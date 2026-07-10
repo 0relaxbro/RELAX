@@ -1,200 +1,495 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 
 <head>
 
 <meta charset="UTF-8">
 
-<title>RELAX V3 FULL</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>RELAX | Just RELAX Bro.</title>
+
+<meta name="description" content="0 Fear. 0 Panic. 0 Regrets. Just RELAX Bro.">
+
+<meta property="og:title" content="RELAX">
+
+<meta property="og:description" content="0 Fear. 0 Panic. 0 Regrets.">
+
+<meta property="og:image" content="ORELAX.png">
+
+<meta property="og:type" content="website">
+
+<link rel="icon" href="ORELAX.png">
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 
 <style>
 
-body{
-    margin:0;
-    background:#080b12;
-    color:white;
-    font-family:Arial;
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
 }
 
+html{
+scroll-behavior:smooth;
+}
 
-.header{
+body{
 
-height:70px;
-background:#111827;
+background:
+radial-gradient(circle at top,#1b2650,#080b18 70%);
+
+font-family:Arial,Helvetica,sans-serif;
+
+color:white;
+
+overflow-x:hidden;
+
+}
+
+body::before{
+
+content:"";
+
+position:fixed;
+
+left:0;
+
+top:0;
+
+width:100%;
+
+height:100%;
+
+background:
+
+radial-gradient(circle,#4d71ff22 1px,transparent 1px);
+
+background-size:35px 35px;
+
+animation:stars 60s linear infinite;
+
+pointer-events:none;
+
+opacity:.45;
+
+}
+
+@keyframes stars{
+
+from{
+transform:translateY(0);
+}
+
+to{
+transform:translateY(600px);
+}
+
+}
+
+header{
+
+padding:70px 20px;
+
+text-align:center;
+
+}
+
+header img{
+
+width:280px;
+
+max-width:80%;
+
+animation:float 6s ease-in-out infinite;
+
+filter:drop-shadow(0 0 35px #5b79ff);
+
+}
+
+@keyframes float{
+
+0%{transform:translateY(0);}
+
+50%{transform:translateY(-15px);}
+
+100%{transform:translateY(0);}
+
+}
+
+h1{
+
+font-family:'Orbitron',sans-serif;
+
+font-size:78px;
+
+margin-top:30px;
+
+letter-spacing:4px;
+
+}
+
+.tagline{
+
+font-size:42px;
+
+font-weight:bold;
+
+margin-top:20px;
+
+color:#79a9ff;
+
+}
+
+.desc{
+
+max-width:900px;
+
+margin:40px auto;
+
+font-size:28px;
+
+line-height:1.7;
+
+color:#d7d7d7;
+
+padding:0 20px;
+
+}
+
+.buttons{
+
 display:flex;
-align-items:center;
-justify-content:space-between;
+
+justify-content:center;
+
+flex-wrap:wrap;
+
+gap:20px;
+
+margin-top:50px;
+
+}
+
+.buttons a{
+
+text-decoration:none;
+
+background:#233261;
+
+padding:18px 34px;
+
+border-radius:14px;
+
+color:white;
+
+font-size:20px;
+
+font-weight:bold;
+
+transition:.35s;
+
+}
+
+.buttons a:hover{
+
+background:#4367ff;
+
+transform:translateY(-6px);
+
+box-shadow:0 0 30px #4d71ff;
+
+}
+
+section{
+
+max-width:1200px;
+
+margin:90px auto;
+
 padding:0 25px;
 
 }
 
+h2{
 
-.logo{
+font-family:'Orbitron',sans-serif;
 
-font-size:25px;
-color:#00e5ff;
-font-weight:bold;
+text-align:center;
 
-}
+font-size:52px;
 
-
-.online{
-
-color:#00ff88;
+margin-bottom:45px;
 
 }
 
+.grid{
 
+display:grid;
 
-.content{
+grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
 
-display:flex;
-height:calc(100vh - 70px);
-
-}
-
-
-.menu{
-
-width:220px;
-background:#0d1320;
-padding:20px;
+gap:25px;
 
 }
 
+.card{
 
-.menu button{
+background:#121b38;
 
-width:100%;
-padding:12px;
-margin-bottom:10px;
+padding:30px;
 
-background:#172033;
+border-radius:18px;
+
+transition:.3s;
+
+}
+
+.card:hover{
+
+transform:translateY(-8px);
+
+box-shadow:0 0 25px rgba(90,130,255,.35);
+
+}
+
+.card h3{
+
+margin-bottom:15px;
+
+font-size:26px;
+
+color:#8eb5ff;
+
+}
+
+.card p{
+
+color:#cfcfcf;
+
+line-height:1.8;
+
+}
+
+.contract{
+
+background:#10182f;
+
+padding:35px;
+
+border-radius:20px;
+
+text-align:center;
+
+margin-top:40px;
+
+word-break:break-word;
+
+}
+
+.contract code{
+
+font-size:18px;
+
+color:#7ab1ff;
+
+}
+
+.copy{
+
+margin-top:25px;
+
+padding:15px 30px;
+
+background:#3554ff;
+
+border:none;
+
 color:white;
 
-border:1px solid #263246;
-border-radius:8px;
+font-size:18px;
 
-}
-
-
-
-.main{
-
-flex:1;
-padding:20px;
-
-}
-
-
-
-.box{
-
-background:#111827;
-border:1px solid #263246;
-
-padding:20px;
 border-radius:12px;
 
+cursor:pointer;
+
+transition:.3s;
+
 }
 
+.copy:hover{
 
+background:#5472ff;
+
+}
+
+footer{
+
+margin-top:120px;
+
+padding:40px;
+
+text-align:center;
+
+background:#060910;
+
+color:#888;
+
+}
+
+@media(max-width:768px){
+
+h1{
+
+font-size:54px;
+
+}
+
+.tagline{
+
+font-size:28px;
+
+}
+
+.desc{
+
+font-size:21px;
+
+}
+
+header img{
+
+width:220px;
+
+}
+
+h2{
+
+font-size:38px;
+
+}
+
+}
 
 </style>
 
-
 </head>
-
-
 
 <body>
 
+<header>
 
-<div class="header">
+<img src="ORELAX.png" alt="RELAX Logo">
 
+<h1>RELAX</h1>
 
-<div class="logo">
-RELAX V3 FULL
-</div>
+<div class="tagline">
 
-
-<div class="online">
-● SYSTEM ONLINE
-</div>
-
+0 Fear. 0 Panic. 0 Regrets.
 
 </div>
 
+<div class="desc">
 
+The market never sleeps.
 
-<div class="content">
+People chase pumps.
 
+People panic during dips.
 
-<div class="menu">
+<strong>RELAX Bro doesn't.</strong>
 
-<button>
-Dashboard
-</button>
+Take a breath.
 
+Enjoy the ride.
 
-<button>
-Signals
-</button>
-
-
-<button>
-Scanner
-</button>
-
-
-<button>
-Risk
-</button>
-
-
-<button>
-Logs
-</button>
-
+Just RELAX.
 
 </div>
 
+<div class="buttons">
 
+<a href="https://pump.fun/coin/6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump" target="_blank">
 
+Buy on Pump.fun
 
-<div class="main">
+</a>
 
+<a href="https://dexscreener.com/solana/5ztferjiljz3u4kzkwmguyujxcwkpagzfqwwyja7yzx3" target="_blank">
 
-<div class="box">
+DexScreener
 
-<h1>
-RELAX ENGINE
-</h1>
+</a>
 
+<a href="https://x.com/0relaxbro" target="_blank">
+
+X
+
+</a>
+
+</div>
+
+</header>
+
+<section>
+
+<h2>What is RELAX?</h2>
+
+<div class="grid">
+
+<div class="card">
+
+<h3>No Fear</h3>
 
 <p>
-V3 FULL başlatıldı.
+Strong hands don't fear volatility.
 </p>
 
+</div>
+
+<div class="card">
+
+<h3>No Panic</h3>
 
 <p>
-Core beklemede...
+Price moves. Emotions don't have to.
 </p>
 
+</div>
+
+<div class="card">
+
+<h3>No Regrets</h3>
+
+<p>
+Every cycle rewards patience.
+</p>
 
 </div>
 
+</div>
 
+<div class="contract">
+
+<h3>Official Contract</h3>
+
+<br>
+
+<code id="ca">
+
+6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump
+
+</code>
+
+<br>
+
+<button class="copy" onclick="copyCA()">
+
+Copy Contract
+
+</button>
 
 </div>
 
-
-
-</div>
-
-
-
-</body>
-
-
-</html>
+</section>
