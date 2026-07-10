@@ -4,50 +4,26 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>RELAX V3 FULL</title>
 
 <style>
 
-*{
-box-sizing:border-box;
-margin:0;
-padding:0;
-font-family:Arial, sans-serif;
-}
-
-
 body{
-
-background:#080b12;
-color:white;
-height:100vh;
-overflow:hidden;
-
+    margin:0;
+    background:#080b12;
+    color:white;
+    font-family:Arial;
 }
-
-
-.app{
-
-height:100vh;
-display:flex;
-flex-direction:column;
-
-}
-
 
 
 .header{
 
-height:65px;
+height:70px;
 background:#111827;
-border-bottom:1px solid #263246;
-
 display:flex;
 align-items:center;
 justify-content:space-between;
-
 padding:0 25px;
 
 }
@@ -55,15 +31,14 @@ padding:0 25px;
 
 .logo{
 
-font-size:24px;
-font-weight:bold;
+font-size:25px;
 color:#00e5ff;
+font-weight:bold;
 
 }
 
 
-
-.status{
+.online{
 
 color:#00ff88;
 
@@ -71,39 +46,34 @@ color:#00ff88;
 
 
 
-.container{
+.content{
 
-flex:1;
 display:flex;
+height:calc(100vh - 70px);
 
 }
 
 
-
-.sidebar{
+.menu{
 
 width:220px;
 background:#0d1320;
-border-right:1px solid #263246;
 padding:20px;
 
 }
 
 
-
-.sidebar button{
+.menu button{
 
 width:100%;
 padding:12px;
 margin-bottom:10px;
 
 background:#172033;
-border:1px solid #263246;
-
 color:white;
-border-radius:8px;
 
-cursor:pointer;
+border:1px solid #263246;
+border-radius:8px;
 
 }
 
@@ -118,57 +88,13 @@ padding:20px;
 
 
 
-.card-area{
-
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:15px;
-
-}
-
-
-
-.card{
+.box{
 
 background:#111827;
 border:1px solid #263246;
-border-radius:12px;
 
 padding:20px;
-
-}
-
-
-.card h3{
-
-font-size:13px;
-color:#94a3b8;
-
-}
-
-
-
-.card span{
-
-display:block;
-font-size:25px;
-margin-top:10px;
-color:#00e5ff;
-
-}
-
-
-
-.panel{
-
-margin-top:20px;
-background:#111827;
-
-border:1px solid #263246;
-
 border-radius:12px;
-
-padding:20px;
 
 }
 
@@ -176,24 +102,24 @@ padding:20px;
 
 </style>
 
+
 </head>
+
 
 
 <body>
 
 
-<div class="app">
-
-
 <div class="header">
+
 
 <div class="logo">
 RELAX V3 FULL
 </div>
 
 
-<div class="status">
-● ONLINE
+<div class="online">
+● SYSTEM ONLINE
 </div>
 
 
@@ -201,100 +127,74 @@ RELAX V3 FULL
 
 
 
-<div class="container">
+<div class="content">
 
 
-<div class="sidebar">
+<div class="menu">
 
-<button>Dashboard</button>
+<button>
+Dashboard
+</button>
 
-<button>Signals</button>
 
-<button>Scanner</button>
+<button>
+Signals
+</button>
 
-<button>Risk</button>
 
-<button>Logs</button>
+<button>
+Scanner
+</button>
 
-<button>Settings</button>
+
+<button>
+Risk
+</button>
+
+
+<button>
+Logs
+</button>
 
 
 </div>
+
 
 
 
 <div class="main">
 
 
-<div class="card-area">
+<div class="box">
+
+<h1>
+RELAX ENGINE
+</h1>
 
 
-<div class="card">
-
-<h3>BTC PRICE</h3>
-
-<span id="btc">--</span>
-
-</div>
+<p>
+V3 FULL başlatıldı.
+</p>
 
 
-
-<div class="card">
-
-<h3>SIGNAL</h3>
-
-<span id="signal">WAIT</span>
-
-</div>
-
-
-
-<div class="card">
-
-<h3>POSITION</h3>
-
-<span id="position">NONE</span>
-
-</div>
-
-
-
-<div class="card">
-
-<h3>PROFIT</h3>
-
-<span id="profit">0%</span>
-
-</div>
+<p>
+Core beklemede...
+</p>
 
 
 </div>
 
 
 
-<div class="panel">
-
-<h2>
-RELAX ENGINE LOG
-</h2>
-
-<br>
-
-<div id="log">
-
-System Ready...
-
 </div>
+
 
 
 </div>
 
 
-</div>
+
+</body>
 
 
-</div>
-
-
-</div>
-
+</html>
