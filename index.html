@@ -1,15 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RELAX | 0 Fear. 0 Panic. 0 Regrets.</title>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>RELAX | Just RELAX Bro</title>
+
+
+<meta name="description" content="0 Fear. 0 Panic. 0 Regrets. Just RELAX Bro.">
+
+
+<link rel="icon" href="ORELAX.png">
+
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+
 
 <style>
+
 
 *{
 margin:0;
@@ -17,291 +28,1116 @@ padding:0;
 box-sizing:border-box;
 }
 
+
+html{
+scroll-behavior:smooth;
+}
+
+
 body{
 
 background:
-radial-gradient(circle at top,#17203d,#090b14 60%,#05060d);
+radial-gradient(circle at top,#263b80,#080b18 65%);
 
-font-family:Inter,sans-serif;
+font-family:Arial,Helvetica,sans-serif;
+
 color:white;
+
 overflow-x:hidden;
 
 }
 
-body::before{
+
+
+body:before{
 
 content:"";
+
 position:fixed;
-width:600px;
-height:600px;
-background:#4d7cff22;
-filter:blur(140px);
-left:-200px;
-top:-150px;
-z-index:-1;
+
+inset:0;
+
+background-image:
+
+radial-gradient(#6d8cff55 1px,transparent 1px);
+
+background-size:40px 40px;
+
+animation:stars 50s linear infinite;
+
+pointer-events:none;
 
 }
 
-body::after{
 
-content:"";
-position:fixed;
-width:500px;
-height:500px;
-background:#9b4dff22;
-filter:blur(150px);
-right:-180px;
-bottom:-180px;
-z-index:-1;
+
+@keyframes stars{
+
+from{
+transform:translateY(0);
+}
+
+to{
+transform:translateY(500px);
+}
 
 }
 
-.container{
 
-max-width:1100px;
-margin:auto;
-padding:70px 25px;
+
+header{
+
+min-height:100vh;
+
+display:flex;
+
+flex-direction:column;
+
+align-items:center;
+
+justify-content:center;
+
+text-align:center;
+
+padding:40px 20px;
 
 }
+
+
 
 .logo{
 
-width:330px;
-max-width:95%;
-border-radius:50%;
-display:block;
-margin:auto;
-box-shadow:0 0 60px #4c7dff55;
+width:300px;
 
-animation:float 4s ease-in-out infinite;
+max-width:80%;
+
+filter:
+drop-shadow(0 0 40px #5577ff);
+
+animation:
+
+float 5s infinite ease-in-out;
 
 }
+
+
 
 @keyframes float{
 
-0%{transform:translateY(0);}
-50%{transform:translateY(-10px);}
-100%{transform:translateY(0);}
+50%{
+
+transform:translateY(-20px);
 
 }
+
+}
+
+
 
 h1{
 
-font-family:Orbitron,sans-serif;
-font-size:64px;
-text-align:center;
-margin-top:35px;
-letter-spacing:2px;
+font-family:'Orbitron';
+
+font-size:90px;
+
+letter-spacing:8px;
+
+margin-top:30px;
 
 }
 
-.subtitle{
 
-text-align:center;
-font-size:26px;
-margin-top:15px;
-font-weight:600;
-color:#6aa8ff;
+
+.tagline{
+
+font-size:40px;
+
+font-weight:bold;
+
+color:#8db5ff;
+
+margin-top:20px;
 
 }
+
+
 
 .desc{
 
-max-width:760px;
-margin:35px auto;
-text-align:center;
-font-size:20px;
+max-width:900px;
+
+margin:40px auto;
+
+font-size:26px;
+
 line-height:1.7;
-color:#d7d7d7;
+
+color:#ddd;
 
 }
+
+
 
 .buttons{
 
 display:flex;
-justify-content:center;
-gap:18px;
+
+gap:20px;
+
 flex-wrap:wrap;
-margin-top:40px;
+
+justify-content:center;
 
 }
+
+
 
 .buttons a{
 
 text-decoration:none;
-padding:16px 32px;
-border-radius:12px;
-background:#1b2343;
+
 color:white;
-font-weight:700;
+
+background:#243777;
+
+padding:18px 35px;
+
+border-radius:15px;
+
+font-size:20px;
+
+font-weight:bold;
+
 transition:.3s;
 
 }
 
+
+
 .buttons a:hover{
 
-transform:translateY(-4px);
-background:#4b7cff;
+background:#5074ff;
+
+transform:translateY(-6px);
+
+box-shadow:0 0 35px #5074ff;
 
 }
 
-.section{
 
-margin-top:90px;
+
+section{
+
+max-width:1200px;
+
+margin:100px auto;
+
+padding:0 25px;
+
+}
+
+
+
+h2{
+
+font-family:'Orbitron';
+
 text-align:center;
 
-}
+font-size:50px;
 
-.section h2{
-
-font-size:34px;
-margin-bottom:25px;
-font-family:Orbitron;
+margin-bottom:45px;
 
 }
 
-.section p{
 
-font-size:18px;
+
+.grid{
+
+display:grid;
+
+grid-template-columns:
+
+repeat(auto-fit,minmax(260px,1fr));
+
+gap:25px;
+
+}
+
+
+
+.card{
+
+background:#111a38cc;
+
+backdrop-filter:blur(10px);
+
+border:1px solid #33457d;
+
+padding:30px;
+
+border-radius:20px;
+
+transition:.3s;
+
+}
+
+
+
+.card:hover{
+
+transform:translateY(-10px);
+
+box-shadow:0 0 35px #526fff55;
+
+}
+
+
+
+.card h3{
+
+color:#91b5ff;
+
+font-size:27px;
+
+margin-bottom:15px;
+
+}
+
+
+
+.card p{
+
+color:#ccc;
+
 line-height:1.8;
-color:#d5d5d5;
 
 }
+
+
 
 .contract{
 
-margin-top:30px;
-padding:20px;
-background:#101522;
-border-radius:15px;
-word-break:break-all;
-font-size:15px;
+background:#10172e;
+
+border:1px solid #33457d;
+
+padding:35px;
+
+border-radius:20px;
+
+text-align:center;
+
+word-break:break-word;
 
 }
+
+
+
+.contract code{
+
+color:#7db0ff;
+
+font-size:18px;
+
+}
+
+
+
+.copy{
+
+margin-top:25px;
+
+background:#4165ff;
+
+color:white;
+
+border:0;
+
+padding:15px 35px;
+
+border-radius:12px;
+
+font-size:18px;
+
+cursor:pointer;
+
+}
+
+
 
 footer{
 
-margin-top:100px;
+background:#050812;
+
+padding:40px;
+
 text-align:center;
+
 color:#777;
-padding-bottom:40px;
+
+margin-top:100px;
 
 }
 
-@media(max-width:700px){
+
+
+@media(max-width:768px){
+
 
 h1{
 
-font-size:46px;
+font-size:55px;
 
 }
 
-.subtitle{
+
+.tagline{
+
+font-size:28px;
+
+}
+
+
+.desc{
 
 font-size:20px;
 
 }
 
-.logo{
-
-width:260px;
 
 }
 
-}
+
 
 </style>
 
 </head>
 
+
 <body>
 
-<div class="container">
 
-<img src="logo.png" class="logo">
+<header>
 
-<h1>RELAX</h1>
 
-<div class="subtitle">
+<img class="logo" src="ORELAX.png">
+
+
+<h1>
+RELAX
+</h1>
+
+
+<div class="tagline">
+
 0 Fear. 0 Panic. 0 Regrets.
+
 </div>
+
+
 
 <div class="desc">
 
 The market never sleeps.
+
 People chase pumps.
+
 People panic during dips.
 
+<br><br>
+
+<strong>
 RELAX Bro doesn't.
+</strong>
+
+<br>
 
 Take a breath.
+
 Enjoy the ride.
+
 Just RELAX.
 
 </div>
 
+
+
 <div class="buttons">
 
-<a href="https://pump.fun/coin/6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump" target="_blank">
 
-Buy on Pump.fun
-
+<a href="#">
+Buy RELAX
 </a>
 
-<a href="https://dexscreener.com/solana/5ztferjiljz3u4kzkwmguyujxcwkpagzfqwwyja7yzx3" target="_blank">
 
+<a href="#">
 DexScreener
-
 </a>
 
-<a href="https://x.com/0relaxbro" target="_blank">
 
-X
-
+<a href="#">
+X Community
 </a>
+
+
 
 </div>
 
-<div class="section">
 
-<h2>What is RELAX?</h2>
+
+</header>
+
+<section>
+
+
+<h2>
+What is RELAX?
+</h2>
+
+
+
+<div class="grid">
+
+
+
+<div class="card">
+
+<h3>
+No Fear
+</h3>
 
 <p>
 
-RELAX isn't another meme chasing hype.
+Strong hands don't fear volatility.
 
-It's a reminder.
+RELAX is a mindset.
 
-The strongest holders stay calm.
-The strongest communities don't panic.
+Not just a token.
 
-0 Fear.
-0 Panic.
-0 Regrets.
+</p>
+
+</div>
+
+
+
+<div class="card">
+
+<h3>
+No Panic
+</h3>
+
+<p>
+
+Charts move.
+
+Markets change.
+
+But emotions stay controlled.
+
+</p>
+
+</div>
+
+
+
+<div class="card">
+
+<h3>
+No Regrets
+</h3>
+
+<p>
+
+Every cycle rewards patience.
+
+Every journey creates believers.
+
+</p>
+
+</div>
+
+
+
+</div>
+
+
+</section>
+
+
+
+
+
+<section>
+
+
+<h2>
+RELAX Features
+</h2>
+
+
+
+<div class="grid">
+
+
+
+<div class="card">
+
+<h3>
+Community Driven
+</h3>
+
+<p>
+
+Built around people who believe in patience, discipline and long-term vision.
+
+</p>
+
+</div>
+
+
+
+
+<div class="card">
+
+<h3>
+Meme Energy
+</h3>
+
+<p>
+
+Simple idea.
+
+Strong message.
+
+A movement anyone can understand.
+
+</p>
+
+</div>
+
+
+
+
+
+<div class="card">
+
+<h3>
+Web3 Spirit
+</h3>
+
+<p>
+
+Connecting holders, traders and believers under one philosophy.
+
+</p>
+
+</div>
+
+
+
+
+</div>
+
+
+</section>
+
+<section>
+
+
+<h2>
+Token Information
+</h2>
+
+
+
+<div class="grid">
+
+
+
+<div class="card">
+
+<h3>
+Total Supply
+</h3>
+
+<p>
+
+1,000,000,000 RELAX
+
+</p>
+
+</div>
+
+
+
+
+<div class="card">
+
+<h3>
+Network
+</h3>
+
+<p>
+
+Solana Blockchain
+
+</p>
+
+</div>
+
+
+
+
+<div class="card">
+
+<h3>
+Mission
+</h3>
+
+<p>
+
+Create a community that stays calm in every market condition.
+
+</p>
+
+</div>
+
+
+
+</div>
+
+
+
+
+<div class="contract">
+
+
+<h3>
+Official Contract
+</h3>
+
+
+<br>
+
+
+<code id="contractAddress">
+
+6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump
+
+</code>
+
+
+
+<br>
+
+
+
+<button class="copy" onclick="copyContract()">
+
+Copy Contract
+
+</button>
+
+
+
+</div>
+
+
+</section>
+
+
+
+
+
+
+<section>
+
+
+<h2>
+Roadmap
+</h2>
+
+
+
+
+<div class="grid">
+
+
+
+<div class="card">
+
+<h3>
+Phase 1
+</h3>
+
+
+<p>
+
+✓ Launch RELAX
+
+<br>
+
+✓ Build Community
+
+<br>
+
+✓ Social Expansion
+
+</p>
+
+
+</div>
+
+
+
+
+
+<div class="card">
+
+<h3>
+Phase 2
+</h3>
+
+
+<p>
+
+✓ Bigger Community
+
+<br>
+
+✓ More Visibility
+
+<br>
+
+✓ Stronger Ecosystem
+
+</p>
+
+
+</div>
+
+
+
+
+
+<div class="card">
+
+<h3>
+Phase 3
+</h3>
+
+
+<p>
+
+✓ Global Recognition
+
+<br>
+
+✓ Long Term Vision
+
+<br>
+
+✓ RELAX Movement
+
+</p>
+
+
+</div>
+
+
+
+
+</div>
+
+
+</section>
+
+<section>
+
+
+<h2>
+Join The RELAX Movement
+</h2>
+
+
+
+<div class="card" style="text-align:center;">
+
+
+<h3>
+0 Fear. 0 Panic. 0 Regrets.
+</h3>
+
+
+
+<p>
+
+The market will always move.
+
+The winners are the ones who stay calm.
+
+<br><br>
+
+Stay focused.
+
+Stay patient.
 
 Just RELAX Bro.
 
 </p>
 
-<div class="contract">
 
-Contract Address
 
-<br><br>
+<br>
 
-6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump
+
+
+<div class="buttons">
+
+
+<a href="https://x.com/0relaxbro" target="_blank">
+
+X Community
+
+</a>
+
+
+
+<a href="#" target="_blank">
+
+Telegram
+
+</a>
+
+
+
+<a href="#" target="_blank">
+
+Website
+
+</a>
+
+
 
 </div>
 
+
 </div>
+
+
+
+</section>
+
+
+
+
+
+<section>
+
+
+<h2>
+RELAX Links
+</h2>
+
+
+
+<div class="grid">
+
+
+
+<div class="card">
+
+
+<h3>
+Community
+</h3>
+
+
+<p>
+
+Follow updates, announcements and community discussions.
+
+</p>
+
+
+</div>
+
+
+
+
+<div class="card">
+
+
+<h3>
+Trading
+</h3>
+
+
+<p>
+
+Track charts, liquidity and market activity.
+
+</p>
+
+
+</div>
+
+
+
+
+<div class="card">
+
+
+<h3>
+Vision
+</h3>
+
+
+<p>
+
+A simple message.
+
+A strong mindset.
+
+A long journey.
+
+</p>
+
+
+</div>
+
+
+
+
+</div>
+
+
+
+</section>
+
+
 
 <footer>
 
-© 2026 RELAX • Built on Solana
+
+<p>
+
+© 2026 RELAX
+
+</p>
+
+
+<p>
+
+Just RELAX Bro.
+
+</p>
+
 
 </footer>
 
-</div>
+<script>
+
+
+function copyContract(){
+
+
+let address=document.getElementById("contractAddress").innerText;
+
+
+navigator.clipboard.writeText(address);
+
+
+
+let button=document.querySelector(".copy");
+
+
+button.innerHTML="Copied ✓";
+
+
+setTimeout(()=>{
+
+
+button.innerHTML="Copy Contract";
+
+
+},2000);
+
+
+
+}
+
+
+
+
+// SCROLL ANIMATION
+
+
+const cards=document.querySelectorAll(".card");
+
+
+
+const observer=new IntersectionObserver((entries)=>{
+
+
+entries.forEach(entry=>{
+
+
+if(entry.isIntersecting){
+
+
+entry.target.style.opacity="1";
+
+entry.target.style.transform="translateY(0)";
+
+
+}
+
+
+});
+
+
+},{
+threshold:.15
+});
+
+
+
+cards.forEach(card=>{
+
+
+card.style.opacity="0";
+
+card.style.transform="translateY(40px)";
+
+card.style.transition="all .7s ease";
+
+
+observer.observe(card);
+
+
+});
+
+
+
+
+// RELAX START MESSAGE
+
+
+console.log(
+
+"RELAX V3 FULL ONLINE"
+
+);
+
+
+
+</script>
+
+
 
 </body>
+
+
 </html>
