@@ -1,13 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RELAX | 0 Fear. 0 Panic. 0 Regrets.</title>
+
+<title>RELAX | The world panics. Relax Bro doesn't.</title>
+
+<meta name="description" content="RELAX is the meme coin for people who refuse to panic.">
+
+<meta property="og:title" content="RELAX">
+<meta property="og:description" content="The world panics. Relax Bro doesn't.">
+<meta property="og:type" content="website">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
+
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;800&family=Orbitron:wght@600;700;900&display=swap" rel="stylesheet">
 
 <style>
 
@@ -17,61 +28,323 @@ padding:0;
 box-sizing:border-box;
 }
 
+html{
+
+scroll-behavior:smooth;
+
+}
+
 body{
 
-background:
-radial-gradient(circle at top,#17203d,#090b14 60%,#05060d);
+background:#060912;
 
 font-family:Inter,sans-serif;
+
 color:white;
+
 overflow-x:hidden;
 
 }
 
-body::before{
+/***************************
+BACKGROUND
+****************************/
 
-content:"";
+.background{
+
 position:fixed;
-width:600px;
-height:600px;
-background:#4d7cff22;
+
+inset:0;
+
+z-index:-5;
+
+background:
+
+radial-gradient(circle at top,#2647a8 0%,transparent 35%),
+
+radial-gradient(circle at bottom,#6628b8 0%,transparent 30%),
+
+#05070e;
+
+overflow:hidden;
+
+}
+
+.blur1{
+
+position:absolute;
+
+width:650px;
+
+height:650px;
+
+left:-220px;
+
+top:-180px;
+
+background:#2d7fff;
+
+opacity:.18;
+
 filter:blur(140px);
-left:-200px;
-top:-150px;
-z-index:-1;
 
-}
-
-body::after{
-
-content:"";
-position:fixed;
-width:500px;
-height:500px;
-background:#9b4dff22;
-filter:blur(150px);
-right:-180px;
-bottom:-180px;
-z-index:-1;
-
-}
-
-.container{
-
-max-width:1100px;
-margin:auto;
-padding:70px 25px;
-
-}
-
-.logo{
-
-width:330px;
-max-width:95%;
 border-radius:50%;
-display:block;
-margin:auto;
-box-shadow:0 0 60px #4c7dff55;
+
+}
+
+.blur2{
+
+position:absolute;
+
+width:550px;
+
+height:550px;
+
+right:-180px;
+
+bottom:-150px;
+
+background:#7b32ff;
+
+opacity:.15;
+
+filter:blur(150px);
+
+border-radius:50%;
+
+}
+
+/***************************
+NAVBAR
+****************************/
+
+nav{
+
+width:100%;
+
+position:fixed;
+
+top:0;
+
+left:0;
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+padding:22px 60px;
+
+backdrop-filter:blur(18px);
+
+background:rgba(8,12,22,.35);
+
+border-bottom:1px solid rgba(255,255,255,.05);
+
+z-index:999;
+
+}
+
+.logoText{
+
+font-family:Orbitron;
+
+font-size:24px;
+
+font-weight:900;
+
+letter-spacing:2px;
+
+}
+
+.menu{
+
+display:flex;
+
+gap:30px;
+
+}
+
+.menu a{
+
+text-decoration:none;
+
+color:#d7d7d7;
+
+transition:.3s;
+
+font-size:15px;
+
+}
+
+.menu a:hover{
+
+color:#67b2ff;
+
+}
+
+/***************************
+HERO
+****************************/
+
+.hero{
+
+min-height:100vh;
+
+display:flex;
+
+justify-content:center;
+
+align-items:center;
+
+padding:120px 30px 50px;
+
+}
+
+.heroBox{
+
+max-width:1200px;
+
+width:100%;
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+gap:70px;
+
+}
+
+.left{
+
+flex:1;
+
+}
+
+.left h1{
+
+font-size:88px;
+
+font-family:Orbitron;
+
+line-height:1;
+
+margin-bottom:20px;
+
+}
+
+.left h2{
+
+font-size:33px;
+
+font-weight:300;
+
+color:#7bb8ff;
+
+margin-bottom:15px;
+
+}
+
+.left p{
+
+font-size:20px;
+
+line-height:1.8;
+
+color:#d6d6d6;
+
+max-width:600px;
+
+}
+
+.buttons{
+
+display:flex;
+
+gap:18px;
+
+margin-top:45px;
+
+flex-wrap:wrap;
+
+}
+
+.btn{
+
+padding:16px 34px;
+
+border-radius:14px;
+
+text-decoration:none;
+
+font-weight:700;
+
+transition:.3s;
+
+}
+
+.buy{
+
+background:#3b7cff;
+
+color:white;
+
+box-shadow:0 0 30px rgba(59,124,255,.45);
+
+}
+
+.buy:hover{
+
+transform:translateY(-4px);
+
+box-shadow:0 0 40px rgba(59,124,255,.8);
+
+}
+
+.chart{
+
+background:rgba(255,255,255,.08);
+
+backdrop-filter:blur(15px);
+
+color:white;
+
+border:1px solid rgba(255,255,255,.08);
+
+}
+
+.chart:hover{
+
+background:rgba(255,255,255,.13);
+
+}
+
+.right{
+
+flex:1;
+
+display:flex;
+
+justify-content:center;
+
+}
+
+.coin{
+
+width:430px;
+
+max-width:95%;
+
+border-radius:50%;
+
+box-shadow:
+
+0 0 80px rgba(79,139,255,.35),
+
+0 0 160px rgba(90,57,255,.18);
 
 animation:float 4s ease-in-out infinite;
 
@@ -79,132 +352,49 @@ animation:float 4s ease-in-out infinite;
 
 @keyframes float{
 
-0%{transform:translateY(0);}
-50%{transform:translateY(-10px);}
-100%{transform:translateY(0);}
+0%{transform:translateY(0px);}
+50%{transform:translateY(-14px);}
+100%{transform:translateY(0px);}
 
 }
 
-h1{
+@media(max-width:950px){
 
-font-family:Orbitron,sans-serif;
-font-size:64px;
+.heroBox{
+
+flex-direction:column-reverse;
+
 text-align:center;
-margin-top:35px;
-letter-spacing:2px;
 
 }
 
-.subtitle{
+.left h1{
 
-text-align:center;
-font-size:26px;
-margin-top:15px;
-font-weight:600;
-color:#6aa8ff;
+font-size:60px;
 
 }
 
-.desc{
+.left p{
 
-max-width:760px;
-margin:35px auto;
-text-align:center;
-font-size:20px;
-line-height:1.7;
-color:#d7d7d7;
+margin:auto;
 
 }
 
 .buttons{
 
-display:flex;
 justify-content:center;
-gap:18px;
-flex-wrap:wrap;
-margin-top:40px;
 
 }
 
-.buttons a{
+nav{
 
-text-decoration:none;
-padding:16px 32px;
-border-radius:12px;
-background:#1b2343;
-color:white;
-font-weight:700;
-transition:.3s;
-
-}
-
-.buttons a:hover{
-
-transform:translateY(-4px);
-background:#4b7cff;
-
-}
-
-.section{
-
-margin-top:90px;
-text-align:center;
-
-}
-
-.section h2{
-
-font-size:34px;
-margin-bottom:25px;
-font-family:Orbitron;
-
-}
-
-.section p{
-
-font-size:18px;
-line-height:1.8;
-color:#d5d5d5;
-
-}
-
-.contract{
-
-margin-top:30px;
 padding:20px;
-background:#101522;
-border-radius:15px;
-word-break:break-all;
-font-size:15px;
 
 }
 
-footer{
+.menu{
 
-margin-top:100px;
-text-align:center;
-color:#777;
-padding-bottom:40px;
-
-}
-
-@media(max-width:700px){
-
-h1{
-
-font-size:46px;
-
-}
-
-.subtitle{
-
-font-size:20px;
-
-}
-
-.logo{
-
-width:260px;
+display:none;
 
 }
 
@@ -216,92 +406,94 @@ width:260px;
 
 <body>
 
-<div class="container">
+<div class="background">
 
-<img src="logo.png" class="logo">
+<div class="blur1"></div>
+
+<div class="blur2"></div>
+
+</div>
+
+<nav>
+
+<div class="logoText">
+
+RELAX
+
+</div>
+
+<div class="menu">
+
+<a href="#">About</a>
+
+<a href="#">Story</a>
+
+<a href="#">Buy</a>
+
+<a href="https://x.com/0relaxbro" target="_blank">X</a>
+
+</div>
+
+</nav>
+
+<section class="hero">
+
+<div class="heroBox">
+
+<div class="left">
 
 <h1>RELAX</h1>
 
-<div class="subtitle">
-0 Fear. 0 Panic. 0 Regrets.
-</div>
+<h2>The world panics.<br>Relax Bro doesn't.</h2>
 
-<div class="desc">
+<p>
 
-The market never sleeps.
-People chase pumps.
-People panic during dips.
+The meme coin for people who refuse to panic.
 
-RELAX Bro doesn't.
+Built on Solana.
 
-Take a breath.
-Enjoy the ride.
+No fake promises.
+
+No stress.
+
 Just RELAX.
 
-</div>
+</p>
 
 <div class="buttons">
 
-<a href="https://pump.fun/coin/6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump" target="_blank">
+<a class="btn buy"
+href="https://pump.fun/coin/6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump"
+target="_blank">
 
 Buy on Pump.fun
 
 </a>
 
-<a href="https://dexscreener.com/solana/5ztferjiljz3u4kzkwmguyujxcwkpagzfqwwyja7yzx3" target="_blank">
+<a class="btn chart"
 
-DexScreener
+href="https://dexscreener.com/solana/5ztferjiljz3u4kzkwmguyujxcwkpagzfqwwyja7yzx3"
 
-</a>
+target="_blank">
 
-<a href="https://x.com/0relaxbro" target="_blank">
-
-X
+View Chart
 
 </a>
 
 </div>
 
-<div class="section">
+</div>
 
-<h2>What is RELAX?</h2>
+<div class="right">
 
-<p>
-
-RELAX isn't another meme chasing hype.
-
-It's a reminder.
-
-The strongest holders stay calm.
-The strongest communities don't panic.
-
-0 Fear.
-0 Panic.
-0 Regrets.
-
-Just RELAX Bro.
-
-</p>
-
-<div class="contract">
-
-Contract Address
-
-<br><br>
-
-6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump
+<img src="logo.png" class="coin">
 
 </div>
 
 </div>
 
-<footer>
-
-© 2026 RELAX • Built on Solana
-
-</footer>
-
-</div>
+</section>
 
 </body>
+
 </html>
