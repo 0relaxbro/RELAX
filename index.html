@@ -1,499 +1,582 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="tr">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>RELAX | The world panics. Relax Bro doesn't.</title>
-
-<meta name="description" content="RELAX is the meme coin for people who refuse to panic.">
-
-<meta property="og:title" content="RELAX">
-<meta property="og:description" content="The world panics. Relax Bro doesn't.">
-<meta property="og:type" content="website">
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;800&family=Orbitron:wght@600;700;900&display=swap" rel="stylesheet">
+<title>RELAX V3 FULL</title>
 
 <style>
 
 *{
-margin:0;
-padding:0;
-box-sizing:border-box;
-}
-
-html{
-
-scroll-behavior:smooth;
-
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Segoe UI,Arial,sans-serif;
 }
 
 body{
+    background:#080b12;
+    color:#e8edf5;
+    height:100vh;
+    overflow:hidden;
+}
 
-background:#060912;
 
-font-family:Inter,sans-serif;
+/* ANA PANEL */
 
-color:white;
+.app{
+    width:100%;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+}
 
-overflow-x:hidden;
+
+/* HEADER */
+
+.header{
+    height:65px;
+    background:#111827;
+    border-bottom:1px solid #263246;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 25px;
+}
+
+
+.logo{
+    font-size:24px;
+    font-weight:700;
+    color:#00e5ff;
+    letter-spacing:2px;
+}
+
+
+.status{
+    display:flex;
+    gap:10px;
+    align-items:center;
+}
+
+
+.dot{
+    width:12px;
+    height:12px;
+    background:#00ff88;
+    border-radius:50%;
+}
+
+
+.status span{
+    color:#9ca3af;
+}
+
+
+/* CONTENT */
+
+.content{
+    flex:1;
+    display:flex;
+    overflow:hidden;
+}
+
+
+/* SIDEBAR */
+
+.sidebar{
+
+    width:230px;
+    background:#0d1320;
+    border-right:1px solid #263246;
+    padding:20px;
 
 }
 
-/***************************
-BACKGROUND
-****************************/
-
-.background{
-
-position:fixed;
-
-inset:0;
-
-z-index:-5;
-
-background:
-
-radial-gradient(circle at top,#2647a8 0%,transparent 35%),
-
-radial-gradient(circle at bottom,#6628b8 0%,transparent 30%),
-
-#05070e;
-
-overflow:hidden;
-
-}
-
-.blur1{
-
-position:absolute;
-
-width:650px;
-
-height:650px;
-
-left:-220px;
-
-top:-180px;
-
-background:#2d7fff;
-
-opacity:.18;
-
-filter:blur(140px);
-
-border-radius:50%;
-
-}
-
-.blur2{
-
-position:absolute;
-
-width:550px;
-
-height:550px;
-
-right:-180px;
-
-bottom:-150px;
-
-background:#7b32ff;
-
-opacity:.15;
-
-filter:blur(150px);
-
-border-radius:50%;
-
-}
-
-/***************************
-NAVBAR
-****************************/
-
-nav{
-
-width:100%;
-
-position:fixed;
-
-top:0;
-
-left:0;
-
-display:flex;
-
-justify-content:space-between;
-
-align-items:center;
-
-padding:22px 60px;
-
-backdrop-filter:blur(18px);
-
-background:rgba(8,12,22,.35);
-
-border-bottom:1px solid rgba(255,255,255,.05);
-
-z-index:999;
-
-}
-
-.logoText{
-
-font-family:Orbitron;
-
-font-size:24px;
-
-font-weight:900;
-
-letter-spacing:2px;
-
-}
 
 .menu{
 
-display:flex;
-
-gap:30px;
+    margin-top:20px;
 
 }
 
-.menu a{
 
-text-decoration:none;
+.menu button{
 
-color:#d7d7d7;
+    width:100%;
+    margin-bottom:12px;
+    padding:13px;
 
-transition:.3s;
+    background:#172033;
+    border:1px solid #263246;
+    color:#dbeafe;
 
-font-size:15px;
+    cursor:pointer;
+    border-radius:8px;
 
-}
-
-.menu a:hover{
-
-color:#67b2ff;
-
-}
-
-/***************************
-HERO
-****************************/
-
-.hero{
-
-min-height:100vh;
-
-display:flex;
-
-justify-content:center;
-
-align-items:center;
-
-padding:120px 30px 50px;
+    transition:.2s;
 
 }
 
-.heroBox{
 
-max-width:1200px;
+.menu button:hover{
 
-width:100%;
-
-display:flex;
-
-justify-content:space-between;
-
-align-items:center;
-
-gap:70px;
+    background:#00bcd4;
+    color:#000;
 
 }
 
-.left{
 
-flex:1;
 
-}
+/* MAIN */
 
-.left h1{
+.main{
 
-font-size:88px;
-
-font-family:Orbitron;
-
-line-height:1;
-
-margin-bottom:20px;
+    flex:1;
+    padding:20px;
+    overflow:auto;
 
 }
 
-.left h2{
 
-font-size:33px;
 
-font-weight:300;
+/* CARDS */
 
-color:#7bb8ff;
+.cards{
 
-margin-bottom:15px;
-
-}
-
-.left p{
-
-font-size:20px;
-
-line-height:1.8;
-
-color:#d6d6d6;
-
-max-width:600px;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:15px;
 
 }
 
-.buttons{
 
-display:flex;
+.card{
 
-gap:18px;
-
-margin-top:45px;
-
-flex-wrap:wrap;
+    background:#111827;
+    border:1px solid #263246;
+    border-radius:12px;
+    padding:20px;
 
 }
 
-.btn{
 
-padding:16px 34px;
+.card h3{
 
-border-radius:14px;
-
-text-decoration:none;
-
-font-weight:700;
-
-transition:.3s;
+    color:#94a3b8;
+    font-size:14px;
 
 }
 
-.buy{
 
-background:#3b7cff;
+.card p{
 
-color:white;
-
-box-shadow:0 0 30px rgba(59,124,255,.45);
-
-}
-
-.buy:hover{
-
-transform:translateY(-4px);
-
-box-shadow:0 0 40px rgba(59,124,255,.8);
+    font-size:28px;
+    margin-top:10px;
+    color:#00e5ff;
 
 }
 
-.chart{
 
-background:rgba(255,255,255,.08);
 
-backdrop-filter:blur(15px);
+/* PANEL */
 
-color:white;
+.panel{
 
-border:1px solid rgba(255,255,255,.08);
-
-}
-
-.chart:hover{
-
-background:rgba(255,255,255,.13);
+    margin-top:20px;
+    background:#111827;
+    border:1px solid #263246;
+    border-radius:12px;
+    padding:20px;
 
 }
 
-.right{
 
-flex:1;
+.panel-title{
 
-display:flex;
-
-justify-content:center;
-
-}
-
-.coin{
-
-width:430px;
-
-max-width:95%;
-
-border-radius:50%;
-
-box-shadow:
-
-0 0 80px rgba(79,139,255,.35),
-
-0 0 160px rgba(90,57,255,.18);
-
-animation:float 4s ease-in-out infinite;
+    font-size:18px;
+    color:#00e5ff;
+    margin-bottom:15px;
 
 }
 
-@keyframes float{
 
-0%{transform:translateY(0px);}
-50%{transform:translateY(-14px);}
-100%{transform:translateY(0px);}
 
-}
+/* RESPONSIVE */
 
-@media(max-width:950px){
+@media(max-width:900px){
 
-.heroBox{
+.cards{
 
-flex-direction:column-reverse;
-
-text-align:center;
+grid-template-columns:repeat(2,1fr);
 
 }
 
-.left h1{
+.sidebar{
 
-font-size:60px;
-
-}
-
-.left p{
-
-margin:auto;
-
-}
-
-.buttons{
-
-justify-content:center;
-
-}
-
-nav{
-
-padding:20px;
-
-}
-
-.menu{
-
-display:none;
+width:180px;
 
 }
 
 }
+
 
 </style>
 
 </head>
 
+
 <body>
 
-<div class="background">
 
-<div class="blur1"></div>
+<div class="app">
 
-<div class="blur2"></div>
+
+<header class="header">
+
+<div class="logo">
+RELAX V3 FULL
+</div>
+
+
+<div class="status">
+
+<div class="dot"></div>
+
+<span>
+SYSTEM ONLINE
+</span>
 
 </div>
 
-<nav>
 
-<div class="logoText">
+</header>
 
-RELAX
 
-</div>
+
+<div class="content">
+
+
+<aside class="sidebar">
+
 
 <div class="menu">
 
-<a href="#">About</a>
+<button>
+Dashboard
+</button>
 
-<a href="#">Story</a>
 
-<a href="#">Buy</a>
+<button>
+Signals
+</button>
 
-<a href="https://x.com/0relaxbro" target="_blank">X</a>
+
+<button>
+Scanner
+</button>
+
+
+<button>
+Risk Manager
+</button>
+
+
+<button>
+Logs
+</button>
+
+
+<button>
+Settings
+</button>
+
 
 </div>
 
-</nav>
 
-<section class="hero">
+</aside>
 
-<div class="heroBox">
 
-<div class="left">
 
-<h1>RELAX</h1>
 
-<h2>The world panics.<br>Relax Bro doesn't.</h2>
+<main class="main">
 
-<p>
 
-The meme coin for people who refuse to panic.
+<div class="cards">
 
-Built on Solana.
 
-No fake promises.
+<div class="card">
 
-No stress.
+<h3>
+BTC PRICE
+</h3>
 
-Just RELAX.
-
+<p id="btc">
+-- 
 </p>
 
-<div class="buttons">
+</div>
 
-<a class="btn buy"
-href="https://pump.fun/coin/6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump"
-target="_blank">
 
-Buy on Pump.fun
 
-</a>
+<div class="card">
 
-<a class="btn chart"
+<h3>
+SIGNAL
+</h3>
 
-href="https://dexscreener.com/solana/5ztferjiljz3u4kzkwmguyujxcwkpagzfqwwyja7yzx3"
-
-target="_blank">
-
-View Chart
-
-</a>
+<p id="signal">
+WAIT
+</p>
 
 </div>
 
+
+
+<div class="card">
+
+<h3>
+POSITION
+</h3>
+
+<p id="position">
+NONE
+</p>
+
 </div>
 
-<div class="right">
 
-<img src="logo.png" class="coin">
+
+<div class="card">
+
+<h3>
+PROFIT
+</h3>
+
+<p id="profit">
+0%
+</p>
 
 </div>
 
+
 </div>
 
-</section>
+
+
+
+<div class="panel">
+
+<div class="panel-title">
+RELAX ENGINE LOG
+</div>
+
+
+<div id="log">
+
+System initialized...
+
+</div>
+
+
+</div>
+
+
+
+</main>
+
+
+
+</div>
+
+
+</div>
+
+
+<script>
+
+
+const logBox=document.getElementById("log");
+
+
+function addLog(text){
+
+let time=new Date().toLocaleTimeString();
+
+logBox.innerHTML += 
+"<br>["+time+"] "+text;
+
+}
+
+
+addLog("RELAX V3 FULL loading...");
+addLog("Core interface ready");
+
+
+</script>
+
 
 </body>
 
 </html>
+
+<style>
+
+.workspace{
+
+display:none;
+
+}
+
+
+.workspace.active{
+
+display:block;
+
+}
+
+
+
+.section-title{
+
+font-size:20px;
+color:#00e5ff;
+margin-bottom:15px;
+
+}
+
+
+
+.grid-box{
+
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:15px;
+
+}
+
+
+
+.info-box{
+
+background:#172033;
+border:1px solid #263246;
+padding:18px;
+border-radius:10px;
+
+}
+
+
+
+.info-box span{
+
+display:block;
+color:#94a3b8;
+font-size:13px;
+
+}
+
+
+
+.info-box strong{
+
+display:block;
+font-size:24px;
+margin-top:8px;
+color:#00e5ff;
+
+}
+
+
+
+.engine-panel{
+
+margin-top:20px;
+background:#111827;
+border:1px solid #263246;
+padding:20px;
+border-radius:12px;
+
+}
+
+
+
+.engine-row{
+
+display:flex;
+justify-content:space-between;
+padding:12px;
+background:#172033;
+border-radius:8px;
+margin-bottom:10px;
+
+}
+
+
+</style>
+
+
+
+<script>
+
+
+// RELAX V3 CORE STATE
+
+
+const RELAX = {
+
+
+version:"V3 FULL",
+
+status:"ONLINE",
+
+engine:false,
+
+signal:"WAIT",
+
+position:"NONE",
+
+risk:0
+
+
+};
+
+
+
+function relaxUpdate(){
+
+console.log("RELAX ENGINE",RELAX);
+
+}
+
+
+
+relaxUpdate();
+
+
+
+function relaxStatus(text){
+
+let log=document.getElementById("log");
+
+if(log){
+
+let time=new Date().toLocaleTimeString();
+
+log.innerHTML +=
+"<br>["+time+"] "+text;
+
+}
+
+}
+
+
+
+relaxStatus("V3 Core loaded");
+
+relaxStatus("System architecture ready");
+
+
+</script>
