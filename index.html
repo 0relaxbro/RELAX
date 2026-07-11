@@ -4171,6 +4171,728 @@ console.log(
 </script>
 
 
+<section class="live-market" id="live-market">
+
+<div class="market-shell">
+
+<div class="market-top">
+
+<div>
+
+<div class="live-label">
+<span class="live-dot"></span>
+LIVE ON SOLANA
+</div>
+
+<h2>$RELAX</h2>
+
+</div>
+
+<div class="market-solana">
+SOLANA
+</div>
+
+</div>
+
+
+<div class="price-zone">
+
+<div class="price-label">
+CURRENT PRICE
+</div>
+
+<div class="live-price" id="livePrice">
+LOADING...
+</div>
+
+<div class="price-change" id="priceChange">
+FETCHING MARKET DATA
+</div>
+
+</div>
+
+
+<div class="market-stats">
+
+<div class="market-stat">
+
+<span>MARKET CAP</span>
+
+<strong id="marketCap">
+—
+</strong>
+
+</div>
+
+
+<div class="market-stat">
+
+<span>LIQUIDITY</span>
+
+<strong id="liquidity">
+—
+</strong>
+
+</div>
+
+
+<div class="market-stat">
+
+<span>24H VOLUME</span>
+
+<strong id="volume24h">
+—
+</strong>
+
+</div>
+
+
+<div class="market-stat">
+
+<span>NETWORK</span>
+
+<strong class="solana-text">
+SOLANA
+</strong>
+
+</div>
+
+</div>
+
+
+<div class="market-bottom">
+
+<span id="marketStatus">
+CONNECTING TO MARKET...
+</span>
+
+<a
+href="https://dexscreener.com/solana/5ztferjiljz3u4kzkwmguyujxcwkpagzfqwwyja7yzx3"
+target="_blank"
+rel="noopener noreferrer"
+>
+
+OPEN CHART ↗
+
+</a>
+
+</div>
+
+</div>
+
+</section>
+
+
+
+<style>
+
+.live-market{
+
+padding:120px max(6vw,30px);
+
+background:
+
+radial-gradient(
+circle at 50% 50%,
+rgba(20,241,149,.07),
+transparent 35%
+),
+
+#050713;
+
+}
+
+
+.market-shell{
+
+max-width:1100px;
+
+margin:auto;
+
+padding:45px;
+
+border-radius:28px;
+
+background:
+
+linear-gradient(
+135deg,
+rgba(12,17,38,.88),
+rgba(7,9,23,.92)
+);
+
+border:1px solid rgba(130,150,255,.25);
+
+box-shadow:
+
+0 30px 100px rgba(0,0,0,.45),
+
+0 0 60px rgba(153,69,255,.08);
+
+backdrop-filter:blur(20px);
+
+}
+
+
+.market-top{
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:flex-start;
+
+}
+
+
+.live-label{
+
+font-family:'Orbitron',sans-serif;
+
+font-size:10px;
+
+letter-spacing:4px;
+
+color:#8D96AF;
+
+}
+
+
+.live-dot{
+
+display:inline-block;
+
+width:8px;
+
+height:8px;
+
+margin-right:10px;
+
+border-radius:50%;
+
+background:var(--sol-green);
+
+box-shadow:
+
+0 0 15px var(--sol-green);
+
+animation:livePulse 1.4s infinite;
+
+}
+
+
+@keyframes livePulse{
+
+50%{
+
+opacity:.25;
+
+}
+
+}
+
+
+.market-top h2{
+
+font-family:'Orbitron',sans-serif;
+
+font-size:clamp(45px,7vw,90px);
+
+margin-top:20px;
+
+}
+
+
+.market-solana{
+
+font-family:'Orbitron',sans-serif;
+
+font-size:12px;
+
+font-weight:900;
+
+letter-spacing:4px;
+
+padding:12px 18px;
+
+border-radius:30px;
+
+background:
+
+linear-gradient(
+90deg,
+var(--sol-green),
+var(--sol-purple)
+);
+
+color:#050713;
+
+}
+
+
+.price-zone{
+
+margin-top:70px;
+
+}
+
+
+.price-label{
+
+font-family:'Orbitron',sans-serif;
+
+font-size:10px;
+
+letter-spacing:4px;
+
+color:#68718B;
+
+}
+
+
+.live-price{
+
+font-family:'Orbitron',sans-serif;
+
+font-size:clamp(42px,7vw,95px);
+
+font-weight:900;
+
+margin-top:15px;
+
+word-break:break-word;
+
+transition:.4s;
+
+}
+
+
+.price-change{
+
+font-family:'Orbitron',sans-serif;
+
+font-size:14px;
+
+font-weight:700;
+
+letter-spacing:2px;
+
+margin-top:20px;
+
+color:#8C95AD;
+
+}
+
+
+.price-change.positive{
+
+color:var(--sol-green);
+
+}
+
+
+.price-change.negative{
+
+color:#FF5F87;
+
+}
+
+
+.market-stats{
+
+display:grid;
+
+grid-template-columns:repeat(4,1fr);
+
+gap:15px;
+
+margin-top:70px;
+
+}
+
+
+.market-stat{
+
+padding:25px;
+
+background:rgba(5,8,20,.65);
+
+border:1px solid rgba(120,145,220,.14);
+
+border-radius:16px;
+
+}
+
+
+.market-stat span{
+
+font-family:'Orbitron',sans-serif;
+
+font-size:9px;
+
+letter-spacing:3px;
+
+color:#69728B;
+
+}
+
+
+.market-stat strong{
+
+display:block;
+
+font-family:'Orbitron',sans-serif;
+
+font-size:clamp(18px,2vw,27px);
+
+margin-top:15px;
+
+}
+
+
+.solana-text{
+
+background:
+
+linear-gradient(
+90deg,
+var(--sol-green),
+var(--sol-purple)
+);
+
+-webkit-background-clip:text;
+
+background-clip:text;
+
+color:transparent;
+
+}
+
+
+.market-bottom{
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+gap:20px;
+
+margin-top:35px;
+
+padding-top:25px;
+
+border-top:1px solid rgba(255,255,255,.07);
+
+font-family:'Orbitron',sans-serif;
+
+font-size:9px;
+
+letter-spacing:2px;
+
+color:#59627A;
+
+}
+
+
+.market-bottom a{
+
+color:var(--sol-green);
+
+text-decoration:none;
+
+}
+
+
+@media(max-width:800px){
+
+
+.market-shell{
+
+padding:28px 20px;
+
+}
+
+
+.market-stats{
+
+grid-template-columns:1fr 1fr;
+
+}
+
+
+.market-solana{
+
+font-size:9px;
+
+}
+
+
+.market-bottom{
+
+align-items:flex-start;
+
+flex-direction:column;
+
+}
+
+
+}
+
+
+@media(max-width:480px){
+
+
+.market-stats{
+
+grid-template-columns:1fr;
+
+}
+
+
+}
+
+</style>
+
+
+
+<script>
+
+const RELAX_CA =
+"6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump";
+
+
+const DEX_API =
+"https://api.dexscreener.com/tokens/v1/solana/" + RELAX_CA;
+
+
+function formatMoney(value){
+
+const number = Number(value);
+
+if(!Number.isFinite(number)){
+
+return "—";
+
+}
+
+if(number >= 1000000000){
+
+return "$" +
+(number / 1000000000).toFixed(2) +
+"B";
+
+}
+
+if(number >= 1000000){
+
+return "$" +
+(number / 1000000).toFixed(2) +
+"M";
+
+}
+
+if(number >= 1000){
+
+return "$" +
+(number / 1000).toFixed(2) +
+"K";
+
+}
+
+return "$" +
+number.toFixed(2);
+
+}
+
+
+
+function formatPrice(value){
+
+const price = Number(value);
+
+if(!Number.isFinite(price)){
+
+return "—";
+
+}
+
+if(price >= 1){
+
+return "$" + price.toFixed(4);
+
+}
+
+if(price >= .01){
+
+return "$" + price.toFixed(6);
+
+}
+
+return "$" +
+price.toFixed(10)
+.replace(/0+$/,"");
+
+}
+
+
+
+async function loadRelaxMarket(){
+
+const status =
+document.getElementById("marketStatus");
+
+
+try{
+
+const response =
+await fetch(DEX_API);
+
+
+if(!response.ok){
+
+throw new Error("MARKET API ERROR");
+
+}
+
+
+const pairs =
+await response.json();
+
+
+if(!Array.isArray(pairs) || !pairs.length){
+
+throw new Error("NO RELAX MARKET FOUND");
+
+}
+
+
+const pair =
+
+pairs
+.filter(item =>
+item.baseToken &&
+item.baseToken.address === RELAX_CA
+)
+.sort((a,b) =>
+Number(b.liquidity?.usd || 0) -
+Number(a.liquidity?.usd || 0)
+)[0] || pairs[0];
+
+
+const price =
+Number(pair.priceUsd);
+
+
+const change =
+Number(pair.priceChange?.h24 || 0);
+
+
+document.getElementById("livePrice")
+.innerText =
+formatPrice(price);
+
+
+const changeElement =
+document.getElementById("priceChange");
+
+
+changeElement.innerText =
+
+(change >= 0 ? "+" : "") +
+
+change.toFixed(2) +
+
+"% 24H";
+
+
+changeElement.classList.remove(
+"positive",
+"negative"
+);
+
+
+changeElement.classList.add(
+
+change >= 0
+? "positive"
+: "negative"
+
+);
+
+
+document.getElementById("marketCap")
+.innerText =
+
+formatMoney(
+pair.marketCap || pair.fdv
+);
+
+
+document.getElementById("liquidity")
+.innerText =
+
+formatMoney(
+pair.liquidity?.usd
+);
+
+
+document.getElementById("volume24h")
+.innerText =
+
+formatMoney(
+pair.volume?.h24
+);
+
+
+status.innerText =
+
+"MARKET LIVE • UPDATED " +
+
+new Date().toLocaleTimeString(
+"en-US",
+{
+hour:"2-digit",
+minute:"2-digit"
+}
+);
+
+
+}
+
+catch(error){
+
+console.error(
+"RELAX MARKET:",
+error
+);
+
+
+status.innerText =
+"MARKET DATA TEMPORARILY UNAVAILABLE";
+
+
+document.getElementById("priceChange")
+.innerText =
+"JUST RELAX. RETRYING...";
+
+}
+
+}
+
+
+loadRelaxMarket();
+
+
+setInterval(
+loadRelaxMarket,
+30000
+);
+
+</script>
+
+
 </body>
 
 </html>
