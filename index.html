@@ -290,20 +290,59 @@ pointer-events:none;
 
 .logo-orbit-ring.ring-a{
 
-width:150%;
+width:124%;
 
-height:150%;
+height:124%;
 
 transform:translate(-50%,-50%);
 
-border:1px solid rgba(130,150,220,.2);
+border:1px solid rgba(130,150,220,.22);
+
+}
+
+
+.logo-orbit-ring.ring-b{
+
+width:142%;
+
+height:142%;
+
+transform:translate(-50%,-50%);
+
+border:1px solid rgba(153,69,255,.17);
+
+}
+
+
+.logo-orbit-motion{
+
+position:absolute;
+
+top:50%;
+
+left:50%;
+
+border-radius:50%;
+
+pointer-events:none;
+
+}
+
+
+.logo-orbit-motion.motion-a{
+
+width:124%;
+
+height:124%;
+
+transform:translate(-50%,-50%);
 
 animation:orbitSpin 9s linear infinite;
 
 }
 
 
-.logo-orbit-ring.ring-a::before{
+.logo-orbit-motion.motion-a::before{
 
 content:"";
 
@@ -328,22 +367,20 @@ box-shadow:0 0 9px 2px rgba(91,124,255,.85);
 }
 
 
-.logo-orbit-ring.ring-b{
+.logo-orbit-motion.motion-b{
 
-width:215%;
+width:142%;
 
-height:215%;
+height:142%;
 
 transform:translate(-50%,-50%);
-
-border:1px solid rgba(153,69,255,.16);
 
 animation:orbitSpin 15s linear infinite reverse;
 
 }
 
 
-.logo-orbit-ring.ring-b::before{
+.logo-orbit-motion.motion-b::before{
 
 content:"";
 
@@ -707,9 +744,11 @@ z-index:-6;
 
 filter:
 
-brightness(.72)
+brightness(.88)
 
-saturate(1.08);
+saturate(1.18)
+
+contrast(1.05);
 
 }
 
@@ -1343,6 +1382,10 @@ display:none;
 
 <div class="logo-orbit-ring ring-b"></div>
 
+<div class="logo-orbit-motion motion-a"></div>
+
+<div class="logo-orbit-motion motion-b"></div>
+
 </div>
 
 <strong>RELAX</strong>
@@ -1450,6 +1493,10 @@ poster="Market.png"
 
 <div class="hero-overlay"></div>
 
+<div class="edge-fade edge-fade-top" id="heroFadeTop"></div>
+
+<div class="edge-fade edge-fade-bottom" id="heroFadeBottom"></div>
+
 <div class="shooting-star"></div>
 
 
@@ -1476,6 +1523,10 @@ class="hero-logo"
 <div class="logo-orbit-ring ring-a"></div>
 
 <div class="logo-orbit-ring ring-b"></div>
+
+<div class="logo-orbit-motion motion-a"></div>
+
+<div class="logo-orbit-motion motion-b"></div>
 
 </div>
 
@@ -5510,6 +5561,10 @@ type="video/mp4"
 
 <div class="final-overlay"></div>
 
+<div class="edge-fade edge-fade-top" id="finalFadeTop"></div>
+
+<div class="edge-fade edge-fade-bottom" id="finalFadeBottom"></div>
+
 
 <div class="final-content reveal">
 
@@ -6022,6 +6077,74 @@ linear-gradient(
 transparent 35%,
 rgba(5,7,19,.55)
 );
+
+}
+
+
+/* =========================
+SOFT EDGE FADE (video ↔ starfield blend)
+========================= */
+
+.edge-fade{
+
+position:absolute;
+
+left:0;
+
+right:0;
+
+z-index:1;
+
+height:min(220px,26vh);
+
+pointer-events:none;
+
+overflow:hidden;
+
+}
+
+
+.edge-fade-top{
+
+top:0;
+
+background:linear-gradient(
+
+180deg,
+
+#050713 0%,
+
+rgba(5,7,19,.65) 45%,
+
+transparent 100%
+
+);
+
+}
+
+
+.edge-fade-bottom{
+
+bottom:0;
+
+background:linear-gradient(
+
+0deg,
+
+#050713 0%,
+
+rgba(5,7,19,.65) 45%,
+
+transparent 100%
+
+);
+
+}
+
+
+.edge-fade .generated-star{
+
+animation-name:starPulse;
 
 }
 
@@ -7433,6 +7556,67 @@ Math.random() * 12000
 }
 
 }
+
+
+/* =========================
+EDGE FADE SPARSE STARS
+========================= */
+
+[
+"heroFadeTop",
+"heroFadeBottom",
+"finalFadeTop",
+"finalFadeBottom"
+].forEach(id=>{
+
+const fadeZone =
+document.getElementById(id);
+
+if(!fadeZone) return;
+
+const count = 5;
+
+for(
+let i = 0;
+i < count;
+i++
+){
+
+const star =
+document.createElement("span");
+
+star.className =
+"generated-star";
+
+const size =
+Math.random() * 1.6 + .4;
+
+star.style.width =
+size + "px";
+
+star.style.height =
+size + "px";
+
+star.style.left =
+Math.random() * 100 + "%";
+
+star.style.top =
+Math.random() * 100 + "%";
+
+star.style.opacity =
+Math.random() * .25 + .08;
+
+star.style.animationDuration =
+Math.random() * 6 + 4 + "s";
+
+star.style.animationDelay =
+Math.random() * 5 + "s";
+
+fadeZone.appendChild(star);
+
+}
+
+});
 
 
 /* =========================
