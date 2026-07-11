@@ -7611,3 +7611,55 @@ transition-duration:
 </body>
 
 </html>
+
+<!-- RELAX V3 SCROLL FIX -->
+
+<style>
+
+html{
+overflow-x:hidden !important;
+overflow-y:auto !important;
+height:auto !important;
+}
+
+body{
+overflow-x:hidden !important;
+overflow-y:auto !important;
+height:auto !important;
+min-height:100vh;
+touch-action:pan-y !important;
+}
+
+.stars,
+.shooting-stars,
+.dust,
+.mouse-glow,
+.cursor,
+.cursor-dot,
+.hero-overlay,
+.final-overlay{
+pointer-events:none !important;
+}
+
+body.loaded{
+overflow-y:auto !important;
+}
+
+@media(max-width:768px){
+
+html,
+body{
+overflow-y:auto !important;
+-webkit-overflow-scrolling:touch;
+touch-action:pan-y !important;
+}
+
+.cursor,
+.cursor-dot,
+.mouse-glow{
+display:none !important;
+}
+
+}
+
+</style>
