@@ -8193,3 +8193,318 @@ animation-duration:20s;
 }
 
 </style>
+
+<!-- =========================
+RELAX V3 HARD VISUAL FIX
+========================= -->
+
+<style>
+
+/* FULL WIDTH TOP NAV */
+
+.navbar{
+width:auto !important;
+max-width:none !important;
+left:24px !important;
+right:24px !important;
+transform:none !important;
+margin:0 !important;
+}
+
+
+/* ALL RELAX LOGOS — FLOAT ONLY */
+
+.loader img,
+.hero-logo,
+.creator-coin img,
+.core-coin img,
+.footer-logo-line img,
+.navbar img{
+animation:relaxPureFloat 5s ease-in-out infinite !important;
+transform-origin:center center !important;
+}
+
+
+@keyframes relaxPureFloat{
+
+0%,100%{
+transform:translate3d(0,0,0) rotate(0deg) !important;
+}
+
+50%{
+transform:translate3d(0,-14px,0) rotate(0deg) !important;
+}
+
+}
+
+
+/* REAL STAR LAYER */
+
+#relax-fixed-stars{
+position:fixed;
+inset:0;
+z-index:0;
+pointer-events:none;
+overflow:hidden;
+}
+
+.relax-fixed-star{
+position:absolute;
+border-radius:50%;
+background:#fff;
+animation:relaxStarBlink var(--speed) ease-in-out infinite;
+box-shadow:
+0 0 5px #fff,
+0 0 12px rgba(91,124,255,.8);
+}
+
+@keyframes relaxStarBlink{
+
+0%,100%{
+opacity:.15;
+transform:scale(.7);
+}
+
+50%{
+opacity:1;
+transform:scale(1.5);
+}
+
+}
+
+
+/* KEEP CONTENT ABOVE STARS */
+
+header,
+section,
+footer,
+.navbar{
+position:relative;
+z-index:2;
+}
+
+
+/* ORBIT PLANETS */
+
+.relax-orbit-system{
+position:absolute;
+width:360px;
+height:360px;
+pointer-events:none;
+z-index:0;
+opacity:.8;
+}
+
+.relax-orbit-system::before{
+content:"";
+position:absolute;
+inset:0;
+border-radius:50%;
+border:1px solid rgba(91,124,255,.12);
+}
+
+.relax-planet{
+position:absolute;
+top:50%;
+left:50%;
+width:14px;
+height:14px;
+margin:-7px;
+border-radius:50%;
+background:linear-gradient(
+135deg,
+#14F195,
+#5B7CFF,
+#9945FF
+);
+box-shadow:
+0 0 15px #14F195,
+0 0 35px rgba(153,69,255,.7);
+animation:relaxPlanetOrbit 13s linear infinite;
+}
+
+.relax-planet.small{
+width:7px;
+height:7px;
+margin:-3.5px;
+animation-duration:19s;
+animation-direction:reverse;
+}
+
+@keyframes relaxPlanetOrbit{
+
+from{
+transform:rotate(0deg) translateX(180px) rotate(0deg);
+}
+
+to{
+transform:rotate(360deg) translateX(180px) rotate(-360deg);
+}
+
+}
+
+
+.core-head,
+.roadmap-head,
+.faq-head{
+z-index:1;
+}
+
+
+/* MOBILE */
+
+@media(max-width:768px){
+
+.navbar{
+left:10px !important;
+right:10px !important;
+}
+
+.relax-orbit-system{
+width:240px;
+height:240px;
+opacity:.55;
+}
+
+@keyframes relaxPlanetOrbit{
+
+from{
+transform:rotate(0deg) translateX(120px) rotate(0deg);
+}
+
+to{
+transform:rotate(360deg) translateX(120px) rotate(-360deg);
+}
+
+}
+
+}
+
+</style>
+
+
+<script>
+
+(function(){
+
+/* REMOVE OLD ROTATION FROM ALL LOGOS */
+
+const relaxLogoSelectors = [
+".loader img",
+".hero-logo",
+".creator-coin img",
+".core-coin img",
+".footer-logo-line img",
+".navbar img"
+];
+
+document
+.querySelectorAll(relaxLogoSelectors.join(","))
+.forEach(function(logo){
+
+logo.style.animation =
+"relaxPureFloat 5s ease-in-out infinite";
+
+logo.style.transform =
+"rotate(0deg)";
+
+});
+
+
+/* CREATE REAL STAR FIELD */
+
+if(!document.getElementById("relax-fixed-stars")){
+
+const field =
+document.createElement("div");
+
+field.id =
+"relax-fixed-stars";
+
+document.body.prepend(field);
+
+
+const count =
+window.innerWidth < 768 ? 70 : 160;
+
+
+for(let i = 0; i < count; i++){
+
+const star =
+document.createElement("span");
+
+star.className =
+"relax-fixed-star";
+
+const size =
+Math.random() * 2.2 + .5;
+
+star.style.width =
+size + "px";
+
+star.style.height =
+size + "px";
+
+star.style.left =
+Math.random() * 100 + "%";
+
+star.style.top =
+Math.random() * 100 + "%";
+
+star.style.setProperty(
+"--speed",
+(Math.random() * 5 + 3) + "s"
+);
+
+star.style.animationDelay =
+(Math.random() * -8) + "s";
+
+field.appendChild(star);
+
+}
+
+}
+
+
+/* CREATE ORBIT SYSTEMS */
+
+[
+".core-head",
+".roadmap-head",
+".faq-head"
+]
+.forEach(function(selector){
+
+const target =
+document.querySelector(selector);
+
+if(!target) return;
+
+if(
+target.querySelector(".relax-orbit-system")
+) return;
+
+
+const orbit =
+document.createElement("div");
+
+orbit.className =
+"relax-orbit-system";
+
+orbit.innerHTML =
+'<span class="relax-planet"></span>' +
+'<span class="relax-planet small"></span>';
+
+orbit.style.top =
+"-80px";
+
+orbit.style.right =
+"-40px";
+
+target.prepend(orbit);
+
+});
+
+})();
+
+</script>
