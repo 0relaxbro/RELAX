@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 
 <head>
@@ -10,11 +11,13 @@ name="viewport"
 content="width=device-width, initial-scale=1.0"
 >
 
-<title>RELAX | Just RELAX Bro.</title>
+<title>
+RELAX | Just RELAX Bro.
+</title>
 
 <meta
 name="description"
-content="0 Fear. 0 Panic. 0 Regrets. Just RELAX Bro."
+content="0 Fear. 0 Panic. 0 Regrets. Just RELAX Bro. A Solana meme born inside market chaos."
 >
 
 <meta
@@ -29,7 +32,7 @@ content="RELAX | Just RELAX Bro."
 
 <meta
 property="og:description"
-content="The world panics. RELAX remains calm."
+content="The world panics. Markets panic. RELAX doesn't."
 >
 
 <meta
@@ -69,6 +72,7 @@ content="logo.png"
 
 <link
 rel="icon"
+type="image/png"
 href="logo.png"
 >
 
@@ -97,19 +101,15 @@ ROOT
 
 :root{
 
---bg:#050713;
+--dark:#050713;
 
---bg-soft:#080B18;
+--dark-soft:#080B18;
 
 --panel:#0D1225;
 
---panel-soft:#10172E;
+--text:#FFFFFF;
 
---white:#FFFFFF;
-
---text:#E9ECF5;
-
---muted:#939DB4;
+--muted:#98A2B8;
 
 --green:#14F195;
 
@@ -119,9 +119,9 @@ ROOT
 
 --danger:#FF5F87;
 
---orbitron:'Orbitron',sans-serif;
+--orbitron:"Orbitron",sans-serif;
 
---inter:'Inter',Arial,sans-serif;
+--inter:"Inter",sans-serif;
 
 }
 
@@ -145,9 +145,7 @@ html{
 
 scroll-behavior:smooth;
 
-overflow-x:hidden;
-
-overflow-y:auto;
+background:var(--dark);
 
 }
 
@@ -158,23 +156,33 @@ min-height:100vh;
 
 overflow-x:hidden;
 
-overflow-y:auto;
-
-background:var(--bg);
+background:var(--dark);
 
 color:var(--text);
 
 font-family:var(--inter);
 
--webkit-font-smoothing:antialiased;
+}
 
-touch-action:pan-y;
+
+body.menu-open{
+
+overflow:hidden;
 
 }
 
 
 button,
 a{
+
+-webkit-tap-highlight-color:transparent;
+
+}
+
+
+button{
+
+border:0;
 
 font:inherit;
 
@@ -188,44 +196,24 @@ color:inherit;
 }
 
 
-button{
-
-border:0;
-
-}
-
-
 img{
-
-display:block;
 
 max-width:100%;
 
 }
 
 
-::selection{
-
-background:var(--green);
-
-color:var(--bg);
-
-}
-
-
 /* =========================
-GLOBAL SPACE BACKGROUND
+GLOBAL BACKGROUND
 ========================= */
 
-#spaceField{
+.site-background{
 
 position:fixed;
 
 inset:0;
 
 z-index:0;
-
-overflow:hidden;
 
 pointer-events:none;
 
@@ -238,7 +226,7 @@ transparent 30%
 ),
 
 radial-gradient(
-circle at 80% 60%,
+circle at 80% 70%,
 rgba(153,69,255,.08),
 transparent 35%
 ),
@@ -248,145 +236,35 @@ transparent 35%
 }
 
 
-.space-star{
+.star-field{
 
-position:absolute;
+position:fixed;
 
-display:block;
+inset:0;
 
-border-radius:50%;
+z-index:1;
 
-background:white;
+overflow:hidden;
 
-box-shadow:
-
-0 0 5px rgba(255,255,255,.9),
-
-0 0 12px rgba(91,124,255,.55);
-
-animation:
-starTwinkle var(--star-speed)
-ease-in-out infinite;
+pointer-events:none;
 
 }
 
 
-@keyframes starTwinkle{
+.shooting-stars{
 
-0%,
-100%{
+position:fixed;
 
-opacity:.15;
-
-transform:scale(.65);
-
-}
-
-50%{
-
-opacity:1;
-
-transform:scale(1.5);
-
-}
-
-}
-
-
-.shooting-star{
-
-position:absolute;
-
-width:160px;
-
-height:1px;
-
-background:
-
-linear-gradient(
-90deg,
-transparent,
-rgba(255,255,255,.95)
-);
-
-filter:
-
-drop-shadow(
-0 0 7px rgba(91,124,255,.9)
-);
-
-transform:rotate(-35deg);
-
-animation:
-shootingStar 1.8s linear forwards;
-
-}
-
-
-@keyframes shootingStar{
-
-0%{
-
-opacity:0;
-
-transform:
-
-translate3d(0,0,0)
-
-rotate(-35deg);
-
-}
-
-10%{
-
-opacity:1;
-
-}
-
-100%{
-
-opacity:0;
-
-transform:
-
-translate3d(
-600px,
-600px,
-0
-)
-
-rotate(-35deg);
-
-}
-
-}
-
-
-/* =========================
-PAGE LAYERS
-========================= */
-
-.page-shell{
-
-position:relative;
+inset:0;
 
 z-index:2;
 
-}
+overflow:hidden;
 
-
-section{
-
-position:relative;
-
-isolation:isolate;
+pointer-events:none;
 
 }
 
-
-/* =========================
-MOUSE GLOW
-========================= */
 
 .mouse-glow{
 
@@ -396,13 +274,11 @@ top:0;
 
 left:0;
 
+z-index:3;
+
 width:500px;
 
 height:500px;
-
-z-index:1;
-
-pointer-events:none;
 
 border-radius:50%;
 
@@ -410,14 +286,26 @@ background:
 
 radial-gradient(
 circle,
-rgba(91,124,255,.12),
-rgba(153,69,255,.05) 35%,
-transparent 70%
+rgba(91,124,255,.08),
+transparent 65%
 );
 
-filter:blur(10px);
+transform:translate(-50%,-50%);
+
+pointer-events:none;
 
 will-change:transform;
+
+}
+
+
+main,
+header,
+footer{
+
+position:relative;
+
+z-index:5;
 
 }
 
@@ -432,7 +320,7 @@ position:fixed;
 
 inset:0;
 
-z-index:99999;
+z-index:9999;
 
 display:flex;
 
@@ -440,24 +328,7 @@ align-items:center;
 
 justify-content:center;
 
-background:#03040B;
-
-transition:
-
-opacity .8s ease,
-
-visibility .8s ease;
-
-}
-
-
-.loader.hidden{
-
-opacity:0;
-
-visibility:hidden;
-
-pointer-events:none;
+background:#03050D;
 
 }
 
@@ -470,9 +341,7 @@ flex-direction:column;
 
 align-items:center;
 
-justify-content:center;
-
-text-align:center;
+gap:30px;
 
 }
 
@@ -483,83 +352,61 @@ width:130px;
 
 height:130px;
 
-object-fit:cover;
-
 border-radius:50%;
 
-animation:
+object-fit:cover;
 
-logoFloat 4.8s ease-in-out infinite;
+/* IMPORTANT:
+NO ROTATION
+NO FLOAT
+*/
+
+animation:none !important;
+
+transform:none !important;
 
 filter:
 
 drop-shadow(
-0 0 30px rgba(91,124,255,.45)
+0 0 35px rgba(91,124,255,.35)
 );
 
 }
 
 
-.loader-title{
-
-margin-top:28px;
+.loader-text{
 
 font-family:var(--orbitron);
 
-font-size:clamp(28px,5vw,55px);
+font-size:11px;
 
-font-weight:900;
+font-weight:800;
 
-letter-spacing:8px;
+letter-spacing:7px;
 
-}
-
-
-.loader-signal{
-
-margin-top:18px;
-
-font-family:var(--orbitron);
-
-font-size:9px;
-
-font-weight:700;
-
-letter-spacing:5px;
-
-color:var(--green);
+color:#8E99AF;
 
 }
 
 
 .loader-line{
 
-position:relative;
-
 width:220px;
 
-height:1px;
-
-margin-top:30px;
+height:2px;
 
 overflow:hidden;
 
-background:rgba(255,255,255,.1);
+background:rgba(255,255,255,.07);
 
 }
 
 
-.loader-line::after{
+.loader-line span{
 
-content:"";
+display:block;
 
-position:absolute;
-
-top:0;
-
-left:-50%;
-
-width:50%;
+width:40%;
 
 height:100%;
 
@@ -567,13 +414,12 @@ background:
 
 linear-gradient(
 90deg,
-transparent,
 var(--green),
+var(--blue),
 var(--purple)
 );
 
-animation:
-loaderSignal 1.5s ease-in-out infinite;
+animation:loaderSignal 1.3s ease-in-out infinite;
 
 }
 
@@ -582,935 +428,18 @@ loaderSignal 1.5s ease-in-out infinite;
 
 0%{
 
-left:-50%;
+transform:translateX(-110%);
 
 }
 
 100%{
 
-left:110%;
+transform:translateX(360%);
 
 }
 
 }
 
-
-/* =========================
-THE ONLY LOGO ANIMATION
-NO ROTATION
-========================= */
-
-@keyframes logoFloat{
-
-0%,
-100%{
-
-transform:
-translate3d(0,0,0);
-
-}
-
-50%{
-
-transform:
-translate3d(0,-14px,0);
-
-}
-
-}
-
-
-.relax-logo{
-
-animation:
-
-logoFloat 5s ease-in-out infinite;
-
-transform-origin:center center;
-
-}
-
-
-/* =========================
-ORBIT SYSTEM
-========================= */
-
-.orbit-zone{
-
-position:absolute;
-
-width:420px;
-
-height:420px;
-
-pointer-events:none;
-
-z-index:-1;
-
-}
-
-
-.orbit-ring{
-
-position:absolute;
-
-inset:0;
-
-border-radius:50%;
-
-border:
-
-1px solid rgba(91,124,255,.10);
-
-transform:rotate(-18deg);
-
-}
-
-
-.orbit-ring.second{
-
-inset:70px;
-
-border-color:
-
-rgba(20,241,149,.08);
-
-transform:rotate(35deg);
-
-}
-
-
-.orbit-traveler{
-
-position:absolute;
-
-top:50%;
-
-left:50%;
-
-width:15px;
-
-height:15px;
-
-margin:-7.5px;
-
-border-radius:50%;
-
-background:
-
-linear-gradient(
-135deg,
-var(--green),
-var(--blue),
-var(--purple)
-);
-
-box-shadow:
-
-0 0 15px rgba(20,241,149,.9),
-
-0 0 40px rgba(91,124,255,.6);
-
-animation:
-
-travelerOrbit 13s linear infinite;
-
-}
-
-
-.orbit-traveler.second{
-
-width:8px;
-
-height:8px;
-
-margin:-4px;
-
-background:var(--purple);
-
-box-shadow:
-
-0 0 14px var(--purple),
-
-0 0 30px rgba(153,69,255,.7);
-
-animation:
-
-travelerOrbitSmall 18s linear infinite reverse;
-
-}
-
-
-@keyframes travelerOrbit{
-
-from{
-
-transform:
-
-rotate(0deg)
-
-translateX(210px)
-
-rotate(0deg);
-
-}
-
-to{
-
-transform:
-
-rotate(360deg)
-
-translateX(210px)
-
-rotate(-360deg);
-
-}
-
-}
-
-
-@keyframes travelerOrbitSmall{
-
-from{
-
-transform:
-
-rotate(0deg)
-
-translateX(140px)
-
-rotate(0deg);
-
-}
-
-to{
-
-transform:
-
-rotate(360deg)
-
-translateX(140px)
-
-rotate(-360deg);
-
-}
-
-}
-
-
-/* =========================
-COMMON TYPOGRAPHY
-========================= */
-
-.section-label{
-
-display:inline-flex;
-
-align-items:center;
-
-gap:12px;
-
-font-family:var(--orbitron);
-
-font-size:9px;
-
-font-weight:800;
-
-letter-spacing:5px;
-
-color:var(--green);
-
-}
-
-
-.section-label::before{
-
-content:"";
-
-width:38px;
-
-height:1px;
-
-background:
-
-linear-gradient(
-90deg,
-var(--green),
-var(--purple)
-);
-
-}
-
-
-.gradient-text{
-
-background:
-
-linear-gradient(
-90deg,
-var(--green),
-var(--blue),
-var(--purple)
-);
-
--webkit-background-clip:text;
-
-background-clip:text;
-
-color:transparent;
-
-}
-
-
-.section-title{
-
-margin-top:30px;
-
-font-family:var(--orbitron);
-
-font-size:clamp(45px,7vw,105px);
-
-font-weight:900;
-
-line-height:.95;
-
-letter-spacing:-2px;
-
-}
-
-
-.section-copy{
-
-max-width:680px;
-
-margin-top:35px;
-
-font-size:18px;
-
-line-height:1.9;
-
-color:var(--muted);
-
-}
-
-
-/* =========================
-BUTTONS
-========================= */
-
-.relax-button{
-
-position:relative;
-
-display:inline-flex;
-
-align-items:center;
-
-justify-content:center;
-
-min-height:54px;
-
-padding:0 27px;
-
-overflow:hidden;
-
-border:
-
-1px solid rgba(255,255,255,.13);
-
-border-radius:12px;
-
-background:
-
-rgba(12,17,36,.68);
-
-color:white;
-
-font-family:var(--orbitron);
-
-font-size:9px;
-
-font-weight:800;
-
-letter-spacing:2px;
-
-text-decoration:none;
-
-backdrop-filter:blur(18px);
-
--webkit-backdrop-filter:blur(18px);
-
-transition:
-
-transform .35s ease,
-
-border-color .35s ease,
-
-box-shadow .35s ease,
-
-background .35s ease;
-
-}
-
-
-.relax-button:hover{
-
-transform:translateY(-5px);
-
-border-color:
-
-rgba(20,241,149,.55);
-
-box-shadow:
-
-0 15px 45px rgba(20,241,149,.10);
-
-}
-
-
-.relax-button.primary{
-
-border-color:transparent;
-
-background:
-
-linear-gradient(
-100deg,
-var(--green),
-var(--blue),
-var(--purple)
-);
-
-color:#050713;
-
-}
-
-
-.relax-button.primary:hover{
-
-box-shadow:
-
-0 15px 50px rgba(91,124,255,.28);
-
-}
-
-
-/* =========================
-SCROLL REVEAL
-========================= */
-
-.reveal{
-
-opacity:0;
-
-transform:translateY(45px);
-
-transition:
-
-opacity .9s ease,
-
-transform .9s ease;
-
-}
-
-
-.reveal.active{
-
-opacity:1;
-
-transform:translateY(0);
-
-}
-
-
-/* =========================
-MOBILE GLOBAL
-========================= */
-
-@media(max-width:768px){
-
-.mouse-glow{
-
-display:none;
-
-}
-
-
-.orbit-zone{
-
-width:250px;
-
-height:250px;
-
-opacity:.7;
-
-}
-
-
-@keyframes travelerOrbit{
-
-from{
-
-transform:
-
-rotate(0deg)
-
-translateX(125px)
-
-rotate(0deg);
-
-}
-
-to{
-
-transform:
-
-rotate(360deg)
-
-translateX(125px)
-
-rotate(-360deg);
-
-}
-
-}
-
-
-@keyframes travelerOrbitSmall{
-
-from{
-
-transform:
-
-rotate(0deg)
-
-translateX(82px)
-
-rotate(0deg);
-
-}
-
-to{
-
-transform:
-
-rotate(360deg)
-
-translateX(82px)
-
-rotate(-360deg);
-
-}
-
-}
-
-
-.section-title{
-
-letter-spacing:-1px;
-
-}
-
-
-.section-copy{
-
-font-size:16px;
-
-}
-
-}
-
-
-/* =========================
-REDUCED MOTION
-========================= */
-
-@media(prefers-reduced-motion:reduce){
-
-html{
-
-scroll-behavior:auto;
-
-}
-
-
-*,
-*::before,
-*::after{
-
-animation-duration:.01ms !important;
-
-animation-iteration-count:1 !important;
-
-transition-duration:.01ms !important;
-
-}
-
-}
-
-</style>
-
-</head>
-
-
-<body>
-
-
-<!-- =========================
-LOADING SCREEN
-========================= -->
-
-<div
-class="loader"
-id="loader"
->
-
-<div class="loader-inner">
-
-<img
-src="logo.png"
-alt="RELAX"
-class="loader-logo"
->
-
-<div class="loader-title">
-
-RELAX
-
-</div>
-
-<div class="loader-signal">
-
-THE WORLD PANICS. WE RELAX.
-
-</div>
-
-<div class="loader-line"></div>
-
-</div>
-
-</div>
-
-
-<!-- =========================
-GLOBAL SPACE
-========================= -->
-
-<div id="spaceField"></div>
-
-<div
-class="mouse-glow"
-id="mouseGlow"
-></div>
-
-
-<!-- =========================
-PAGE
-========================= -->
-
-<div class="page-shell">
-
-<!-- =========================
-NAVBAR
-========================= -->
-
-<nav
-class="navbar"
-id="navbar"
->
-
-<a
-href="#home"
-class="nav-brand"
-aria-label="RELAX Home"
->
-
-<img
-src="logo.png"
-alt="RELAX Logo"
-class="nav-logo relax-logo"
->
-
-<span>
-RELAX
-</span>
-
-</a>
-
-
-<div class="nav-links">
-
-<a href="#story">
-STORY
-</a>
-
-<a href="#philosophy">
-PHILOSOPHY
-</a>
-
-<a href="#market">
-MARKET
-</a>
-
-<a href="#token">
-TOKEN
-</a>
-
-<a href="#roadmap">
-ROADMAP
-</a>
-
-<a href="#faq">
-FAQ
-</a>
-
-</div>
-
-
-<div class="nav-actions">
-
-<a
-href="https://github.com/0relaxbro/RELAX"
-target="_blank"
-rel="noopener noreferrer"
-class="nav-source"
->
-
-SOURCE
-
-</a>
-
-
-<a
-href="https://pump.fun/coin/6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump"
-target="_blank"
-rel="noopener noreferrer"
-class="nav-buy"
->
-
-BUY RELAX
-
-</a>
-
-</div>
-
-
-<button
-class="menu-toggle"
-id="menuToggle"
-type="button"
-aria-label="Open navigation"
->
-
-<span></span>
-<span></span>
-<span></span>
-
-</button>
-
-</nav>
-
-
-
-<!-- =========================
-HERO
-========================= -->
-
-<header
-class="hero"
-id="home"
->
-
-
-<div class="hero-video-fallback"></div>
-
-
-<video
-class="hero-video"
-autoplay
-muted
-loop
-playsinline
-preload="metadata"
-poster="Market.png"
->
-
-<source
-src="RELAX-BG.mp4"
-type="video/mp4"
->
-
-</video>
-
-
-<div class="hero-overlay"></div>
-
-<div class="hero-fog hero-fog-one"></div>
-
-<div class="hero-fog hero-fog-two"></div>
-
-
-<div
-class="orbit-zone hero-orbit"
-aria-hidden="true"
->
-
-<div class="orbit-ring"></div>
-
-<div class="orbit-ring second"></div>
-
-<span class="orbit-traveler"></span>
-
-<span class="orbit-traveler second"></span>
-
-</div>
-
-
-<div class="hero-content">
-
-
-<div class="hero-status reveal">
-
-<span class="status-dot"></span>
-
-LIVE ON SOLANA
-
-</div>
-
-
-<div class="hero-brand reveal">
-
-<img
-src="logo.png"
-alt="RELAX"
-class="hero-logo relax-logo"
->
-
-
-<h1>
-
-RELAX
-
-</h1>
-
-</div>
-
-
-<p class="hero-tagline reveal">
-
-0 FEAR.
-<span>0 PANIC.</span>
-0 REGRETS.
-
-</p>
-
-
-<p class="hero-copy reveal">
-
-The world is loud.
-
-Markets move fast.
-
-Crowds chase green candles and run from red ones.
-
-<strong>
-RELAX stays calm.
-</strong>
-
-</p>
-
-
-<div class="hero-actions reveal">
-
-
-<a
-href="https://pump.fun/coin/6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump"
-target="_blank"
-rel="noopener noreferrer"
-class="relax-button primary"
->
-
-BUY RELAX
-
-</a>
-
-
-<a
-href="https://dexscreener.com/solana/5ztferjiljz3u4kzkwmguyujxcwkpagzfqwwyja7yzx3"
-target="_blank"
-rel="noopener noreferrer"
-class="relax-button"
->
-
-DEXSCREENER
-
-</a>
-
-
-<a
-href="https://x.com/0relaxbro"
-target="_blank"
-rel="noopener noreferrer"
-class="relax-button"
->
-
-X COMMUNITY
-
-</a>
-
-
-</div>
-
-
-<div class="hero-contract reveal">
-
-<div>
-
-<span>
-OFFICIAL CONTRACT
-</span>
-
-<code>
-6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump
-</code>
-
-</div>
-
-
-<button
-type="button"
-id="copyContract"
->
-
-<span id="copyText">
-COPY
-</span>
-
-</button>
-
-</div>
-
-
-</div>
-
-
-<div class="scroll-signal">
-
-<span>
-SCROLL TO RELAX
-</span>
-
-<div class="scroll-line"></div>
-
-</div>
-
-
-</header>
-
-
-
-<style>
 
 /* =========================
 NAVBAR
@@ -1522,13 +451,17 @@ position:fixed;
 
 top:18px;
 
-left:24px;
+left:2%;
 
-right:24px;
+right:2%;
 
-z-index:9000;
+z-index:1000;
+
+width:96%;
 
 min-height:72px;
+
+margin:auto;
 
 display:flex;
 
@@ -1538,25 +471,21 @@ justify-content:space-between;
 
 gap:30px;
 
-padding:0 20px;
+padding:0 28px;
 
 border:
 
-1px solid rgba(255,255,255,.10);
+1px solid rgba(255,255,255,.08);
 
 border-radius:18px;
 
 background:
 
-rgba(5,7,19,.58);
+rgba(5,7,19,.55);
 
-box-shadow:
+backdrop-filter:blur(20px);
 
-0 20px 60px rgba(0,0,0,.18);
-
-backdrop-filter:blur(24px);
-
--webkit-backdrop-filter:blur(24px);
+-webkit-backdrop-filter:blur(20px);
 
 transition:
 
@@ -1569,23 +498,6 @@ box-shadow .35s ease;
 }
 
 
-.navbar.scrolled{
-
-background:
-
-rgba(5,7,19,.88);
-
-border-color:
-
-rgba(91,124,255,.22);
-
-box-shadow:
-
-0 20px 60px rgba(0,0,0,.35);
-
-}
-
-
 .nav-brand{
 
 display:flex;
@@ -1594,10 +506,6 @@ align-items:center;
 
 gap:13px;
 
-flex-shrink:0;
-
-color:white;
-
 text-decoration:none;
 
 }
@@ -1605,32 +513,34 @@ text-decoration:none;
 
 .nav-logo{
 
-width:42px;
+width:46px;
 
-height:42px;
+height:46px;
 
 border-radius:50%;
 
 object-fit:cover;
 
-filter:
+/* NAV LOGO ABSOLUTELY STATIC */
 
-drop-shadow(
-0 0 15px rgba(91,124,255,.35)
-);
+animation:none !important;
+
+transform:none !important;
+
+transition:none !important;
 
 }
 
 
-.nav-brand span{
+.nav-brand strong{
 
 font-family:var(--orbitron);
 
-font-size:18px;
+font-size:19px;
 
 font-weight:900;
 
-letter-spacing:4px;
+letter-spacing:3px;
 
 }
 
@@ -1643,14 +553,12 @@ align-items:center;
 
 justify-content:center;
 
-gap:clamp(18px,2.5vw,42px);
+gap:28px;
 
 }
 
 
-.nav-links a,
-
-.nav-source{
+.nav-links a{
 
 position:relative;
 
@@ -1662,7 +570,7 @@ font-weight:800;
 
 letter-spacing:2px;
 
-color:#9DA6BB;
+color:#A3ACC0;
 
 text-decoration:none;
 
@@ -1679,9 +587,9 @@ position:absolute;
 
 left:0;
 
-bottom:-9px;
+right:100%;
 
-width:0;
+bottom:-9px;
 
 height:1px;
 
@@ -1693,7 +601,7 @@ var(--green),
 var(--purple)
 );
 
-transition:width .3s ease;
+transition:right .3s ease;
 
 }
 
@@ -1707,7 +615,7 @@ color:white;
 
 .nav-links a:hover::after{
 
-width:100%;
+right:0;
 
 }
 
@@ -1718,38 +626,29 @@ display:flex;
 
 align-items:center;
 
-gap:18px;
-
-flex-shrink:0;
-
-}
-
-
-.nav-source:hover{
-
-color:var(--green);
+gap:12px;
 
 }
 
 
 .nav-buy{
 
-display:flex;
+min-height:42px;
+
+display:inline-flex;
 
 align-items:center;
 
 justify-content:center;
 
-min-height:42px;
-
-padding:0 19px;
+padding:0 20px;
 
 border-radius:10px;
 
 background:
 
 linear-gradient(
-100deg,
+90deg,
 var(--green),
 var(--blue),
 var(--purple)
@@ -1778,11 +677,11 @@ box-shadow .3s ease;
 
 .nav-buy:hover{
 
-transform:translateY(-3px);
+transform:translateY(-2px);
 
 box-shadow:
 
-0 12px 35px rgba(91,124,255,.28);
+0 0 30px rgba(91,124,255,.25);
 
 }
 
@@ -1801,7 +700,7 @@ justify-content:center;
 
 flex-direction:column;
 
-gap:5px;
+gap:6px;
 
 border-radius:10px;
 
@@ -1831,16 +730,15 @@ opacity .3s ease;
 }
 
 
-
 /* =========================
-HERO
+CINEMATIC HERO
 ========================= */
 
 .hero{
 
 position:relative;
 
-min-height:100vh;
+min-height:100svh;
 
 display:flex;
 
@@ -1848,87 +746,55 @@ align-items:center;
 
 overflow:hidden;
 
-padding:
-
-150px max(7vw,40px)
-
-100px;
-
-}
-
-
-.hero-video-fallback,
-
-.hero-video{
-
-position:absolute;
-
-inset:-3%;
-
-width:106%;
-
-height:106%;
-
-}
-
-
-.hero-video-fallback{
-
-z-index:-8;
-
-background-image:
-
-url("Market.png");
-
-background-size:cover;
-
-background-position:center;
+background:#050713;
 
 }
 
 
 .hero-video{
-
-z-index:-7;
-
-object-fit:cover;
-
-filter:
-
-brightness(.58)
-
-saturate(.9)
-
-contrast(1.08);
-
-}
-
-
-.hero-overlay{
 
 position:absolute;
 
 inset:0;
 
-z-index:-6;
+width:100%;
 
-pointer-events:none;
+height:100%;
+
+object-fit:cover;
+
+object-position:center;
+
+z-index:0;
+
+transform:scale(1.03);
+
+}
+
+
+.hero-video-overlay{
+
+position:absolute;
+
+inset:0;
+
+z-index:1;
 
 background:
 
 linear-gradient(
 90deg,
-rgba(5,7,19,.92) 0%,
-rgba(5,7,19,.68) 43%,
-rgba(5,7,19,.25) 72%,
-rgba(5,7,19,.52) 100%
+rgba(3,5,13,.97) 0%,
+rgba(3,5,13,.83) 38%,
+rgba(3,5,13,.36) 68%,
+rgba(3,5,13,.58) 100%
 ),
 
 linear-gradient(
-0deg,
-#050713 0%,
-transparent 28%,
-rgba(5,7,19,.35) 100%
+180deg,
+rgba(3,5,13,.28),
+rgba(3,5,13,.08) 45%,
+#050713 100%
 );
 
 }
@@ -1938,124 +804,113 @@ rgba(5,7,19,.35) 100%
 
 position:absolute;
 
-z-index:-5;
+inset:0;
+
+z-index:2;
+
+overflow:hidden;
 
 pointer-events:none;
 
-width:80vw;
+}
 
-height:280px;
+
+.hero-fog::before,
+.hero-fog::after{
+
+content:"";
+
+position:absolute;
+
+width:120%;
+
+height:45%;
+
+left:-10%;
 
 border-radius:50%;
 
 filter:blur(70px);
 
-opacity:.20;
+background:
+
+rgba(90,103,145,.10);
+
+animation:fogMove 16s ease-in-out infinite alternate;
 
 }
 
 
-.hero-fog-one{
+.hero-fog::before{
 
-left:-25%;
-
-bottom:10%;
-
-background:#5B7CFF;
-
-animation:
-
-fogMoveOne 18s ease-in-out infinite alternate;
+bottom:4%;
 
 }
 
 
-.hero-fog-two{
+.hero-fog::after{
 
-right:-30%;
+bottom:20%;
 
-top:25%;
+opacity:.5;
 
-background:#9945FF;
+animation-duration:22s;
 
-animation:
-
-fogMoveTwo 22s ease-in-out infinite alternate;
+animation-direction:alternate-reverse;
 
 }
 
 
-@keyframes fogMoveOne{
+@keyframes fogMove{
 
-from{
+0%{
 
-transform:
-translate3d(-10%,20px,0)
-scale(1);
+transform:translate3d(-5%,0,0);
 
 }
 
-to{
+100%{
 
-transform:
-translate3d(35%,-30px,0)
-scale(1.2);
+transform:translate3d(8%,-20px,0);
 
 }
 
 }
 
 
-@keyframes fogMoveTwo{
+.hero-inner{
 
-from{
+position:relative;
 
-transform:
-translate3d(20%,0,0)
-scale(1);
+z-index:10;
 
-}
+width:min(1500px,100%);
 
-to{
+margin:auto;
 
-transform:
-translate3d(-30%,50px,0)
-scale(1.25);
+padding:
 
-}
+170px max(7vw,45px)
 
-}
-
-
-.hero-orbit{
-
-right:5%;
-
-top:18%;
-
-opacity:.75;
+100px;
 
 }
 
 
 .hero-content{
 
-position:relative;
-
-z-index:10;
-
-width:min(900px,100%);
+max-width:880px;
 
 }
 
 
-.hero-status{
+.hero-kicker{
 
-display:inline-flex;
+display:flex;
 
 align-items:center;
 
-gap:12px;
+gap:14px;
 
 font-family:var(--orbitron);
 
@@ -2063,95 +918,25 @@ font-size:9px;
 
 font-weight:800;
 
-letter-spacing:4px;
+letter-spacing:5px;
 
-color:#A9B2C8;
-
-}
-
-
-.status-dot{
-
-width:8px;
-
-height:8px;
-
-border-radius:50%;
-
-background:var(--green);
-
-box-shadow:
-
-0 0 8px var(--green),
-
-0 0 22px rgba(20,241,149,.65);
-
-animation:
-
-statusPulse 2s ease-in-out infinite;
+color:#B4BED1;
 
 }
 
 
-@keyframes statusPulse{
+.hero-kicker span{
 
-0%,
-100%{
+width:45px;
 
-opacity:.45;
+height:1px;
 
-transform:scale(.8);
+background:
 
-}
-
-50%{
-
-opacity:1;
-
-transform:scale(1.2);
-
-}
-
-}
-
-
-.hero-brand{
-
-display:flex;
-
-align-items:center;
-
-gap:clamp(20px,3vw,42px);
-
-margin-top:40px;
-
-}
-
-
-.hero-logo{
-
-width:
-
-clamp(90px,11vw,160px);
-
-height:
-
-clamp(90px,11vw,160px);
-
-flex-shrink:0;
-
-border-radius:50%;
-
-object-fit:cover;
-
-filter:
-
-drop-shadow(
-0 0 25px rgba(91,124,255,.45)
-)
-
-drop-shadow(
-0 0 60px rgba(153,69,255,.18)
+linear-gradient(
+90deg,
+var(--green),
+var(--purple)
 );
 
 }
@@ -2159,21 +944,46 @@ drop-shadow(
 
 .hero h1{
 
+margin-top:40px;
+
 font-family:var(--orbitron);
 
 font-size:
 
-clamp(70px,12vw,180px);
+clamp(72px,11vw,175px);
 
 font-weight:900;
 
-line-height:.8;
+line-height:.78;
 
-letter-spacing:-5px;
+letter-spacing:-7px;
 
 text-shadow:
 
-0 20px 70px rgba(0,0,0,.5);
+0 25px 80px rgba(0,0,0,.55);
+
+}
+
+
+.hero h1 .hero-relax{
+
+display:block;
+
+background:
+
+linear-gradient(
+90deg,
+#FFFFFF 0%,
+#DDE4FF 35%,
+#8DA7FF 70%,
+#C48BFF 100%
+);
+
+-webkit-background-clip:text;
+
+background-clip:text;
+
+color:transparent;
 
 }
 
@@ -2186,44 +996,53 @@ font-family:var(--orbitron);
 
 font-size:
 
-clamp(15px,2vw,27px);
+clamp(18px,2.5vw,34px);
 
 font-weight:800;
 
-letter-spacing:
+letter-spacing:2px;
 
-clamp(2px,.6vw,8px);
-
-line-height:1.7;
+line-height:1.5;
 
 }
 
 
-.hero-tagline span{
+.hero-tagline .fear{
 
 color:var(--danger);
 
 }
 
 
-.hero-copy{
+.hero-tagline .calm{
 
-max-width:660px;
+color:var(--green);
 
-margin-top:30px;
+}
+
+
+.hero-description{
+
+max-width:690px;
+
+margin-top:32px;
 
 font-size:
 
 clamp(17px,1.5vw,21px);
 
-line-height:1.9;
+line-height:1.85;
 
-color:#B7BED0;
+color:#B0B8C9;
+
+text-shadow:
+
+0 5px 20px rgba(0,0,0,.65);
 
 }
 
 
-.hero-copy strong{
+.hero-description strong{
 
 color:white;
 
@@ -2234,58 +1053,120 @@ color:white;
 
 display:flex;
 
+align-items:center;
+
 flex-wrap:wrap;
 
-gap:14px;
+gap:16px;
 
-margin-top:42px;
+margin-top:48px;
 
 }
 
 
-.hero-contract{
+.hero-button{
 
-width:min(720px,100%);
+min-height:58px;
 
-margin-top:45px;
+display:inline-flex;
 
-padding:20px 22px;
+align-items:center;
+
+justify-content:center;
+
+padding:0 28px;
+
+border-radius:12px;
+
+font-family:var(--orbitron);
+
+font-size:9px;
+
+font-weight:900;
+
+letter-spacing:2px;
+
+text-decoration:none;
+
+transition:
+
+transform .35s ease,
+
+box-shadow .35s ease,
+
+border-color .35s ease;
+
+}
+
+
+.hero-button.primary{
+
+background:
+
+linear-gradient(
+90deg,
+var(--green),
+var(--blue),
+var(--purple)
+);
+
+color:#050713;
+
+}
+
+
+.hero-button.secondary{
+
+border:
+
+1px solid rgba(255,255,255,.16);
+
+background:
+
+rgba(5,7,19,.55);
+
+color:white;
+
+backdrop-filter:blur(14px);
+
+-webkit-backdrop-filter:blur(14px);
+
+}
+
+
+.hero-button:hover{
+
+transform:translateY(-5px);
+
+box-shadow:
+
+0 20px 50px rgba(0,0,0,.35);
+
+}
+
+
+.hero-meta{
 
 display:flex;
 
 align-items:center;
 
-justify-content:space-between;
+flex-wrap:wrap;
 
 gap:25px;
 
-border:
-
-1px solid rgba(255,255,255,.10);
-
-border-radius:15px;
-
-background:
-
-rgba(7,10,24,.58);
-
-backdrop-filter:blur(18px);
-
--webkit-backdrop-filter:blur(18px);
+margin-top:55px;
 
 }
 
 
-.hero-contract > div{
+.hero-meta-item{
 
-min-width:0;
+display:flex;
 
-}
+align-items:center;
 
-
-.hero-contract span{
-
-display:block;
+gap:11px;
 
 font-family:var(--orbitron);
 
@@ -2293,100 +1174,37 @@ font-size:7px;
 
 font-weight:800;
 
-letter-spacing:4px;
+letter-spacing:3px;
 
-color:#727D96;
-
-}
-
-
-.hero-contract code{
-
-display:block;
-
-margin-top:11px;
-
-font-family:var(--orbitron);
-
-font-size:
-
-clamp(8px,1vw,12px);
-
-color:#C7CDDB;
-
-word-break:break-all;
+color:#8C96AA;
 
 }
 
 
-.hero-contract button{
+.hero-meta-item span{
 
-flex-shrink:0;
+width:7px;
 
-min-width:90px;
+height:7px;
 
-height:42px;
-
-border-radius:9px;
-
-background:
-
-rgba(91,124,255,.13);
-
-color:var(--green);
-
-font-family:var(--orbitron);
-
-font-size:8px;
-
-font-weight:900;
-
-letter-spacing:2px;
-
-cursor:pointer;
-
-transition:
-
-transform .3s ease,
-
-background .3s ease,
-
-box-shadow .3s ease;
-
-}
-
-
-.hero-contract button:hover{
-
-transform:translateY(-3px);
-
-background:
-
-rgba(20,241,149,.12);
-
-box-shadow:
-
-0 10px 30px rgba(20,241,149,.10);
-
-}
-
-
-.hero-contract button.copied{
+border-radius:50%;
 
 background:var(--green);
 
-color:#050713;
+box-shadow:
+
+0 0 14px var(--green);
 
 }
 
 
-.scroll-signal{
+.hero-scroll{
 
 position:absolute;
 
-right:max(3vw,25px);
+right:max(4vw,35px);
 
-bottom:50px;
+bottom:55px;
 
 z-index:10;
 
@@ -2398,12 +1216,7 @@ gap:18px;
 
 transform:rotate(90deg);
 
-transform-origin:right center;
-
-}
-
-
-.scroll-signal span{
+transform-origin:right bottom;
 
 font-family:var(--orbitron);
 
@@ -2413,98 +1226,61 @@ font-weight:800;
 
 letter-spacing:4px;
 
-color:#6D7790;
+color:#8993A8;
 
 }
 
 
-.scroll-line{
+.hero-scroll::after{
 
-position:relative;
+content:"";
 
 width:75px;
 
 height:1px;
 
-overflow:hidden;
-
 background:
 
-rgba(255,255,255,.12);
+linear-gradient(
+90deg,
+rgba(255,255,255,.5),
+transparent
+);
 
 }
-
-
-.scroll-line::after{
-
-content:"";
-
-position:absolute;
-
-top:0;
-
-left:-100%;
-
-width:100%;
-
-height:100%;
-
-background:var(--green);
-
-animation:
-
-scrollSignal 2.2s ease-in-out infinite;
-
-}
-
-
-@keyframes scrollSignal{
-
-0%{
-
-left:-100%;
-
-}
-
-100%{
-
-left:100%;
-
-}
-
-}
-
 
 
 /* =========================
-PART 2 MOBILE
+MOBILE PART 1
 ========================= */
 
-@media(max-width:1050px){
+@media(max-width:1000px){
 
 .nav-links{
 
-display:none;
+position:fixed;
 
-position:absolute;
+top:102px;
 
-top:82px;
+left:2%;
 
-left:0;
+right:2%;
 
-right:0;
+width:96%;
 
-padding:30px;
-
-flex-direction:column;
+display:flex;
 
 align-items:flex-start;
 
-gap:28px;
+flex-direction:column;
+
+gap:0;
+
+padding:25px;
 
 border:
 
-1px solid rgba(255,255,255,.10);
+1px solid rgba(255,255,255,.08);
 
 border-radius:18px;
 
@@ -2516,26 +1292,50 @@ backdrop-filter:blur(25px);
 
 -webkit-backdrop-filter:blur(25px);
 
+opacity:0;
+
+visibility:hidden;
+
+transform:translateY(-15px);
+
+transition:
+
+opacity .3s ease,
+
+visibility .3s ease,
+
+transform .3s ease;
+
 }
 
 
 .nav-links.active{
 
-display:flex;
+opacity:1;
+
+visibility:visible;
+
+transform:translateY(0);
 
 }
 
 
 .nav-links a{
 
-font-size:10px;
+width:100%;
+
+padding:20px 5px;
+
+border-bottom:
+
+1px solid rgba(255,255,255,.06);
 
 }
 
 
-.nav-source{
+.nav-links a:last-child{
 
-display:none;
+border-bottom:0;
 
 }
 
@@ -2547,50 +1347,30 @@ display:flex;
 }
 
 
-.menu-toggle.active span:nth-child(1){
+.nav-buy{
 
-transform:
-
-translateY(6px)
-
-rotate(45deg);
-
-}
-
-
-.menu-toggle.active span:nth-child(2){
-
-opacity:0;
-
-}
-
-
-.menu-toggle.active span:nth-child(3){
-
-transform:
-
-translateY(-6px)
-
-rotate(-45deg);
+display:none;
 
 }
 
 }
 
 
-@media(max-width:700px){
+@media(max-width:800px){
 
 .navbar{
 
-top:10px;
+top:12px;
 
-left:10px;
+left:12px;
 
-right:10px;
+right:12px;
+
+width:calc(100% - 24px);
 
 min-height:64px;
 
-padding:0 13px;
+padding:0 16px;
 
 border-radius:15px;
 
@@ -2599,29 +1379,29 @@ border-radius:15px;
 
 .nav-logo{
 
-width:38px;
+width:40px;
 
-height:38px;
-
-}
-
-
-.nav-brand span{
-
-font-size:14px;
-
-letter-spacing:3px;
+height:40px;
 
 }
 
 
-.nav-buy{
+.nav-brand strong{
 
-min-height:38px;
+font-size:16px;
 
-padding:0 13px;
+}
 
-font-size:7px;
+
+.nav-links{
+
+top:88px;
+
+left:12px;
+
+right:12px;
+
+width:calc(100% - 24px);
 
 }
 
@@ -2630,71 +1410,65 @@ font-size:7px;
 
 min-height:100svh;
 
-padding:
-
-125px 22px
-
-90px;
-
 }
 
 
 .hero-video{
 
-filter:
-
-brightness(.48)
-
-saturate(.85);
+object-position:60% center;
 
 }
 
 
-.hero-overlay{
+.hero-video-overlay{
 
 background:
 
 linear-gradient(
 90deg,
-rgba(5,7,19,.90),
-rgba(5,7,19,.52)
+rgba(3,5,13,.94),
+rgba(3,5,13,.55)
 ),
 
 linear-gradient(
-0deg,
-#050713,
-transparent 35%,
-rgba(5,7,19,.42)
+180deg,
+rgba(3,5,13,.18),
+rgba(3,5,13,.20) 50%,
+#050713 100%
 );
 
 }
 
 
-.hero-brand{
+.hero-inner{
 
-gap:18px;
+padding:
 
-margin-top:35px;
+145px 22px
+
+95px;
 
 }
 
 
-.hero-logo{
+.hero-kicker{
 
-width:78px;
+font-size:7px;
 
-height:78px;
+letter-spacing:3px;
 
 }
 
 
 .hero h1{
 
+margin-top:30px;
+
 font-size:
 
-clamp(57px,20vw,90px);
+clamp(65px,22vw,100px);
 
-letter-spacing:-3px;
+letter-spacing:-4px;
 
 }
 
@@ -2703,73 +1477,66 @@ letter-spacing:-3px;
 
 margin-top:35px;
 
-font-size:13px;
-
-letter-spacing:2px;
+font-size:18px;
 
 }
 
 
-.hero-copy{
+.hero-description{
 
 font-size:16px;
+
+line-height:1.75;
 
 }
 
 
 .hero-actions{
 
-display:grid;
-
-grid-template-columns:
-
-repeat(2,1fr);
-
-}
-
-
-.hero-actions .relax-button{
-
-padding:0 15px;
-
-}
-
-
-.hero-actions .relax-button:first-child{
-
-grid-column:1 / -1;
-
-}
-
-
-.hero-contract{
-
 align-items:stretch;
 
 flex-direction:column;
 
+margin-top:38px;
+
 }
 
 
-.hero-contract button{
+.hero-button{
 
 width:100%;
 
 }
 
 
-.scroll-signal{
+.hero-meta{
+
+gap:18px;
+
+margin-top:38px;
+
+}
+
+
+.hero-meta-item{
+
+font-size:6px;
+
+letter-spacing:2px;
+
+}
+
+
+.hero-scroll{
 
 display:none;
 
 }
 
 
-.hero-orbit{
+.mouse-glow{
 
-right:-110px;
-
-top:25%;
+display:none;
 
 }
 
@@ -2777,8 +1544,346 @@ top:25%;
 
 </style>
 
+</head>
+
+
+<body class="loading">
+
+
 <!-- =========================
+GLOBAL EFFECT LAYERS
+========================= -->
+
+<div class="site-background"></div>
+
+<div class="star-field"></div>
+
+<div class="shooting-stars"></div>
+
+<div class="mouse-glow"></div>
+
+
+<!-- =========================
+LOADER
+STATIC LOGO
+========================= -->
+
+<div class="loader">
+
+<div class="loader-inner">
+
+<img
+src="logo.png"
+alt="RELAX"
+class="loader-logo"
+>
+
+<div class="loader-text">
+
+RELAX
+
+</div>
+
+<div class="loader-line">
+
+<span></span>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- =========================
+NAVBAR
+STATIC LOGO
+========================= -->
+
+<nav class="navbar">
+
+<a
+href="#top"
+class="nav-brand"
+>
+
+<img
+src="logo.png"
+alt="RELAX"
+class="nav-logo"
+>
+
+<strong>
+RELAX
+</strong>
+
+</a>
+
+
+<div class="nav-links">
+
+<a href="#story">
 STORY
+</a>
+
+<a href="#philosophy">
+THE CODE
+</a>
+
+<a href="#market">
+MARKET
+</a>
+
+<a href="#token">
+TOKEN
+</a>
+
+<a href="#roadmap">
+ROADMAP
+</a>
+
+<a href="#faq">
+FAQ
+</a>
+
+<a
+href="https://github.com/0relaxbro/RELAX"
+target="_blank"
+rel="noopener noreferrer"
+>
+GITHUB ↗
+</a>
+
+</div>
+
+
+<div class="nav-actions">
+
+<a
+href="https://pump.fun/coin/6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump"
+target="_blank"
+rel="noopener noreferrer"
+class="nav-buy"
+>
+
+BUY $RELAX
+
+</a>
+
+
+<button
+class="menu-toggle"
+type="button"
+aria-label="Open menu"
+>
+
+<span></span>
+
+<span></span>
+
+</button>
+
+</div>
+
+</nav>
+
+
+<!-- =========================
+CINEMATIC HERO
+========================= -->
+
+<header
+class="hero"
+id="top"
+>
+
+
+<video
+class="hero-video"
+autoplay
+muted
+loop
+playsinline
+preload="auto"
+>
+
+<source
+src="market.mp4"
+type="video/mp4"
+>
+
+</video>
+
+
+<div class="hero-video-overlay"></div>
+
+<div class="hero-fog"></div>
+
+
+<div class="hero-inner">
+
+<div class="hero-content">
+
+
+<div class="hero-kicker">
+
+<span></span>
+
+SOLANA // MARKET CHAOS
+
+</div>
+
+
+<h1>
+
+<span class="hero-relax">
+
+RELAX.
+
+</span>
+
+</h1>
+
+
+<div class="hero-tagline">
+
+<span class="fear">
+THE WORLD PANICS.
+</span>
+
+<br>
+
+<span class="calm">
+RELAX DOESN'T.
+</span>
+
+</div>
+
+
+<p class="hero-description">
+
+Markets fly.
+
+People chase.
+
+Markets collapse.
+
+People panic.
+
+<br><br>
+
+While the world loses itself in fear and noise,
+
+<strong>
+RELAX remains calm.
+</strong>
+
+</p>
+
+
+<div class="hero-actions">
+
+
+<a
+href="https://pump.fun/coin/6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump"
+target="_blank"
+rel="noopener noreferrer"
+class="hero-button primary"
+>
+
+BUY $RELAX
+
+</a>
+
+
+<a
+href="https://dexscreener.com/solana/5ztferjiljz3u4kzkwmguyujxcwkpagzfqwwyja7yzx3"
+target="_blank"
+rel="noopener noreferrer"
+class="hero-button secondary"
+>
+
+LIVE CHART ↗
+
+</a>
+
+
+<a
+href="https://x.com/0relaxbro"
+target="_blank"
+rel="noopener noreferrer"
+class="hero-button secondary"
+>
+
+X COMMUNITY ↗
+
+</a>
+
+
+</div>
+
+
+<div class="hero-meta">
+
+
+div class="hero-meta-item">
+
+<span></span>
+
+SOLANA
+
+</div>
+
+
+<div class="hero-meta-item">
+
+<span></span>
+
+0 FEAR
+
+</div>
+
+
+<div class="hero-meta-item">
+
+<span></span>
+
+0 PANIC
+
+</div>
+
+
+<div class="hero-meta-item">
+
+<span></span>
+
+0 REGRETS
+
+</div>
+
+
+</div>
+
+
+</div>
+
+</div>
+
+
+<div class="hero-scroll">
+
+SCROLL TO RELAX
+
+</div>
+
+
+</header>
+
+
+<main>
+
+<!-- =========================
+STORY SECTION
 ========================= -->
 
 <section
@@ -2786,143 +1891,105 @@ class="story-section"
 id="story"
 >
 
-<div
-class="orbit-zone story-orbit"
-aria-hidden="true"
->
+<div class="story-orbit orbit-left">
 
-<div class="orbit-ring"></div>
-
-<div class="orbit-ring second"></div>
+<span class="orbit-core"></span>
 
 <span class="orbit-traveler"></span>
 
-<span class="orbit-traveler second"></span>
-
 </div>
 
 
-<div class="story-wrap">
-
-
-<div class="story-head reveal">
+<div class="section-shell">
 
 <div class="section-label">
 
-THE RELAX STORY
+01 // THE STORY
 
 </div>
 
-<h2 class="section-title">
 
-WHEN THE WORLD<br>
+<div class="story-layout">
 
-<span class="panic-text">
-PANICS.
+
+<div class="story-title-wrap reveal">
+
+<h2 class="section-title story-title">
+
+CHAOS IS
+<br>
+
+<span>
+EVERYWHERE.
 </span>
 
 </h2>
 
-</div>
 
+<p class="story-lead">
 
-<div class="story-grid">
+But calm is a choice.
 
-
-<div class="story-number reveal">
-
-<span>
-01
-</span>
+</p>
 
 </div>
 
 
 <div class="story-content reveal">
 
-<p>
+<p class="story-big-text">
 
-The world is chaotic.
+The world moves fast.
 
-Markets are even louder.
-
-</p>
-
-<p>
-
-When candles fly, people chase.
-
-They watch green move higher and higher until fear whispers:
-
-<strong>
-“You missed it.”
-</strong>
+Markets move faster.
 
 </p>
 
+
 <p>
 
-Then FOMO takes control.
+When candles explode upward, people chase the green.
+
+They fear missing the move.
+
+They buy the noise.
+
+They call it opportunity.
 
 </p>
 
-<div class="story-line"></div>
 
 <p>
 
-When markets collapse, panic spreads faster than price.
+When markets collapse, fear takes control.
 
-Red candles become fear.
+Charts turn red.
 
-Fear becomes noise.
+Timelines become louder.
 
-Noise becomes a waterfall of panic selling.
+The panic sell waterfall begins.
 
 </p>
 
-<p>
 
-<strong class="gradient-text">
+<div class="story-separator"></div>
+
+
+<p class="story-highlight">
 
 RELAX does neither.
 
-</strong>
-
 </p>
 
-</div>
-
-
-</div>
-
-
-<div class="story-grid reverse">
-
-
-<div class="story-number reveal">
-
-<span>
-02
-</span>
-
-</div>
-
-
-<div class="story-content reveal">
 
 <p>
 
-RELAX does not chase a market simply because it is flying.
+RELAX doesn't chase every pump because of FOMO.
+
+RELAX doesn't jump into the panic sell waterfall when the market turns red.
 
 </p>
 
-<p>
-
-RELAX does not jump into the panic sell waterfall simply because the crowd is running.
-
-</p>
-
-<div class="story-line"></div>
 
 <p>
 
@@ -2930,29 +1997,31 @@ Risk is measured.
 
 Reward is considered.
 
-The noise is filtered.
+The noise is ignored.
 
 </p>
 
-<p>
 
-The market can move.
+<p class="story-final">
 
 The world can panic.
 
-</p>
+The market can burn.
 
-<strong class="story-final">
+<br>
 
-JUST RELAX BRO.
+<strong>
+
+Just RELAX Bro.
 
 </strong>
 
+</p>
+
 </div>
 
 
 </div>
-
 
 </div>
 
@@ -2961,7 +2030,7 @@ JUST RELAX BRO.
 
 
 <!-- =========================
-CINEMATIC PHILOSOPHY
+PHILOSOPHY
 ========================= -->
 
 <section
@@ -2969,200 +2038,472 @@ class="philosophy-section"
 id="philosophy"
 >
 
-
-<div class="philosophy-glow"></div>
-
-
-<div
-class="orbit-zone philosophy-orbit"
-aria-hidden="true"
->
-
-<div class="orbit-ring"></div>
-
-<div class="orbit-ring second"></div>
-
-<span class="orbit-traveler"></span>
-
-<span class="orbit-traveler second"></span>
-
-</div>
+<div class="section-shell">
 
 
-<div class="philosophy-wrap">
-
-
-<div class="philosophy-head reveal">
+<div class="section-heading reveal">
 
 <div class="section-label">
 
-THE RELAX CODE
+02 // THE RELAX CODE
 
 </div>
 
-<h2>
 
-THE WORLD<br>
+<h2 class="section-title">
 
-<span class="panic-text">
-PANICS.
+THREE RULES.
+
+<br>
+
+<span>
+ONE MINDSET.
 </span>
 
 </h2>
 
-<div class="philosophy-divider"></div>
+
+<p class="section-description">
+
+Markets are unpredictable.
+
+Your reaction doesn't have to be.
+
+</p>
+
+</div>
+
+
+
+<div class="philosophy-grid">
+
+
+<article class="philosophy-card fear-card reveal">
+
+<div class="card-number">
+
+01
+
+</div>
+
+
+<div class="philosophy-icon">
+
+<span></span>
+
+</div>
+
 
 <h3>
 
-RELAX<br>
-
-<span class="gradient-text">
-DOESN'T.
-</span>
+NO FEAR.
 
 </h3>
 
-</div>
-
-
-<div class="philosophy-cards">
-
-
-<article class="philosophy-card reveal">
-
-<div class="card-index">
-01
-</div>
-
-<h4>
-
-NO FEAR
-
-</h4>
 
 <p>
 
 Volatility is part of the market.
 
-Fear does not need to control the decision.
+Fear doesn't improve the chart.
+
+Understand the risk.
+
+Respect the market.
+
+Stay calm.
 
 </p>
 
-<span class="card-signal"></span>
+
+<div class="card-code">
+
+0 FEAR
+
+</div>
 
 </article>
 
 
-<article class="philosophy-card reveal">
 
-<div class="card-index">
+<article class="philosophy-card panic-card reveal">
+
+<div class="card-number">
+
 02
+
 </div>
 
-<h4>
 
-NO PANIC
+<div class="philosophy-icon">
 
-</h4>
+<span></span>
+
+</div>
+
+
+<h3>
+
+NO PANIC.
+
+</h3>
+
 
 <p>
 
-Price moves fast.
+Red candles create noise.
 
-RELAX remains calm when the crowd becomes emotional.
+Noise creates emotion.
+
+Emotion creates bad decisions.
+
+RELAX watches before reacting.
 
 </p>
 
-<span class="card-signal"></span>
+
+<div class="card-code">
+
+0 PANIC
+
+</div>
 
 </article>
 
 
-<article class="philosophy-card reveal">
 
-<div class="card-index">
+<article class="philosophy-card regret-card reveal">
+
+<div class="card-number">
+
 03
+
 </div>
 
-<h4>
 
-NO REGRETS
+<div class="philosophy-icon">
 
-</h4>
+<span></span>
+
+</div>
+
+
+<h3>
+
+NO REGRETS.
+
+</h3>
+
 
 <p>
 
-No candle deserves your peace.
+You cannot trade yesterday.
 
-Observe the market.
+You cannot buy the candle you missed.
 
-Accept the decision.
+Learn.
 
 Move forward.
 
+Enjoy the ride.
+
 </p>
 
-<span class="card-signal"></span>
+
+<div class="card-code">
+
+0 REGRETS
+
+</div>
 
 </article>
 
 
 </div>
 
+</div>
 
-<div class="relax-code reveal">
 
-<div class="relax-code-line">
+<div class="philosophy-statement reveal">
+
+<div class="statement-line"></div>
+
+
+<p>
+
+FEAR CHASES.
+
+<br>
+
+PANIC SELLS.
+
+<br>
 
 <span>
-MARKET
+
+RELAX OBSERVES.
+
 </span>
 
-<strong>
-CHAOS
+</p>
+
+
+<div class="statement-line"></div>
+
+</div>
+
+
+</section>
+
+
+
+<!-- =========================
+MARKET SECTION
+========================= -->
+
+<section
+class="market-section"
+id="market"
+>
+
+
+<div class="market-orbit orbit-right">
+
+<span class="orbit-core"></span>
+
+<span class="orbit-traveler"></span>
+
+</div>
+
+
+<div class="section-shell">
+
+
+<div class="market-heading reveal">
+
+
+<div>
+
+<div class="section-label">
+
+03 // LIVE MARKET
+
+</div>
+
+
+<h2 class="section-title">
+
+THE MARKET
+
+<br>
+
+<span>
+
+NEVER RELAXES.
+
+</span>
+
+</h2>
+
+</div>
+
+
+<div class="market-live-badge">
+
+<span></span>
+
+LIVE DATA
+
+</div>
+
+
+</div>
+
+
+
+<div class="market-dashboard reveal">
+
+
+<div class="market-primary">
+
+
+<div class="market-symbol">
+
+<div class="market-coin-wrap">
+
+<img
+src="logo.png"
+alt="RELAX"
+class="market-coin relax-logo"
+>
+
+</div>
+
+
+<div>
+
+<span class="market-network">
+
+SOLANA
+
+</span>
+
+
+<h3>
+
+$RELAX
+
+</h3>
+
+</div>
+
+</div>
+
+
+
+<div class="market-price-wrap">
+
+<div class="market-price-label">
+
+CURRENT PRICE
+
+</div>
+
+
+<div
+class="market-price"
+id="livePrice"
+>
+
+LOADING...
+
+</div>
+
+
+<div
+class="market-change"
+id="priceChange"
+>
+
+CONNECTING TO MARKET
+
+</div>
+
+</div>
+
+
+</div>
+
+
+
+<div class="market-stats">
+
+
+<div class="market-stat">
+
+<span>
+
+MARKET CAP
+
+</span>
+
+
+<strong id="marketCap">
+
+—
+
 </strong>
 
 </div>
 
 
-<div class="relax-code-arrow">
-
-↓
-
-</div>
-
-
-<div class="relax-code-line">
+<div class="market-stat">
 
 <span>
-CROWD
+
+LIQUIDITY
+
 </span>
 
-<strong class="panic-text">
-PANIC
+
+<strong id="liquidity">
+
+—
+
 </strong>
 
 </div>
 
 
-<div class="relax-code-arrow">
-
-↓
-
-</div>
-
-
-<div class="relax-code-line active">
+<div class="market-stat">
 
 <span>
-RELAX
+
+24H VOLUME
+
 </span>
 
-<strong class="gradient-text">
-CALM
+
+<strong id="volume24h">
+
+—
+
 </strong>
 
 </div>
+
+
+<div class="market-stat">
+
+<span>
+
+NETWORK
+
+</span>
+
+
+<strong class="solana-text">
+
+SOLANA
+
+</strong>
+
+</div>
+
+
+</div>
+
+
+
+<div class="market-bottom">
+
+
+<div
+class="market-status"
+id="marketStatus"
+>
+
+<span></span>
+
+CONNECTING TO DEX FEED
+
+</div>
+
+
+<a
+href="https://dexscreener.com/solana/5ztferjiljz3u4kzkwmguyujxcwkpagzfqwwyja7yzx3"
+target="_blank"
+rel="noopener noreferrer"
+class="market-chart-link"
+>
+
+OPEN FULL CHART ↗
+
+</a>
+
+
+</div>
+
 
 </div>
 
@@ -3176,205 +2517,198 @@ CALM
 <style>
 
 /* =========================
-STORY
+SHARED SECTION SYSTEM
 ========================= */
 
-.story-section{
+section{
 
 position:relative;
-
-padding:
-
-190px max(7vw,40px)
-
-210px;
 
 overflow:hidden;
 
-background:
-
-linear-gradient(
-180deg,
-rgba(5,7,19,.82),
-rgba(5,7,19,.94)
-);
-
 }
 
 
-.story-section::before{
+.section-shell{
 
-content:"";
-
-position:absolute;
-
-top:15%;
-
-left:-20%;
-
-width:700px;
-
-height:700px;
-
-border-radius:50%;
-
-background:
-
-radial-gradient(
-circle,
-rgba(91,124,255,.11),
-transparent 65%
-);
-
-filter:blur(30px);
-
-pointer-events:none;
-
-}
-
-
-.story-wrap{
-
-position:relative;
-
-z-index:5;
-
-width:min(1300px,100%);
+width:min(1500px,100%);
 
 margin:auto;
 
-}
+padding:
 
-
-.story-head{
-
-position:relative;
+140px max(7vw,45px);
 
 }
 
 
-.story-head .section-title{
+.section-label{
 
-max-width:1000px;
+font-family:var(--orbitron);
 
-}
+font-size:8px;
 
+font-weight:800;
 
-.panic-text{
+letter-spacing:5px;
 
-color:var(--danger);
-
-text-shadow:
-
-0 0 40px rgba(255,95,135,.20);
+color:#778299;
 
 }
 
 
-.story-grid{
-
-display:grid;
-
-grid-template-columns:
-
-180px minmax(0,760px);
-
-justify-content:space-between;
-
-gap:80px;
-
-margin-top:130px;
-
-}
-
-
-.story-grid.reverse{
-
-grid-template-columns:
-
-minmax(0,760px) 180px;
-
-}
-
-
-.story-grid.reverse .story-number{
-
-grid-column:2;
-
-grid-row:1;
-
-}
-
-
-.story-grid.reverse .story-content{
-
-grid-column:1;
-
-grid-row:1;
-
-}
-
-
-.story-number{
-
-display:flex;
-
-align-items:flex-start;
-
-justify-content:center;
-
-}
-
-
-.story-number span{
+.section-title{
 
 font-family:var(--orbitron);
 
 font-size:
 
-clamp(70px,10vw,150px);
+clamp(48px,6vw,100px);
 
 font-weight:900;
 
-line-height:.8;
+line-height:.95;
+
+letter-spacing:-4px;
+
+}
+
+
+.section-title span{
+
+background:
+
+linear-gradient(
+90deg,
+var(--green),
+var(--blue),
+var(--purple)
+);
+
+-webkit-background-clip:text;
+
+background-clip:text;
 
 color:transparent;
 
--webkit-text-stroke:
+}
 
-1px rgba(255,255,255,.13);
+
+.section-description{
+
+max-width:620px;
+
+margin-top:28px;
+
+font-size:18px;
+
+line-height:1.8;
+
+color:var(--muted);
+
+}
+
+
+/* =========================
+STORY
+========================= */
+
+.story-section{
+
+background:
+
+radial-gradient(
+circle at 15% 50%,
+rgba(91,124,255,.11),
+transparent 30%
+),
+
+#050713;
+
+}
+
+
+.story-layout{
+
+display:grid;
+
+grid-template-columns:
+
+minmax(0,.9fr)
+
+minmax(0,1.1fr);
+
+gap:10vw;
+
+margin-top:75px;
+
+}
+
+
+.story-title{
+
+margin-top:28px;
+
+}
+
+
+.story-lead{
+
+margin-top:30px;
+
+font-family:var(--orbitron);
+
+font-size:11px;
+
+font-weight:700;
+
+letter-spacing:4px;
+
+color:#8792A8;
 
 }
 
 
 .story-content{
 
+max-width:720px;
+
+}
+
+
+.story-content p{
+
+margin-bottom:30px;
+
 font-size:
 
-clamp(19px,2vw,28px);
+clamp(18px,1.5vw,22px);
 
-line-height:1.8;
+line-height:1.9;
 
-color:#AAB3C7;
-
-}
-
-
-.story-content p + p{
-
-margin-top:35px;
+color:#9EA8BA;
 
 }
 
 
-.story-content strong{
+.story-content .story-big-text{
+
+font-family:var(--orbitron);
+
+font-size:
+
+clamp(25px,2.6vw,42px);
+
+font-weight:800;
+
+line-height:1.45;
 
 color:white;
 
 }
 
 
-.story-line{
+.story-separator{
 
 width:100%;
 
@@ -3392,42 +2726,212 @@ var(--purple),
 transparent
 );
 
-opacity:.55;
-
 }
 
 
-.story-final{
-
-display:block;
-
-margin-top:60px;
+.story-content .story-highlight{
 
 font-family:var(--orbitron);
 
 font-size:
 
-clamp(28px,4vw,60px);
+clamp(30px,4vw,65px);
 
 font-weight:900;
 
-letter-spacing:3px;
+line-height:1.1;
 
 color:white;
 
 }
 
 
-.story-orbit{
+.story-content .story-final{
 
-right:-90px;
+margin-top:65px;
 
-top:8%;
-
-opacity:.8;
+color:#D9DEEA;
 
 }
 
+
+.story-final strong{
+
+display:inline-block;
+
+margin-top:15px;
+
+font-family:var(--orbitron);
+
+font-size:
+
+clamp(23px,3vw,45px);
+
+background:
+
+linear-gradient(
+90deg,
+var(--green),
+var(--blue),
+var(--purple)
+);
+
+-webkit-background-clip:text;
+
+background-clip:text;
+
+color:transparent;
+
+}
+
+
+/* =========================
+ORBIT DECORATION
+========================= */
+
+.story-orbit,
+.market-orbit{
+
+position:absolute;
+
+width:360px;
+
+height:360px;
+
+border:
+
+1px solid rgba(255,255,255,.05);
+
+border-radius:50%;
+
+pointer-events:none;
+
+}
+
+
+.orbit-left{
+
+left:-220px;
+
+top:35%;
+
+}
+
+
+.orbit-right{
+
+right:-180px;
+
+top:20%;
+
+}
+
+
+.story-orbit::before,
+.market-orbit::before{
+
+content:"";
+
+position:absolute;
+
+inset:70px;
+
+border:
+
+1px solid rgba(91,124,255,.10);
+
+border-radius:50%;
+
+}
+
+
+.orbit-core{
+
+position:absolute;
+
+left:50%;
+
+top:50%;
+
+width:18px;
+
+height:18px;
+
+border-radius:50%;
+
+background:
+
+linear-gradient(
+135deg,
+var(--green),
+var(--purple)
+);
+
+transform:translate(-50%,-50%);
+
+box-shadow:
+
+0 0 40px rgba(91,124,255,.5);
+
+}
+
+
+.orbit-traveler{
+
+position:absolute;
+
+left:50%;
+
+top:50%;
+
+width:8px;
+
+height:8px;
+
+margin:-4px;
+
+border-radius:50%;
+
+background:white;
+
+box-shadow:
+
+0 0 20px white;
+
+animation:
+
+orbitTraveler 12s linear infinite;
+
+}
+
+
+@keyframes orbitTraveler{
+
+from{
+
+transform:
+
+rotate(0deg)
+
+translateX(180px)
+
+rotate(0deg);
+
+}
+
+to{
+
+transform:
+
+rotate(360deg)
+
+translateX(180px)
+
+rotate(-360deg);
+
+}
+
+}
 
 
 /* =========================
@@ -3436,161 +2940,43 @@ PHILOSOPHY
 
 .philosophy-section{
 
-position:relative;
-
-padding:
-
-190px max(7vw,40px)
-
-220px;
-
-overflow:hidden;
-
-background:
-
-rgba(3,5,14,.82);
-
-}
-
-
-.philosophy-glow{
-
-position:absolute;
-
-top:20%;
-
-left:50%;
-
-width:900px;
-
-height:900px;
-
-border-radius:50%;
-
-transform:translateX(-50%);
-
-background:
-
-radial-gradient(
-circle,
-rgba(153,69,255,.10),
-rgba(91,124,255,.05) 40%,
-transparent 70%
-);
-
-filter:blur(20px);
-
-pointer-events:none;
-
-}
-
-
-.philosophy-wrap{
-
-position:relative;
-
-z-index:5;
-
-width:min(1300px,100%);
-
-margin:auto;
-
-}
-
-
-.philosophy-head{
-
-position:relative;
-
-text-align:center;
-
-}
-
-
-.philosophy-head .section-label{
-
-justify-content:center;
-
-}
-
-
-.philosophy-head h2{
-
-margin-top:40px;
-
-font-family:var(--orbitron);
-
-font-size:
-
-clamp(65px,11vw,170px);
-
-font-weight:900;
-
-line-height:.8;
-
-}
-
-
-.philosophy-divider{
-
-width:1px;
-
-height:110px;
-
-margin:65px auto;
-
 background:
 
 linear-gradient(
-transparent,
-var(--green),
-var(--blue),
-var(--purple),
-transparent
+180deg,
+#050713,
+#080B18 50%,
+#050713
 );
 
 }
 
 
-.philosophy-head h3{
+.section-heading{
 
-font-family:var(--orbitron);
-
-font-size:
-
-clamp(60px,10vw,150px);
-
-font-weight:900;
-
-line-height:.85;
+max-width:900px;
 
 }
 
 
-.philosophy-orbit{
+.section-heading .section-title{
 
-left:50%;
-
-top:12%;
-
-margin-left:-210px;
-
-opacity:.7;
+margin-top:28px;
 
 }
 
 
-.philosophy-cards{
+.philosophy-grid{
 
 display:grid;
 
 grid-template-columns:
 
-repeat(3,1fr);
+repeat(3,minmax(0,1fr));
 
 gap:24px;
 
-margin-top:140px;
+margin-top:85px;
 
 }
 
@@ -3599,24 +2985,28 @@ margin-top:140px;
 
 position:relative;
 
-min-height:360px;
+min-height:520px;
 
-padding:45px 38px;
+display:flex;
+
+flex-direction:column;
+
+padding:45px;
 
 overflow:hidden;
 
 border:
 
-1px solid rgba(255,255,255,.08);
+1px solid rgba(255,255,255,.07);
 
-border-radius:22px;
+border-radius:24px;
 
 background:
 
 linear-gradient(
 145deg,
-rgba(16,23,46,.88),
-rgba(8,11,24,.68)
+rgba(255,255,255,.055),
+rgba(255,255,255,.015)
 );
 
 backdrop-filter:blur(15px);
@@ -3640,41 +3030,108 @@ transform:translateY(-10px);
 
 border-color:
 
-rgba(91,124,255,.32);
+rgba(91,124,255,.28);
 
 box-shadow:
 
-0 30px 80px rgba(0,0,0,.35),
-
-0 0 45px rgba(91,124,255,.08);
+0 30px 80px rgba(0,0,0,.3);
 
 }
 
 
-.card-index{
+.card-number{
+
+position:absolute;
+
+right:30px;
+
+top:25px;
 
 font-family:var(--orbitron);
 
-font-size:10px;
+font-size:65px;
 
-font-weight:800;
+font-weight:900;
 
-letter-spacing:4px;
-
-color:var(--green);
+color:rgba(255,255,255,.025);
 
 }
 
 
-.philosophy-card h4{
+.philosophy-icon{
 
-margin-top:70px;
+width:68px;
+
+height:68px;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+border:
+
+1px solid rgba(255,255,255,.09);
+
+border-radius:50%;
+
+}
+
+
+.philosophy-icon span{
+
+width:16px;
+
+height:16px;
+
+border-radius:50%;
+
+}
+
+
+.fear-card .philosophy-icon span{
+
+background:var(--danger);
+
+box-shadow:
+
+0 0 25px var(--danger);
+
+}
+
+
+.panic-card .philosophy-icon span{
+
+background:var(--blue);
+
+box-shadow:
+
+0 0 25px var(--blue);
+
+}
+
+
+.regret-card .philosophy-icon span{
+
+background:var(--green);
+
+box-shadow:
+
+0 0 25px var(--green);
+
+}
+
+
+.philosophy-card h3{
+
+margin-top:55px;
 
 font-family:var(--orbitron);
 
 font-size:
 
-clamp(25px,3vw,42px);
+clamp(27px,2.5vw,42px);
 
 font-weight:900;
 
@@ -3689,787 +3146,100 @@ font-size:17px;
 
 line-height:1.9;
 
-color:#929CB2;
+color:#9DA7BA;
 
 }
 
 
-.card-signal{
+.card-code{
 
-position:absolute;
+margin-top:auto;
 
-left:38px;
-
-bottom:35px;
-
-width:55px;
-
-height:2px;
-
-background:
-
-linear-gradient(
-90deg,
-var(--green),
-var(--purple)
-);
-
-box-shadow:
-
-0 0 12px rgba(20,241,149,.35);
-
-}
-
-
-.relax-code{
-
-width:min(850px,100%);
-
-margin:
-
-150px auto 0;
-
-padding:60px;
-
-border:
-
-1px solid rgba(255,255,255,.08);
-
-border-radius:25px;
-
-background:
-
-rgba(8,11,24,.70);
-
-backdrop-filter:blur(20px);
-
--webkit-backdrop-filter:blur(20px);
-
-}
-
-
-.relax-code-line{
-
-display:flex;
-
-align-items:center;
-
-justify-content:space-between;
-
-gap:30px;
-
-padding:25px 0;
-
-}
-
-
-.relax-code-line span{
+padding-top:45px;
 
 font-family:var(--orbitron);
 
-font-size:10px;
+font-size:8px;
 
 font-weight:800;
 
 letter-spacing:5px;
 
-color:#667089;
+color:#687389;
 
 }
 
 
-.relax-code-line strong{
+.philosophy-statement{
+
+width:min(1100px,90%);
+
+margin:40px auto 140px;
+
+display:grid;
+
+grid-template-columns:1fr auto 1fr;
+
+align-items:center;
+
+gap:45px;
+
+}
+
+
+.statement-line{
+
+height:1px;
+
+background:
+
+linear-gradient(
+90deg,
+transparent,
+rgba(255,255,255,.15)
+);
+
+}
+
+
+.statement-line:last-child{
+
+background:
+
+linear-gradient(
+90deg,
+rgba(255,255,255,.15),
+transparent
+);
+
+}
+
+
+.philosophy-statement p{
+
+text-align:center;
 
 font-family:var(--orbitron);
 
 font-size:
 
-clamp(27px,5vw,65px);
+clamp(20px,2.7vw,42px);
 
 font-weight:900;
 
-}
+line-height:1.65;
 
-
-.relax-code-line.active{
-
-padding:
-
-35px 30px;
-
-border-radius:15px;
-
-background:
-
-rgba(91,124,255,.07);
+color:#69748A;
 
 }
 
 
-.relax-code-arrow{
+.philosophy-statement span{
 
-text-align:center;
-
-font-size:28px;
-
-color:#4D5770;
+color:var(--green);
 
 }
 
-
-
-/* =========================
-PART 3 MOBILE
-========================= */
-
-@media(max-width:800px){
-
-.story-section{
-
-padding:
-
-125px 22px
-
-140px;
-
-}
-
-
-.story-grid,
-.story-grid.reverse{
-
-grid-template-columns:1fr;
-
-gap:45px;
-
-margin-top:85px;
-
-}
-
-
-.story-grid.reverse .story-number,
-.story-grid.reverse .story-content{
-
-grid-column:auto;
-
-grid-row:auto;
-
-}
-
-
-.story-number{
-
-justify-content:flex-start;
-
-}
-
-
-.story-number span{
-
-font-size:75px;
-
-}
-
-
-.story-content{
-
-font-size:18px;
-
-}
-
-
-.story-content p + p{
-
-margin-top:28px;
-
-}
-
-
-.story-line{
-
-margin:40px 0;
-
-}
-
-
-.story-orbit{
-
-right:-130px;
-
-top:5%;
-
-}
-
-
-.philosophy-section{
-
-padding:
-
-125px 22px
-
-150px;
-
-}
-
-
-.philosophy-divider{
-
-height:75px;
-
-margin:45px auto;
-
-}
-
-
-.philosophy-orbit{
-
-margin-left:-125px;
-
-top:10%;
-
-}
-
-
-.philosophy-cards{
-
-grid-template-columns:1fr;
-
-margin-top:90px;
-
-}
-
-
-.philosophy-card{
-
-min-height:310px;
-
-padding:35px 28px;
-
-}
-
-
-.philosophy-card h4{
-
-margin-top:50px;
-
-}
-
-
-.card-signal{
-
-left:28px;
-
-}
-
-
-.relax-code{
-
-margin-top:90px;
-
-padding:30px 22px;
-
-}
-
-
-.relax-code-line{
-
-gap:15px;
-
-}
-
-
-.relax-code-line span{
-
-font-size:7px;
-
-letter-spacing:3px;
-
-}
-
-
-.relax-code-line.active{
-
-padding:
-
-28px 18px;
-
-}
-
-}
-
-</style>
-
-<!-- =========================
-LIVE MARKET
-========================= -->
-
-<section
-class="market-section"
-id="market"
->
-
-<div class="market-wrap">
-
-<div class="market-head reveal">
-
-<div class="section-label">
-LIVE MARKET
-</div>
-
-<h2 class="section-title">
-
-$RELAX<br>
-
-<span class="gradient-text">
-ON SOLANA.
-</span>
-
-</h2>
-
-<p class="section-copy">
-
-The market moves every second.
-
-RELAX watches the signal without chasing the noise.
-
-</p>
-
-</div>
-
-
-<div class="market-terminal reveal">
-
-<div class="terminal-top">
-
-<div>
-
-<span class="terminal-label">
-RELAX / SOL
-</span>
-
-<strong>
-LIVE MARKET SIGNAL
-</strong>
-
-</div>
-
-<div class="terminal-live">
-
-<span></span>
-
-LIVE
-
-</div>
-
-</div>
-
-
-<div class="price-zone">
-
-<span>
-CURRENT PRICE
-</span>
-
-<strong id="livePrice">
-CONNECTING...
-</strong>
-
-<div
-class="price-change"
-id="priceChange"
->
-
-FETCHING MARKET DATA
-
-</div>
-
-</div>
-
-
-<div class="market-stats">
-
-<div class="market-stat">
-
-<span>
-MARKET CAP
-</span>
-
-<strong id="marketCap">
-—
-</strong>
-
-</div>
-
-
-<div class="market-stat">
-
-<span>
-LIQUIDITY
-</span>
-
-<strong id="liquidity">
-—
-</strong>
-
-</div>
-
-
-<div class="market-stat">
-
-<span>
-24H VOLUME
-</span>
-
-<strong id="volume24h">
-—
-</strong>
-
-</div>
-
-
-<div class="market-stat">
-
-<span>
-NETWORK
-</span>
-
-<strong>
-SOLANA
-</strong>
-
-</div>
-
-</div>
-
-
-<div class="terminal-bottom">
-
-<span id="marketStatus">
-
-CONNECTING TO MARKET
-
-</span>
-
-
-<a
-href="https://dexscreener.com/solana/5ztferjiljz3u4kzkwmguyujxcwkpagzfqwwyja7yzx3"
-target="_blank"
-rel="noopener noreferrer"
->
-
-OPEN LIVE CHART ↗
-
-</a>
-
-</div>
-
-</div>
-
-</div>
-
-</section>
-
-
-
-<!-- =========================
-TOKEN INFORMATION
-========================= -->
-
-<section
-class="token-section"
-id="token"
->
-
-<div
-class="orbit-zone token-orbit"
-aria-hidden="true"
->
-
-<div class="orbit-ring"></div>
-
-<div class="orbit-ring second"></div>
-
-<span class="orbit-traveler"></span>
-
-<span class="orbit-traveler second"></span>
-
-</div>
-
-
-<div class="token-wrap">
-
-<div class="token-head reveal">
-
-<div class="section-label">
-
-THE RELAX CODE
-
-</div>
-
-<h2 class="section-title">
-
-NO HIDDEN CONTROL.<br>
-
-<span class="gradient-text">
-VERIFY THE CHAIN.
-</span>
-
-</h2>
-
-<p class="section-copy">
-
-RELAX does not ask for blind trust.
-
-The contract is public.
-
-The chain is public.
-
-Verify everything.
-
-</p>
-
-</div>
-
-
-<div class="token-grid">
-
-
-<article class="token-card reveal">
-
-<span class="token-index">
-01
-</span>
-
-<h3>
-FIXED SUPPLY
-</h3>
-
-<p>
-
-No additional minting.
-
-No creator-controlled supply expansion.
-
-</p>
-
-<div class="token-card-glow"></div>
-
-</article>
-
-
-<article class="token-card reveal">
-
-<span class="token-index">
-02
-</span>
-
-<h3>
-NO PRIVATE CREATOR ALLOCATION
-</h3>
-
-<p>
-
-No reserved creator bag.
-
-No free token allocation hidden behind the launch.
-
-</p>
-
-<div class="token-card-glow"></div>
-
-</article>
-
-
-<article class="token-card reveal">
-
-<span class="token-index">
-03
-</span>
-
-<h3>
-PUBLIC CONTRACT
-</h3>
-
-<p>
-
-The RELAX contract is visible, public and available for anyone to inspect.
-
-</p>
-
-<div class="token-card-glow"></div>
-
-</article>
-
-
-<article class="token-card reveal">
-
-<span class="token-index">
-04
-</span>
-
-<h3>
-ON-CHAIN VERIFIABLE
-</h3>
-
-<p>
-
-Do not trust a slogan.
-
-Check the contract.
-
-Check the chain.
-
-</p>
-
-<div class="token-card-glow"></div>
-
-</article>
-
-
-</div>
-
-</div>
-
-</section>
-
-
-
-<!-- =========================
-CREATOR
-========================= -->
-
-<section class="creator-section">
-
-<div class="creator-wrap">
-
-
-<div class="creator-copy reveal">
-
-<div class="section-label">
-
-THE CREATOR ENTERED TOO
-
-</div>
-
-<h2>
-
-NOT GIFTED.<br>
-
-<span class="gradient-text">
-BOUGHT.
-</span>
-
-</h2>
-
-<p>
-
-The creator did not receive a free bag.
-
-</p>
-
-<p>
-
-He entered the market with his own funds, under the same market rules as everyone else.
-
-</p>
-
-<p>
-
-No reserved position.
-
-No special entry.
-
-No hidden creator allocation.
-
-</p>
-
-
-<div class="creator-result">
-
-<span>
-THE RESULT
-</span>
-
-<strong>
-~1% OF THE SUPPLY
-</strong>
-
-<small>
-ACQUIRED THROUGH THE MARKET
-</small>
-
-</div>
-
-</div>
-
-
-<div class="creator-visual reveal">
-
-<div class="creator-coin-glow"></div>
-
-<img
-src="logo.png"
-alt="RELAX Coin"
-class="creator-coin relax-logo"
->
-
-<div class="creator-signals">
-
-<span>
-SAME MARKET
-</span>
-
-<span>
-OWN FUNDS
-</span>
-
-<span>
-NO FREE BAG
-</span>
-
-</div>
-
-</div>
-
-
-</div>
-
-
-<div class="contract-panel reveal">
-
-<div>
-
-<span>
-OFFICIAL RELAX CONTRACT
-</span>
-
-<code>
-
-6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump
-
-</code>
-
-</div>
-
-
-<button
-type="button"
-id="copyContractSecond"
->
-
-<span id="copyTextSecond">
-COPY CONTRACT
-</span>
-
-</button>
-
-</div>
-
-</section>
-
-
-
-<style>
 
 /* =========================
 MARKET
@@ -4477,60 +3247,134 @@ MARKET
 
 .market-section{
 
-padding:
-180px max(7vw,40px);
-
 background:
-linear-gradient(
-180deg,
-rgba(5,7,19,.92),
-rgba(8,11,24,.88)
-);
+
+radial-gradient(
+circle at 80% 30%,
+rgba(153,69,255,.12),
+transparent 32%
+),
+
+#050713;
 
 }
 
 
-.market-wrap{
+.market-heading{
 
-width:min(1300px,100%);
+display:flex;
 
-margin:auto;
+align-items:flex-end;
 
-}
+justify-content:space-between;
 
-
-.market-head{
-
-max-width:900px;
+gap:40px;
 
 }
 
 
-.market-terminal{
+.market-heading .section-title{
 
-margin-top:90px;
+margin-top:28px;
+
+}
+
+
+.market-live-badge{
+
+display:flex;
+
+align-items:center;
+
+gap:12px;
+
+padding:15px 20px;
+
+border:
+
+1px solid rgba(20,241,149,.15);
+
+border-radius:100px;
+
+font-family:var(--orbitron);
+
+font-size:7px;
+
+font-weight:900;
+
+letter-spacing:3px;
+
+color:var(--green);
+
+}
+
+
+.market-live-badge span,
+.market-status span{
+
+width:7px;
+
+height:7px;
+
+border-radius:50%;
+
+background:var(--green);
+
+box-shadow:
+
+0 0 15px var(--green);
+
+animation:livePulse 1.7s ease-in-out infinite;
+
+}
+
+
+@keyframes livePulse{
+
+0%,
+100%{
+
+opacity:.35;
+
+}
+
+50%{
+
+opacity:1;
+
+}
+
+}
+
+
+.market-dashboard{
+
+margin-top:75px;
 
 overflow:hidden;
 
 border:
-1px solid rgba(255,255,255,.10);
 
-border-radius:25px;
+1px solid rgba(255,255,255,.08);
+
+border-radius:28px;
 
 background:
-rgba(8,12,27,.78);
+
+linear-gradient(
+145deg,
+rgba(15,20,43,.90),
+rgba(6,9,21,.94)
+);
 
 box-shadow:
-0 40px 120px rgba(0,0,0,.38);
 
-backdrop-filter:blur(22px);
-
--webkit-backdrop-filter:blur(22px);
+0 40px 120px rgba(0,0,0,.35);
 
 }
 
 
-.terminal-top{
+.market-primary{
 
 display:flex;
 
@@ -4538,153 +3382,150 @@ align-items:center;
 
 justify-content:space-between;
 
-gap:25px;
+gap:50px;
 
-padding:30px 35px;
-
-border-bottom:
-1px solid rgba(255,255,255,.07);
+padding:55px;
 
 }
 
 
-.terminal-label{
-
-display:block;
-
-font-family:var(--orbitron);
-
-font-size:8px;
-
-font-weight:800;
-
-letter-spacing:4px;
-
-color:var(--green);
-
-}
-
-
-.terminal-top strong{
-
-display:block;
-
-margin-top:10px;
-
-font-family:var(--orbitron);
-
-font-size:13px;
-
-letter-spacing:2px;
-
-}
-
-
-.terminal-live{
+.market-symbol{
 
 display:flex;
 
 align-items:center;
 
-gap:10px;
-
-font-family:var(--orbitron);
-
-font-size:8px;
-
-font-weight:800;
-
-letter-spacing:3px;
-
-color:var(--green);
+gap:25px;
 
 }
 
 
-.terminal-live span{
+.market-coin-wrap{
 
-width:8px;
+width:105px;
 
-height:8px;
+height:105px;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+}
+
+
+.market-coin{
+
+width:92px;
+
+height:92px;
 
 border-radius:50%;
 
-background:var(--green);
+object-fit:cover;
 
-box-shadow:
-0 0 15px var(--green);
+filter:
 
-animation:
-statusPulse 2s infinite;
-
-}
-
-
-.price-zone{
-
-padding:65px 35px;
+drop-shadow(
+0 0 30px rgba(91,124,255,.3)
+);
 
 }
 
 
-.price-zone > span{
+.market-network{
 
 font-family:var(--orbitron);
 
-font-size:8px;
+font-size:7px;
 
 font-weight:800;
 
-letter-spacing:5px;
+letter-spacing:4px;
 
-color:#6F7991;
+color:#707C92;
 
 }
 
 
-.price-zone strong{
+.market-symbol h3{
 
-display:block;
-
-margin-top:20px;
+margin-top:12px;
 
 font-family:var(--orbitron);
 
 font-size:
-clamp(38px,7vw,100px);
+
+clamp(32px,4vw,65px);
 
 font-weight:900;
 
-line-height:1;
+}
+
+
+.market-price-wrap{
+
+text-align:right;
 
 }
 
 
-.price-change{
-
-margin-top:25px;
+.market-price-label{
 
 font-family:var(--orbitron);
 
-font-size:10px;
+font-size:7px;
 
 font-weight:800;
 
-letter-spacing:3px;
+letter-spacing:4px;
 
-color:#7F899F;
+color:#707C92;
 
 }
 
 
-.price-change.positive{
+.market-price{
+
+margin-top:15px;
+
+font-family:var(--orbitron);
+
+font-size:
+
+clamp(30px,4.5vw,70px);
+
+font-weight:900;
+
+}
+
+
+.market-change{
+
+margin-top:12px;
+
+font-family:var(--orbitron);
+
+font-size:8px;
+
+font-weight:800;
+
+letter-spacing:2px;
+
+color:#8994A9;
+
+}
+
+
+.market-change.positive{
 
 color:var(--green);
 
 }
 
 
-.price-change.negative{
+.market-change.negative{
 
 color:var(--danger);
 
@@ -4696,23 +3537,27 @@ color:var(--danger);
 display:grid;
 
 grid-template-columns:
-repeat(4,1fr);
+
+repeat(4,minmax(0,1fr));
 
 border-top:
-1px solid rgba(255,255,255,.07);
+
+1px solid rgba(255,255,255,.06);
 
 border-bottom:
-1px solid rgba(255,255,255,.07);
+
+1px solid rgba(255,255,255,.06);
 
 }
 
 
 .market-stat{
 
-padding:35px;
+padding:35px 40px;
 
 border-right:
-1px solid rgba(255,255,255,.07);
+
+1px solid rgba(255,255,255,.06);
 
 }
 
@@ -4736,7 +3581,7 @@ font-weight:800;
 
 letter-spacing:3px;
 
-color:#69738B;
+color:#68748A;
 
 }
 
@@ -4745,479 +3590,37 @@ color:#69738B;
 
 display:block;
 
-margin-top:17px;
+margin-top:16px;
 
 font-family:var(--orbitron);
 
 font-size:
-clamp(16px,2vw,25px);
+
+clamp(18px,2vw,30px);
 
 }
 
 
-.terminal-bottom{
-
-display:flex;
-
-align-items:center;
-
-justify-content:space-between;
-
-gap:25px;
-
-padding:27px 35px;
-
-}
-
-
-.terminal-bottom span,
-
-.terminal-bottom a{
-
-font-family:var(--orbitron);
-
-font-size:8px;
-
-font-weight:800;
-
-letter-spacing:3px;
-
-}
-
-
-.terminal-bottom span{
-
-color:#737D94;
-
-}
-
-
-.terminal-bottom a{
-
-color:var(--green);
-
-text-decoration:none;
-
-}
-
-
-
-/* =========================
-TOKEN
-========================= */
-
-.token-section{
-
-position:relative;
-
-padding:
-200px max(7vw,40px);
-
-overflow:hidden;
+.solana-text{
 
 background:
-rgba(4,6,16,.88);
 
-}
-
-
-.token-wrap{
-
-position:relative;
-
-z-index:5;
-
-width:min(1300px,100%);
-
-margin:auto;
-
-}
-
-
-.token-head{
-
-max-width:1100px;
-
-}
-
-
-.token-grid{
-
-display:grid;
-
-grid-template-columns:
-repeat(2,1fr);
-
-gap:25px;
-
-margin-top:110px;
-
-}
-
-
-.token-card{
-
-position:relative;
-
-min-height:330px;
-
-padding:45px;
-
-overflow:hidden;
-
-border:
-1px solid rgba(255,255,255,.08);
-
-border-radius:22px;
-
-background:
-rgba(13,18,37,.72);
-
-transition:
-transform .4s ease,
-border-color .4s ease;
-
-}
-
-
-.token-card:hover{
-
-transform:translateY(-8px);
-
-border-color:
-rgba(20,241,149,.30);
-
-}
-
-
-.token-index{
-
-font-family:var(--orbitron);
-
-font-size:9px;
-
-font-weight:900;
-
-letter-spacing:4px;
-
-color:var(--green);
-
-}
-
-
-.token-card h3{
-
-max-width:500px;
-
-margin-top:70px;
-
-font-family:var(--orbitron);
-
-font-size:
-clamp(22px,3vw,39px);
-
-line-height:1.15;
-
-}
-
-
-.token-card p{
-
-max-width:520px;
-
-margin-top:27px;
-
-font-size:17px;
-
-line-height:1.8;
-
-color:#939DB4;
-
-}
-
-
-.token-card-glow{
-
-position:absolute;
-
-right:-80px;
-
-bottom:-100px;
-
-width:260px;
-
-height:260px;
-
-border-radius:50%;
-
-background:
-radial-gradient(
-circle,
-rgba(91,124,255,.14),
-transparent 65%
-);
-
-}
-
-
-.token-orbit{
-
-right:-100px;
-
-top:8%;
-
-}
-
-
-
-/* =========================
-CREATOR
-========================= */
-
-.creator-section{
-
-padding:
-190px max(7vw,40px);
-
-background:
 linear-gradient(
-135deg,
-rgba(8,11,24,.94),
-rgba(5,7,19,.90)
+90deg,
+var(--green),
+var(--purple)
 );
 
-}
+-webkit-background-clip:text;
 
+background-clip:text;
 
-.creator-wrap{
-
-width:min(1300px,100%);
-
-margin:auto;
-
-display:grid;
-
-grid-template-columns:
-1.1fr .9fr;
-
-align-items:center;
-
-gap:100px;
+color:transparent;
 
 }
 
 
-.creator-copy h2{
-
-margin-top:35px;
-
-font-family:var(--orbitron);
-
-font-size:
-clamp(55px,8vw,120px);
-
-font-weight:900;
-
-line-height:.88;
-
-}
-
-
-.creator-copy p{
-
-max-width:650px;
-
-margin-top:30px;
-
-font-size:19px;
-
-line-height:1.85;
-
-color:#9AA4BA;
-
-}
-
-
-.creator-result{
-
-margin-top:60px;
-
-padding-left:25px;
-
-border-left:
-2px solid var(--green);
-
-}
-
-
-.creator-result span,
-.creator-result small{
-
-display:block;
-
-font-family:var(--orbitron);
-
-font-size:8px;
-
-font-weight:800;
-
-letter-spacing:4px;
-
-color:#717B93;
-
-}
-
-
-.creator-result strong{
-
-display:block;
-
-margin:15px 0;
-
-font-family:var(--orbitron);
-
-font-size:
-clamp(26px,4vw,55px);
-
-}
-
-
-.creator-visual{
-
-position:relative;
-
-min-height:600px;
-
-display:flex;
-
-align-items:center;
-
-justify-content:center;
-
-}
-
-
-.creator-coin{
-
-position:relative;
-
-z-index:3;
-
-width:min(390px,80%);
-
-aspect-ratio:1;
-
-border-radius:50%;
-
-object-fit:cover;
-
-filter:
-drop-shadow(
-0 0 45px rgba(91,124,255,.35)
-);
-
-}
-
-
-.creator-coin-glow{
-
-position:absolute;
-
-width:420px;
-
-height:420px;
-
-border-radius:50%;
-
-background:
-radial-gradient(
-circle,
-rgba(20,241,149,.15),
-rgba(91,124,255,.10) 40%,
-rgba(153,69,255,.06) 60%,
-transparent 72%
-);
-
-filter:blur(25px);
-
-}
-
-
-.creator-signals{
-
-position:absolute;
-
-inset:0;
-
-z-index:4;
-
-pointer-events:none;
-
-}
-
-
-.creator-signals span{
-
-position:absolute;
-
-padding:12px 16px;
-
-border:
-1px solid rgba(255,255,255,.10);
-
-border-radius:9px;
-
-background:
-rgba(5,7,19,.75);
-
-font-family:var(--orbitron);
-
-font-size:7px;
-
-font-weight:800;
-
-letter-spacing:3px;
-
-color:#A8B1C5;
-
-}
-
-
-.creator-signals span:nth-child(1){
-
-top:15%;
-
-left:0;
-
-}
-
-
-.creator-signals span:nth-child(2){
-
-top:50%;
-
-right:0;
-
-}
-
-
-.creator-signals span:nth-child(3){
-
-bottom:15%;
-
-left:8%;
-
-}
-
-
-.contract-panel{
-
-width:min(1300px,100%);
-
-margin:
-100px auto 0;
-
-padding:35px;
+.market-bottom{
 
 display:flex;
 
@@ -5227,69 +3630,33 @@ justify-content:space-between;
 
 gap:30px;
 
-border:
-1px solid rgba(255,255,255,.10);
-
-border-radius:20px;
-
-background:
-rgba(10,14,30,.75);
+padding:28px 40px;
 
 }
 
 
-.contract-panel span{
+.market-status{
+
+display:flex;
+
+align-items:center;
+
+gap:12px;
 
 font-family:var(--orbitron);
 
-font-size:8px;
+font-size:7px;
 
 font-weight:800;
 
-letter-spacing:4px;
+letter-spacing:3px;
 
-color:#727C94;
-
-}
-
-
-.contract-panel code{
-
-display:block;
-
-margin-top:16px;
-
-font-family:var(--orbitron);
-
-font-size:
-clamp(8px,1.1vw,13px);
-
-color:#D1D6E1;
-
-word-break:break-all;
+color:#758097;
 
 }
 
 
-.contract-panel button{
-
-flex-shrink:0;
-
-min-height:52px;
-
-padding:0 25px;
-
-border-radius:11px;
-
-background:
-linear-gradient(
-90deg,
-var(--green),
-var(--blue),
-var(--purple)
-);
-
-color:#050713;
+.market-chart-link{
 
 font-family:var(--orbitron);
 
@@ -5299,41 +3666,107 @@ font-weight:900;
 
 letter-spacing:2px;
 
-cursor:pointer;
+color:white;
+
+text-decoration:none;
 
 }
-
 
 
 /* =========================
-PART 4 MOBILE
+PART 2 MOBILE
 ========================= */
 
-@media(max-width:800px){
+@media(max-width:900px){
 
-.market-section,
-.token-section,
-.creator-section{
+.section-shell{
 
 padding:
-125px 22px;
+
+100px 22px;
 
 }
 
 
-.market-terminal{
+.section-title{
 
-margin-top:65px;
+letter-spacing:-2px;
 
 }
 
 
-.terminal-top,
-.price-zone,
-.terminal-bottom{
+.story-layout{
 
-padding:
-25px 22px;
+grid-template-columns:1fr;
+
+gap:65px;
+
+margin-top:55px;
+
+}
+
+
+.philosophy-grid{
+
+grid-template-columns:1fr;
+
+margin-top:55px;
+
+}
+
+
+.philosophy-card{
+
+min-height:440px;
+
+padding:35px;
+
+}
+
+
+.philosophy-statement{
+
+grid-template-columns:1fr;
+
+gap:30px;
+
+margin-bottom:100px;
+
+}
+
+
+.statement-line{
+
+width:100%;
+
+}
+
+
+.market-heading{
+
+align-items:flex-start;
+
+flex-direction:column;
+
+}
+
+
+.market-primary{
+
+align-items:flex-start;
+
+flex-direction:column;
+
+padding:35px 25px;
+
+}
+
+
+.market-price-wrap{
+
+width:100%;
+
+text-align:left;
 
 }
 
@@ -5341,14 +3774,15 @@ padding:
 .market-stats{
 
 grid-template-columns:
-repeat(2,1fr);
+
+repeat(2,minmax(0,1fr));
 
 }
 
 
 .market-stat{
 
-padding:25px 22px;
+padding:28px 25px;
 
 }
 
@@ -5363,116 +3797,83 @@ border-right:0;
 .market-stat:nth-child(-n+2){
 
 border-bottom:
-1px solid rgba(255,255,255,.07);
+
+1px solid rgba(255,255,255,.06);
 
 }
 
 
-.terminal-bottom{
+.market-bottom{
 
 align-items:flex-start;
 
 flex-direction:column;
 
+padding:25px;
+
 }
 
 
-.token-grid{
+.story-orbit,
+.market-orbit{
+
+opacity:.5;
+
+transform:scale(.65);
+
+}
+
+}
+
+
+@media(max-width:520px){
+
+.market-symbol{
+
+gap:18px;
+
+}
+
+
+.market-coin-wrap{
+
+width:75px;
+
+height:75px;
+
+}
+
+
+.market-coin{
+
+width:68px;
+
+height:68px;
+
+}
+
+
+.market-stats{
 
 grid-template-columns:1fr;
 
-margin-top:70px;
+}
+
+
+.market-stat{
+
+border-right:0;
+
+border-bottom:
+
+1px solid rgba(255,255,255,.06);
 
 }
 
 
-.token-card{
+.market-stat:last-child{
 
-min-height:290px;
-
-padding:35px 28px;
-
-}
-
-
-.token-card h3{
-
-margin-top:50px;
-
-}
-
-
-.token-orbit{
-
-right:-130px;
-
-}
-
-
-.creator-wrap{
-
-grid-template-columns:1fr;
-
-gap:50px;
-
-}
-
-
-.creator-copy p{
-
-font-size:17px;
-
-}
-
-
-.creator-visual{
-
-min-height:430px;
-
-}
-
-
-.creator-coin{
-
-width:min(280px,75%);
-
-}
-
-
-.creator-coin-glow{
-
-width:300px;
-
-height:300px;
-
-}
-
-
-.creator-signals span{
-
-font-size:6px;
-
-letter-spacing:2px;
-
-}
-
-
-.contract-panel{
-
-margin-top:60px;
-
-padding:28px 22px;
-
-align-items:stretch;
-
-flex-direction:column;
-
-}
-
-
-.contract-panel button{
-
-width:100%;
+border-bottom:0;
 
 }
 
@@ -5481,172 +3882,255 @@ width:100%;
 </style>
 
 <!-- =========================
-RELAX CORE
+TOKEN TRUTH
 ========================= -->
 
 <section
-class="core-section"
-id="core"
+class="token-section"
+id="token"
 >
 
-<div class="core-wrap">
+<div class="token-orbit">
 
+<span class="token-orbit-core"></span>
 
-<div class="core-visual reveal">
-
-<div
-class="orbit-zone core-orbit"
-aria-hidden="true"
->
-
-<div class="orbit-ring"></div>
-
-<div class="orbit-ring second"></div>
-
-<span class="orbit-traveler"></span>
-
-<span class="orbit-traveler second"></span>
+<span class="token-orbit-traveler"></span>
 
 </div>
 
 
-<div class="core-glow"></div>
+<div class="section-shell">
 
 
-<img
-src="logo.png"
-alt="RELAX Core"
-class="core-coin relax-logo"
->
-
-
-<div class="core-ring core-ring-one"></div>
-
-<div class="core-ring core-ring-two"></div>
-
-
-</div>
-
-
-<div class="core-copy reveal">
+<div class="token-heading reveal">
 
 <div class="section-label">
 
-THE RELAX CORE
-
-</div>
-
-
-<h2>
-
-CALM IS<br>
-
-<span class="gradient-text">
-THE SIGNAL.
-</span>
-
-</h2>
-
-
-<p>
-
-Markets generate endless noise.
-
-Green candles create urgency.
-
-Red candles create fear.
-
-</p>
-
-
-<p>
-
-RELAX is a simple reminder that not every move requires a reaction.
-
-</p>
-
-
-<p>
-
-Watch.
-
-Measure.
-
-Think.
-
-Then decide.
-
-</p>
-
-
-<strong>
-
-THE MARKET MOVES.<br>
-RELAX REMAINS.
-
-</strong>
-
-
-</div>
-
-
-</div>
-
-</section>
-
-
-
-<!-- =========================
-OPEN SOURCE
-========================= -->
-
-<section
-class="source-section"
-id="source"
->
-
-<div class="source-wrap">
-
-
-<div class="source-head reveal">
-
-<div class="section-label">
-
-OPEN SOURCE
+04 // TOKEN TRUTH
 
 </div>
 
 
 <h2 class="section-title">
 
-DON'T TRUST.<br>
+NO CONTROL.
 
-<span class="gradient-text">
-VERIFY.
+<br>
+
+<span>
+
+NO HIDDEN HAND.
+
 </span>
 
 </h2>
 
 
-<p class="section-copy">
+<p class="section-description">
 
-The RELAX website source is public.
+RELAX was released into the market.
 
-Inspect the code.
+Not kept on a leash.
 
-Follow the project.
-
-Watch it evolve.
+Not controlled from behind the screen.
 
 </p>
 
 </div>
 
 
-<div class="source-terminal reveal">
+
+<div class="token-truth-grid">
 
 
-<div class="source-terminal-top">
+<article class="truth-card reveal">
+
+<div class="truth-index">
+
+01
+
+</div>
+
+<h3>
+
+NO CREATOR AUTHORITY
+
+</h3>
+
+<p>
+
+The creator has no special authority over the token.
+
+RELAX was launched and ownership control was left behind.
+
+</p>
+
+<strong>
+
+NO CONTROL SWITCH.
+
+</strong>
+
+</article>
+
+
+
+<article class="truth-card reveal">
+
+<div class="truth-index">
+
+02
+
+</div>
+
+<h3>
+
+FIXED SUPPLY
+
+</h3>
+
+<p>
+
+The supply cannot simply be increased or reduced by the creator.
+
+No surprise minting.
+
+No hidden supply games.
+
+</p>
+
+<strong>
+
+WHAT EXISTS, EXISTS.
+
+</strong>
+
+</article>
+
+
+
+<article class="truth-card reveal">
+
+<div class="truth-index">
+
+03
+
+</div>
+
+<h3>
+
+CREATOR BOUGHT TOO
+
+</h3>
+
+<p>
+
+Even the creator had to enter the market with personal funds.
+
+No giant free allocation.
+
+No hidden creator vault.
+
+</p>
+
+<strong>
+
+AROUND 1% ACQUIRED.
+
+</strong>
+
+</article>
+
+
+</div>
+
+
+
+<div class="creator-truth reveal">
+
+
+<div class="creator-truth-left">
+
+<div class="section-label">
+
+CREATOR // STATUS
+
+</div>
+
+
+<h3>
+
+THE CREATOR
+
+<br>
+
+<span>
+
+IS A PARTICIPANT.
+
+</span>
+
+</h3>
+
+</div>
+
+
+<div class="creator-truth-right">
+
+<p>
+
+RELAX was not created to give one wallet unlimited control.
+
+</p>
+
+<p>
+
+The creator cannot mint more tokens.
+
+The creator cannot reduce the supply at will.
+
+The creator does not hold a secret authority button.
+
+</p>
+
+<p>
+
+To own RELAX, the creator entered the same market and bought with personal funds — acquiring only around 1% of the token.
+
+</p>
+
+<p class="creator-final">
+
+No throne.
+
+No control room.
+
+<br>
+
+<strong>
+
+Just another RELAX holder.
+
+</strong>
+
+</p>
+
+</div>
+
+
+</div>
+
+
+
+<!-- =========================
+CONTRACT TERMINAL
+========================= -->
+
+<div class="contract-terminal reveal">
+
+
+<div class="terminal-top">
+
 
 <div class="terminal-dots">
 
@@ -5659,103 +4143,18 @@ Watch it evolve.
 </div>
 
 
-<span>
+<div class="terminal-title">
 
-RELAX / SOURCE
-
-</span>
+RELAX / SOLANA / CONTRACT
 
 </div>
 
 
-<div class="source-code">
+<div class="terminal-status">
 
-<div>
+<span></span>
 
-<span class="code-number">
-01
-</span>
-
-<code>
-
-const project = "RELAX";
-
-</code>
-
-</div>
-
-
-<div>
-
-<span class="code-number">
-02
-</span>
-
-<code>
-
-const network = "SOLANA";
-
-</code>
-
-</div>
-
-
-<div>
-
-<span class="code-number">
-03
-</span>
-
-<code>
-
-const fear = 0;
-
-</code>
-
-</div>
-
-
-<div>
-
-<span class="code-number">
-04
-</span>
-
-<code>
-
-const panic = 0;
-
-</code>
-
-</div>
-
-
-<div>
-
-<span class="code-number">
-05
-</span>
-
-<code>
-
-const regrets = 0;
-
-</code>
-
-</div>
-
-
-<div class="source-highlight">
-
-<span class="code-number">
-06
-</span>
-
-<code>
-
-return "JUST RELAX BRO.";
-
-</code>
+VERIFIED ADDRESS
 
 </div>
 
@@ -5763,24 +4162,1346 @@ return "JUST RELAX BRO.";
 </div>
 
 
-<div class="source-terminal-bottom">
 
-<span>
+<div class="terminal-body">
 
-PUBLIC REPOSITORY
+
+<div class="terminal-line">
+
+<span class="terminal-prefix">
+
+$
 
 </span>
+
+<span class="terminal-command">
+
+relax --contract
+
+</span>
+
+</div>
+
+
+<div class="terminal-output">
+
+<span class="terminal-key">
+
+network
+
+</span>
+
+<span class="terminal-divider">
+
+:
+
+</span>
+
+<span class="terminal-value solana-terminal">
+
+Solana
+
+</span>
+
+</div>
+
+
+<div class="terminal-output">
+
+<span class="terminal-key">
+
+symbol
+
+</span>
+
+<span class="terminal-divider">
+
+:
+
+</span>
+
+<span class="terminal-value">
+
+$RELAX
+
+</span>
+
+</div>
+
+
+<div class="terminal-output">
+
+<span class="terminal-key">
+
+contract
+
+</span>
+
+<span class="terminal-divider">
+
+:
+
+</span>
+
+<span
+class="terminal-value terminal-ca"
+id="contractAddress"
+>
+
+6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump
+
+</span>
+
+</div>
+
+
+<div class="terminal-output">
+
+<span class="terminal-key">
+
+creator_control
+
+</span>
+
+<span class="terminal-divider">
+
+:
+
+</span>
+
+<span class="terminal-value terminal-green">
+
+NONE
+
+</span>
+
+</div>
+
+
+<div class="terminal-output">
+
+<span class="terminal-key">
+
+supply
+
+</span>
+
+<span class="terminal-divider">
+
+:
+
+</span>
+
+<span class="terminal-value terminal-green">
+
+FIXED
+
+</span>
+
+</div>
+
+
+<div class="terminal-output">
+
+<span class="terminal-key">
+
+mindset
+
+</span>
+
+<span class="terminal-divider">
+
+:
+
+</span>
+
+<span class="terminal-value terminal-purple">
+
+JUST_RELAX_BRO
+
+</span>
+
+</div>
+
+
+
+<div class="terminal-action">
+
+
+<button
+class="terminal-copy"
+type="button"
+id="copyContract"
+>
+
+<span class="copy-default">
+
+COPY CONTRACT
+
+</span>
+
+<span class="copy-success">
+
+COPIED ✓
+
+</span>
+
+</button>
 
 
 <a
 href="https://github.com/0relaxbro/RELAX"
 target="_blank"
 rel="noopener noreferrer"
+class="terminal-github"
 >
 
-VIEW ON GITHUB ↗
+VIEW SOURCE ON GITHUB ↗
 
 </a>
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+</section>
+
+
+
+<style>
+
+/* =========================
+TOKEN SECTION
+========================= */
+
+.token-section{
+
+background:
+
+radial-gradient(
+circle at 10% 25%,
+rgba(20,241,149,.08),
+transparent 28%
+),
+
+radial-gradient(
+circle at 90% 70%,
+rgba(153,69,255,.10),
+transparent 32%
+),
+
+#050713;
+
+}
+
+
+.token-heading{
+
+max-width:950px;
+
+}
+
+
+.token-heading .section-title{
+
+margin-top:28px;
+
+}
+
+
+.token-truth-grid{
+
+display:grid;
+
+grid-template-columns:
+
+repeat(3,minmax(0,1fr));
+
+gap:24px;
+
+margin-top:80px;
+
+}
+
+
+.truth-card{
+
+position:relative;
+
+min-height:400px;
+
+display:flex;
+
+flex-direction:column;
+
+padding:42px;
+
+overflow:hidden;
+
+border:
+
+1px solid rgba(255,255,255,.07);
+
+border-radius:24px;
+
+background:
+
+linear-gradient(
+145deg,
+rgba(13,18,37,.92),
+rgba(7,10,24,.92)
+);
+
+transition:
+
+transform .4s ease,
+
+border-color .4s ease,
+
+box-shadow .4s ease;
+
+}
+
+
+.truth-card::before{
+
+content:"";
+
+position:absolute;
+
+left:0;
+
+top:0;
+
+width:100%;
+
+height:2px;
+
+background:
+
+linear-gradient(
+90deg,
+var(--green),
+var(--blue),
+var(--purple)
+);
+
+opacity:.75;
+
+}
+
+
+.truth-card:hover{
+
+transform:translateY(-8px);
+
+border-color:
+
+rgba(91,124,255,.24);
+
+box-shadow:
+
+0 30px 80px rgba(0,0,0,.32);
+
+}
+
+
+.truth-index{
+
+font-family:var(--orbitron);
+
+font-size:8px;
+
+font-weight:900;
+
+letter-spacing:4px;
+
+color:#667187;
+
+}
+
+
+.truth-card h3{
+
+margin-top:55px;
+
+font-family:var(--orbitron);
+
+font-size:
+
+clamp(23px,2vw,34px);
+
+font-weight:900;
+
+line-height:1.35;
+
+}
+
+
+.truth-card p{
+
+margin-top:28px;
+
+font-size:17px;
+
+line-height:1.9;
+
+color:#98A3B7;
+
+}
+
+
+.truth-card strong{
+
+margin-top:auto;
+
+padding-top:40px;
+
+font-family:var(--orbitron);
+
+font-size:8px;
+
+font-weight:900;
+
+letter-spacing:3px;
+
+color:var(--green);
+
+}
+
+
+/* =========================
+CREATOR TRUTH
+========================= */
+
+.creator-truth{
+
+display:grid;
+
+grid-template-columns:
+
+minmax(0,.9fr)
+
+minmax(0,1.1fr);
+
+gap:9vw;
+
+margin-top:120px;
+
+padding:
+
+80px 0;
+
+border-top:
+
+1px solid rgba(255,255,255,.07);
+
+border-bottom:
+
+1px solid rgba(255,255,255,.07);
+
+}
+
+
+.creator-truth-left h3{
+
+margin-top:30px;
+
+font-family:var(--orbitron);
+
+font-size:
+
+clamp(38px,5vw,78px);
+
+font-weight:900;
+
+line-height:1;
+
+letter-spacing:-3px;
+
+}
+
+
+.creator-truth-left h3 span{
+
+background:
+
+linear-gradient(
+90deg,
+var(--green),
+var(--blue),
+var(--purple)
+);
+
+-webkit-background-clip:text;
+
+background-clip:text;
+
+color:transparent;
+
+}
+
+
+.creator-truth-right p{
+
+margin-bottom:28px;
+
+font-size:
+
+clamp(17px,1.4vw,21px);
+
+line-height:1.9;
+
+color:#9DA7BA;
+
+}
+
+
+.creator-truth-right .creator-final{
+
+margin-top:50px;
+
+color:white;
+
+}
+
+
+.creator-final strong{
+
+display:inline-block;
+
+margin-top:15px;
+
+font-family:var(--orbitron);
+
+font-size:
+
+clamp(22px,2.5vw,38px);
+
+color:var(--green);
+
+}
+
+
+/* =========================
+TOKEN ORBIT
+========================= */
+
+.token-orbit{
+
+position:absolute;
+
+right:-190px;
+
+top:36%;
+
+width:430px;
+
+height:430px;
+
+border:
+
+1px solid rgba(153,69,255,.08);
+
+border-radius:50%;
+
+pointer-events:none;
+
+}
+
+
+.token-orbit::before{
+
+content:"";
+
+position:absolute;
+
+inset:85px;
+
+border:
+
+1px solid rgba(20,241,149,.07);
+
+border-radius:50%;
+
+}
+
+
+.token-orbit-core{
+
+position:absolute;
+
+left:50%;
+
+top:50%;
+
+width:22px;
+
+height:22px;
+
+border-radius:50%;
+
+background:var(--purple);
+
+transform:translate(-50%,-50%);
+
+box-shadow:
+
+0 0 45px rgba(153,69,255,.7);
+
+}
+
+
+.token-orbit-traveler{
+
+position:absolute;
+
+left:50%;
+
+top:50%;
+
+width:9px;
+
+height:9px;
+
+margin:-4.5px;
+
+border-radius:50%;
+
+background:var(--green);
+
+box-shadow:
+
+0 0 22px var(--green);
+
+animation:
+
+tokenOrbit 17s linear infinite;
+
+}
+
+
+@keyframes tokenOrbit{
+
+from{
+
+transform:
+
+rotate(0deg)
+
+translateX(215px)
+
+rotate(0deg);
+
+}
+
+to{
+
+transform:
+
+rotate(360deg)
+
+translateX(215px)
+
+rotate(-360deg);
+
+}
+
+}
+
+
+/* =========================
+CONTRACT TERMINAL
+========================= */
+
+.contract-terminal{
+
+margin-top:120px;
+
+overflow:hidden;
+
+border:
+
+1px solid rgba(255,255,255,.09);
+
+border-radius:22px;
+
+background:#070A15;
+
+box-shadow:
+
+0 45px 120px rgba(0,0,0,.45);
+
+}
+
+
+.terminal-top{
+
+min-height:65px;
+
+display:grid;
+
+grid-template-columns:1fr auto 1fr;
+
+align-items:center;
+
+gap:20px;
+
+padding:0 25px;
+
+border-bottom:
+
+1px solid rgba(255,255,255,.07);
+
+background:
+
+rgba(255,255,255,.025);
+
+}
+
+
+.terminal-dots{
+
+display:flex;
+
+align-items:center;
+
+gap:8px;
+
+}
+
+
+.terminal-dots span{
+
+width:10px;
+
+height:10px;
+
+border-radius:50%;
+
+}
+
+
+.terminal-dots span:nth-child(1){
+
+background:#FF5F57;
+
+}
+
+
+.terminal-dots span:nth-child(2){
+
+background:#FEBB2E;
+
+}
+
+
+.terminal-dots span:nth-child(3){
+
+background:#28C840;
+
+}
+
+
+.terminal-title{
+
+font-family:var(--orbitron);
+
+font-size:7px;
+
+font-weight:800;
+
+letter-spacing:3px;
+
+color:#758097;
+
+}
+
+
+.terminal-status{
+
+justify-self:end;
+
+display:flex;
+
+align-items:center;
+
+gap:10px;
+
+font-family:var(--orbitron);
+
+font-size:6px;
+
+font-weight:800;
+
+letter-spacing:2px;
+
+color:var(--green);
+
+}
+
+
+.terminal-status span{
+
+width:7px;
+
+height:7px;
+
+border-radius:50%;
+
+background:var(--green);
+
+box-shadow:
+
+0 0 12px var(--green);
+
+}
+
+
+.terminal-body{
+
+padding:55px;
+
+font-family:
+
+"Courier New",
+monospace;
+
+}
+
+
+.terminal-line{
+
+display:flex;
+
+align-items:center;
+
+gap:14px;
+
+margin-bottom:40px;
+
+font-size:
+
+clamp(15px,1.5vw,20px);
+
+}
+
+
+.terminal-prefix{
+
+color:var(--green);
+
+}
+
+
+.terminal-command{
+
+color:white;
+
+}
+
+
+.terminal-output{
+
+display:grid;
+
+grid-template-columns:180px 30px 1fr;
+
+align-items:start;
+
+gap:10px;
+
+margin-bottom:22px;
+
+font-size:
+
+clamp(13px,1.2vw,17px);
+
+line-height:1.6;
+
+}
+
+
+.terminal-key{
+
+color:#718097;
+
+}
+
+
+.terminal-divider{
+
+color:#455067;
+
+}
+
+
+.terminal-value{
+
+color:#DCE3F1;
+
+}
+
+
+.terminal-green{
+
+color:var(--green);
+
+}
+
+
+.terminal-purple{
+
+color:#C58BFF;
+
+}
+
+
+.solana-terminal{
+
+background:
+
+linear-gradient(
+90deg,
+var(--green),
+var(--purple)
+);
+
+-webkit-background-clip:text;
+
+background-clip:text;
+
+color:transparent;
+
+font-weight:bold;
+
+}
+
+
+.terminal-ca{
+
+word-break:break-all;
+
+color:#8EABFF;
+
+}
+
+
+.terminal-action{
+
+display:flex;
+
+align-items:center;
+
+flex-wrap:wrap;
+
+gap:16px;
+
+margin-top:55px;
+
+padding-top:35px;
+
+border-top:
+
+1px solid rgba(255,255,255,.06);
+
+}
+
+
+.terminal-copy,
+.terminal-github{
+
+min-height:50px;
+
+display:inline-flex;
+
+align-items:center;
+
+justify-content:center;
+
+padding:0 24px;
+
+border-radius:10px;
+
+font-family:var(--orbitron);
+
+font-size:7px;
+
+font-weight:900;
+
+letter-spacing:2px;
+
+cursor:pointer;
+
+text-decoration:none;
+
+}
+
+
+.terminal-copy{
+
+position:relative;
+
+min-width:190px;
+
+background:
+
+linear-gradient(
+90deg,
+var(--green),
+var(--blue),
+var(--purple)
+);
+
+color:#050713;
+
+}
+
+
+.copy-success{
+
+display:none;
+
+}
+
+
+.terminal-copy.copied .copy-default{
+
+display:none;
+
+}
+
+
+.terminal-copy.copied .copy-success{
+
+display:inline;
+
+}
+
+
+.terminal-github{
+
+border:
+
+1px solid rgba(255,255,255,.12);
+
+background:
+
+rgba(255,255,255,.03);
+
+color:white;
+
+transition:
+
+background .3s ease,
+
+border-color .3s ease,
+
+transform .3s ease;
+
+}
+
+
+.terminal-github:hover{
+
+transform:translateY(-3px);
+
+background:
+
+rgba(255,255,255,.07);
+
+border-color:
+
+rgba(91,124,255,.35);
+
+}
+
+
+/* =========================
+PART 3 MOBILE
+========================= */
+
+@media(max-width:900px){
+
+.token-truth-grid{
+
+grid-template-columns:1fr;
+
+margin-top:55px;
+
+}
+
+
+.truth-card{
+
+min-height:360px;
+
+padding:35px;
+
+}
+
+
+.creator-truth{
+
+grid-template-columns:1fr;
+
+gap:60px;
+
+margin-top:85px;
+
+padding:65px 0;
+
+}
+
+
+.token-orbit{
+
+opacity:.45;
+
+transform:scale(.65);
+
+}
+
+
+.contract-terminal{
+
+margin-top:85px;
+
+}
+
+
+.terminal-top{
+
+grid-template-columns:1fr auto;
+
+}
+
+
+.terminal-title{
+
+display:none;
+
+}
+
+
+.terminal-body{
+
+padding:35px 25px;
+
+}
+
+
+.terminal-output{
+
+grid-template-columns:130px 20px 1fr;
+
+}
+
+}
+
+
+@media(max-width:600px){
+
+.terminal-status{
+
+font-size:5px;
+
+}
+
+
+.terminal-body{
+
+padding:30px 20px;
+
+}
+
+
+.terminal-output{
+
+grid-template-columns:1fr;
+
+gap:3px;
+
+margin-bottom:28px;
+
+}
+
+
+.terminal-divider{
+
+display:none;
+
+}
+
+
+.terminal-key::after{
+
+content:":";
+
+}
+
+
+.terminal-action{
+
+align-items:stretch;
+
+flex-direction:column;
+
+}
+
+
+.terminal-copy,
+.terminal-github{
+
+width:100%;
+
+}
+
+
+.token-orbit{
+
+display:none;
+
+}
+
+}
+
+</style>
+
+<!-- =========================
+VISION
+========================= -->
+
+<section
+class="vision-section"
+id="vision"
+>
+
+<div class="vision-glow vision-glow-left"></div>
+
+<div class="vision-glow vision-glow-right"></div>
+
+
+<div class="section-shell">
+
+
+<div class="vision-layout">
+
+
+<div class="vision-heading reveal">
+
+<div class="section-label">
+
+05 // THE VISION
+
+</div>
+
+
+<h2 class="section-title">
+
+NO FAKE
+
+<br>
+
+<span>
+
+PROMISES.
+
+</span>
+
+</h2>
+
+
+<p class="vision-intro">
+
+RELAX is not here to sell a fantasy.
+
+</p>
+
+</div>
+
+
+
+<div class="vision-content reveal">
+
+
+<p class="vision-large">
+
+No imaginary revolution.
+
+<br>
+
+No impossible roadmap.
+
+<br>
+
+No corporate buzzwords.
+
+</p>
+
+
+<p>
+
+Crypto has enough noise already.
+
+Every day, another project promises to change the world before changing its own logo.
+
+</p>
+
+
+<p>
+
+RELAX takes a different path.
+
+The idea is simple:
+
+build the identity,
+
+grow the community,
+
+improve the experience,
+
+and let the journey happen naturally.
+
+</p>
+
+
+<div class="vision-quote">
+
+<span class="vision-quote-mark">
+
+“
+
+</span>
+
+
+<p>
+
+We don't know where the market goes tomorrow.
+
+<br>
+
+That's kind of the point.
+
+</p>
+
+
+<strong>
+
+JUST RELAX BRO.
+
+</strong>
+
+</div>
+
 
 </div>
 
@@ -5803,67 +5524,74 @@ class="roadmap-section"
 id="roadmap"
 >
 
-<div
-class="orbit-zone roadmap-orbit"
-aria-hidden="true"
->
 
-<div class="orbit-ring"></div>
+<div class="roadmap-orbit">
 
-<div class="orbit-ring second"></div>
+<span class="roadmap-core"></span>
 
-<span class="orbit-traveler"></span>
-
-<span class="orbit-traveler second"></span>
+<span class="roadmap-traveler"></span>
 
 </div>
 
 
-<div class="roadmap-wrap">
+<div class="section-shell">
 
 
-<div class="roadmap-head reveal">
+<div class="roadmap-heading reveal">
+
 
 <div class="section-label">
 
-RELAX ROADMAP
+06 // ROADMAP
 
 </div>
 
 
 <h2 class="section-title">
 
-NO RUSH.<br>
+THE JOURNEY
 
-<span class="gradient-text">
-KEEP BUILDING.
+<br>
+
+<span>
+
+IS THE ROADMAP.
+
 </span>
 
 </h2>
 
 
-<p class="section-copy">
+<p class="section-description">
 
-RELAX does not need to promise the universe overnight.
+No fake deadlines.
 
-Build carefully.
+No impossible promises.
 
-Grow naturally.
-
-Keep moving.
+Just clear steps and continuous progress.
 
 </p>
+
 
 </div>
 
 
 
+<div class="roadmap-timeline">
+
+
 <div class="roadmap-line">
+
+<span id="roadmapProgress"></span>
+
+</div>
+
 
 
 <article class="roadmap-item reveal">
 
-<div class="roadmap-node">
+
+<div class="roadmap-marker">
 
 <span></span>
 
@@ -5877,29 +5605,59 @@ PHASE 01
 </div>
 
 
+<div class="roadmap-card">
+
+
+<div class="roadmap-status completed">
+
+LIVE
+
+</div>
+
+
 <h3>
 
-RELAX IS BORN
+BORN IN CHAOS
 
 </h3>
 
 
 <p>
 
-Launch on Solana.
+RELAX enters the Solana market.
 
-Establish the RELAX identity.
+The identity is created.
 
-Build the first home for the community.
+The philosophy begins.
 
 </p>
 
 
-<div class="roadmap-status active">
+<div class="roadmap-tags">
 
-LIVE
+<span>
+
+SOLANA
+
+</span>
+
+<span>
+
+PUMP.FUN
+
+</span>
+
+<span>
+
+RELAX
+
+</span>
 
 </div>
+
+
+</div>
+
 
 </article>
 
@@ -5907,7 +5665,8 @@ LIVE
 
 <article class="roadmap-item reveal">
 
-<div class="roadmap-node">
+
+<div class="roadmap-marker">
 
 <span></span>
 
@@ -5921,29 +5680,61 @@ PHASE 02
 </div>
 
 
+<div class="roadmap-card">
+
+
+<div class="roadmap-status active">
+
+NOW
+
+</div>
+
+
 <h3>
 
-SPREAD THE SIGNAL
+BUILD THE WORLD
 
 </h3>
 
 
 <p>
 
-Expand the RELAX story.
+Develop the RELAX identity.
 
-Grow organically across X.
+Expand the website.
 
-Strengthen community identity.
+Create original visual stories.
+
+Build a recognizable presence across the market.
 
 </p>
 
 
-<div class="roadmap-status">
+<div class="roadmap-tags">
 
-BUILDING
+<span>
+
+WEBSITE
+
+</span>
+
+<span>
+
+STORY
+
+</span>
+
+<span>
+
+VISUALS
+
+</span>
 
 </div>
+
+
+</div>
+
 
 </article>
 
@@ -5951,7 +5742,8 @@ BUILDING
 
 <article class="roadmap-item reveal">
 
-<div class="roadmap-node">
+
+<div class="roadmap-marker">
 
 <span></span>
 
@@ -5965,31 +5757,61 @@ PHASE 03
 </div>
 
 
+<div class="roadmap-card">
+
+
+<div class="roadmap-status future">
+
+NEXT
+
+</div>
+
+
 <h3>
 
-RELAX CULTURE
+FIND THE RELAXED
 
 </h3>
 
 
 <p>
 
-Community-driven content.
+Grow an organic community around the mindset.
 
-Memes.
+No forced hype.
 
-Visual stories.
+No fake engagement.
 
-A recognizable calm signal inside market chaos.
+Let the people who understand RELAX find each other.
 
 </p>
 
 
-<div class="roadmap-status">
+<div class="roadmap-tags">
 
-NEXT
+<span>
+
+COMMUNITY
+
+</span>
+
+<span>
+
+ORGANIC
+
+</span>
+
+<span>
+
+CULTURE
+
+</span>
 
 </div>
+
+
+</div>
+
 
 </article>
 
@@ -5997,7 +5819,8 @@ NEXT
 
 <article class="roadmap-item reveal">
 
-<div class="roadmap-node">
+
+<div class="roadmap-marker">
 
 <span></span>
 
@@ -6011,36 +5834,61 @@ PHASE 04
 </div>
 
 
+<div class="roadmap-card">
+
+
+<div class="roadmap-status future">
+
+RELAX
+
+</div>
+
+
 <h3>
 
-THE UNKNOWN
+LET IT EVOLVE
 
 </h3>
 
 
 <p>
 
-No fake promises.
+New ideas.
 
-No imaginary partnerships.
+New content.
 
-No forced roadmap theatre.
+New experiments.
 
-</p>
-
-
-<p>
-
-If RELAX grows, the next chapter will be built in public.
+The future of RELAX will grow with the people around it.
 
 </p>
 
 
-<div class="roadmap-status">
+<div class="roadmap-tags">
+
+<span>
+
+CREATE
+
+</span>
+
+<span>
+
+EXPERIMENT
+
+</span>
+
+<span>
 
 RELAX
 
+</span>
+
 </div>
+
+
+</div>
+
 
 </article>
 
@@ -6054,439 +5902,325 @@ RELAX
 
 
 
+<!-- =========================
+MANIFESTO
+========================= -->
+
+<section class="manifesto-section">
+
+
+<div class="manifesto-stars"></div>
+
+
+<div class="manifesto-inner reveal">
+
+
+<div class="manifesto-logo-wrap">
+
+<div class="manifesto-logo-glow"></div>
+
+
+<img
+src="logo.png"
+alt="RELAX"
+class="manifesto-logo relax-logo"
+>
+
+</div>
+
+
+<div class="manifesto-label">
+
+THE RELAX MANIFESTO
+
+</div>
+
+
+<h2>
+
+THE MARKET
+
+<br>
+
+DOESN'T OWE YOU
+
+<br>
+
+<span>
+
+ANYTHING.
+
+</span>
+
+</h2>
+
+
+<p>
+
+You will miss pumps.
+
+You will see red candles.
+
+You will watch strangers celebrate trades you never took.
+
+</p>
+
+
+<p>
+
+The chart will move without asking how you feel.
+
+</p>
+
+
+<p class="manifesto-highlight">
+
+So understand the risk.
+
+<br>
+
+Make your decision.
+
+<br>
+
+Accept the outcome.
+
+</p>
+
+
+<div class="manifesto-final">
+
+0 FEAR.
+
+<span>
+
+0 PANIC.
+
+</span>
+
+0 REGRETS.
+
+</div>
+
+
+<strong class="manifesto-relax">
+
+JUST RELAX BRO.
+
+</strong>
+
+
+</div>
+
+
+</section>
+
+
+
 <style>
 
 /* =========================
-CORE
+VISION
 ========================= */
 
-.core-section{
+.vision-section{
 
-padding:
-200px max(7vw,40px);
-
-overflow:hidden;
-
-background:
-linear-gradient(
-135deg,
-rgba(4,6,16,.96),
-rgba(9,12,28,.90)
-);
+background:#070A17;
 
 }
 
 
-.core-wrap{
-
-width:min(1300px,100%);
-
-margin:auto;
-
-display:grid;
-
-grid-template-columns:
-.9fr 1.1fr;
-
-align-items:center;
-
-gap:110px;
-
-}
-
-
-.core-visual{
-
-position:relative;
-
-min-height:650px;
-
-display:flex;
-
-align-items:center;
-
-justify-content:center;
-
-}
-
-
-.core-coin{
-
-position:relative;
-
-z-index:5;
-
-width:min(360px,70%);
-
-aspect-ratio:1;
-
-border-radius:50%;
-
-object-fit:cover;
-
-filter:
-drop-shadow(
-0 0 45px rgba(91,124,255,.35)
-);
-
-}
-
-
-.core-glow{
+.vision-glow{
 
 position:absolute;
 
-width:500px;
+width:600px;
 
-height:500px;
-
-border-radius:50%;
-
-background:
-radial-gradient(
-circle,
-rgba(20,241,149,.15),
-rgba(91,124,255,.10) 38%,
-rgba(153,69,255,.07) 58%,
-transparent 72%
-);
-
-filter:blur(30px);
-
-}
-
-
-.core-ring{
-
-position:absolute;
+height:600px;
 
 border-radius:50%;
 
-border:
-1px solid rgba(255,255,255,.08);
+filter:blur(130px);
+
+pointer-events:none;
+
+opacity:.11;
 
 }
 
 
-.core-ring-one{
+.vision-glow-left{
 
-width:470px;
+left:-350px;
 
-height:470px;
-
-}
-
-
-.core-ring-two{
-
-width:580px;
-
-height:580px;
-
-border-color:
-rgba(91,124,255,.10);
-
-}
-
-
-.core-orbit{
-
-z-index:4;
-
-width:520px;
-
-height:520px;
-
-}
-
-
-.core-copy h2{
-
-margin-top:35px;
-
-font-family:var(--orbitron);
-
-font-size:
-clamp(55px,8vw,120px);
-
-font-weight:900;
-
-line-height:.88;
-
-}
-
-
-.core-copy p{
-
-max-width:650px;
-
-margin-top:30px;
-
-font-size:19px;
-
-line-height:1.85;
-
-color:#9AA4BA;
-
-}
-
-
-.core-copy strong{
-
-display:block;
-
-margin-top:60px;
-
-font-family:var(--orbitron);
-
-font-size:
-clamp(20px,3vw,40px);
-
-line-height:1.5;
-
-}
-
-
-
-/* =========================
-SOURCE
-========================= */
-
-.source-section{
-
-padding:
-190px max(7vw,40px);
-
-background:
-rgba(5,7,19,.90);
-
-}
-
-
-.source-wrap{
-
-width:min(1300px,100%);
-
-margin:auto;
-
-}
-
-
-.source-head{
-
-max-width:1000px;
-
-}
-
-
-.source-terminal{
-
-margin-top:90px;
-
-overflow:hidden;
-
-border:
-1px solid rgba(255,255,255,.10);
-
-border-radius:22px;
-
-background:
-rgba(7,10,23,.82);
-
-box-shadow:
-0 40px 100px rgba(0,0,0,.35);
-
-}
-
-
-.source-terminal-top{
-
-min-height:65px;
-
-display:flex;
-
-align-items:center;
-
-justify-content:space-between;
-
-padding:0 28px;
-
-border-bottom:
-1px solid rgba(255,255,255,.07);
-
-}
-
-
-.terminal-dots{
-
-display:flex;
-
-gap:8px;
-
-}
-
-
-.terminal-dots span{
-
-width:9px;
-
-height:9px;
-
-border-radius:50%;
-
-background:#30384D;
-
-}
-
-
-.terminal-dots span:nth-child(1){
-
-background:var(--danger);
-
-}
-
-
-.terminal-dots span:nth-child(2){
-
-background:#FFCA5C;
-
-}
-
-
-.terminal-dots span:nth-child(3){
+top:0;
 
 background:var(--green);
 
 }
 
 
-.source-terminal-top > span{
+.vision-glow-right{
+
+right:-350px;
+
+bottom:0;
+
+background:var(--purple);
+
+}
+
+
+.vision-layout{
+
+display:grid;
+
+grid-template-columns:
+
+minmax(0,.9fr)
+
+minmax(0,1.1fr);
+
+gap:10vw;
+
+}
+
+
+.vision-heading .section-title{
+
+margin-top:28px;
+
+}
+
+
+.vision-intro{
+
+margin-top:30px;
 
 font-family:var(--orbitron);
 
-font-size:8px;
+font-size:11px;
 
 font-weight:800;
 
 letter-spacing:3px;
 
-color:#707A92;
+color:#8D98AD;
 
 }
 
 
-.source-code{
+.vision-content{
 
-padding:
-50px 35px;
-
-}
-
-
-.source-code > div{
-
-display:flex;
-
-align-items:center;
-
-gap:30px;
-
-min-height:65px;
-
-padding:0 20px;
-
-border-radius:10px;
+max-width:720px;
 
 }
 
 
-.code-number{
+.vision-content > p{
 
-width:30px;
-
-flex-shrink:0;
-
-font-family:var(--orbitron);
-
-font-size:8px;
-
-color:#485168;
-
-}
-
-
-.source-code code{
+margin-bottom:30px;
 
 font-size:
-clamp(13px,1.7vw,21px);
 
-color:#9CA7BD;
+clamp(17px,1.4vw,21px);
 
-}
+line-height:1.9;
 
-
-.source-highlight{
-
-background:
-rgba(20,241,149,.06);
+color:#9CA7BA;
 
 }
 
 
-.source-highlight code{
-
-color:var(--green);
-
-}
-
-
-.source-terminal-bottom{
-
-display:flex;
-
-align-items:center;
-
-justify-content:space-between;
-
-gap:20px;
-
-padding:25px 35px;
-
-border-top:
-1px solid rgba(255,255,255,.07);
-
-}
-
-
-.source-terminal-bottom span,
-.source-terminal-bottom a{
+.vision-content .vision-large{
 
 font-family:var(--orbitron);
 
-font-size:8px;
+font-size:
 
-font-weight:800;
+clamp(24px,2.7vw,43px);
 
-letter-spacing:3px;
+font-weight:900;
 
-}
+line-height:1.55;
 
-
-.source-terminal-bottom span{
-
-color:#626C84;
+color:white;
 
 }
 
 
-.source-terminal-bottom a{
+.vision-quote{
+
+position:relative;
+
+margin-top:65px;
+
+padding:
+
+55px 55px 55px 70px;
+
+border-left:
+
+2px solid var(--green);
+
+background:
+
+linear-gradient(
+90deg,
+rgba(20,241,149,.055),
+transparent
+);
+
+}
+
+
+.vision-quote-mark{
+
+position:absolute;
+
+left:20px;
+
+top:15px;
+
+font-family:Georgia,serif;
+
+font-size:90px;
+
+color:rgba(20,241,149,.18);
+
+}
+
+
+.vision-quote p{
+
+font-family:var(--orbitron);
+
+font-size:
+
+clamp(18px,2vw,30px);
+
+font-weight:700;
+
+line-height:1.7;
+
+}
+
+
+.vision-quote strong{
+
+display:block;
+
+margin-top:30px;
+
+font-family:var(--orbitron);
+
+font-size:9px;
+
+letter-spacing:4px;
 
 color:var(--green);
 
-text-decoration:none;
-
 }
-
 
 
 /* =========================
@@ -6495,74 +6229,81 @@ ROADMAP
 
 .roadmap-section{
 
-position:relative;
-
-padding:
-200px max(7vw,40px);
-
-overflow:hidden;
-
 background:
-linear-gradient(
-180deg,
-rgba(8,11,24,.92),
-rgba(4,6,16,.96)
-);
+
+radial-gradient(
+circle at 80% 20%,
+rgba(91,124,255,.09),
+transparent 30%
+),
+
+#050713;
 
 }
 
 
-.roadmap-wrap{
+.roadmap-heading{
+
+max-width:900px;
+
+}
+
+
+.roadmap-heading .section-title{
+
+margin-top:28px;
+
+}
+
+
+.roadmap-timeline{
 
 position:relative;
 
-z-index:5;
-
-width:min(1300px,100%);
-
-margin:auto;
-
-}
-
-
-.roadmap-head{
-
-max-width:1000px;
+margin-top:100px;
 
 }
 
 
 .roadmap-line{
 
-position:relative;
-
-margin-top:130px;
-
-}
-
-
-.roadmap-line::before{
-
-content:"";
-
 position:absolute;
+
+left:18px;
 
 top:0;
 
 bottom:0;
 
-left:25px;
-
 width:1px;
 
 background:
+
+rgba(255,255,255,.08);
+
+}
+
+
+.roadmap-line span{
+
+display:block;
+
+width:100%;
+
+height:0;
+
+background:
+
 linear-gradient(
 180deg,
 var(--green),
 var(--blue),
-var(--purple),
-rgba(255,255,255,.05)
+var(--purple)
 );
+
+box-shadow:
+
+0 0 15px rgba(91,124,255,.4);
 
 }
 
@@ -6571,34 +6312,30 @@ rgba(255,255,255,.05)
 
 position:relative;
 
-max-width:850px;
+display:grid;
 
-margin-left:100px;
+grid-template-columns:
 
-padding:
-0 0 120px 60px;
+70px 180px 1fr;
 
-}
+align-items:start;
 
+gap:20px;
 
-.roadmap-item:last-child{
-
-padding-bottom:0;
+margin-bottom:55px;
 
 }
 
 
-.roadmap-node{
+.roadmap-marker{
 
-position:absolute;
+position:relative;
 
-left:-87px;
+z-index:3;
 
-top:0;
+width:37px;
 
-width:26px;
-
-height:26px;
+height:37px;
 
 display:flex;
 
@@ -6607,35 +6344,36 @@ align-items:center;
 justify-content:center;
 
 border:
-1px solid rgba(20,241,149,.55);
+
+1px solid rgba(255,255,255,.15);
 
 border-radius:50%;
 
 background:#050713;
 
-box-shadow:
-0 0 25px rgba(20,241,149,.16);
-
 }
 
 
-.roadmap-node span{
+.roadmap-marker span{
 
-width:8px;
+width:9px;
 
-height:8px;
+height:9px;
 
 border-radius:50%;
 
 background:var(--green);
 
 box-shadow:
-0 0 12px var(--green);
+
+0 0 18px var(--green);
 
 }
 
 
 .roadmap-phase{
+
+padding-top:12px;
 
 font-family:var(--orbitron);
 
@@ -6643,38 +6381,49 @@ font-size:8px;
 
 font-weight:900;
 
-letter-spacing:5px;
+letter-spacing:3px;
 
-color:var(--green);
-
-}
-
-
-.roadmap-item h3{
-
-margin-top:25px;
-
-font-family:var(--orbitron);
-
-font-size:
-clamp(30px,5vw,65px);
-
-font-weight:900;
+color:#737F95;
 
 }
 
 
-.roadmap-item p{
+.roadmap-card{
 
-max-width:700px;
+position:relative;
 
-margin-top:25px;
+padding:45px;
 
-font-size:18px;
+border:
 
-line-height:1.8;
+1px solid rgba(255,255,255,.07);
 
-color:#949EB4;
+border-radius:22px;
+
+background:
+
+linear-gradient(
+145deg,
+rgba(255,255,255,.04),
+rgba(255,255,255,.012)
+);
+
+transition:
+
+transform .4s ease,
+
+border-color .4s ease;
+
+}
+
+
+.roadmap-card:hover{
+
+transform:translateX(8px);
+
+border-color:
+
+rgba(91,124,255,.25);
 
 }
 
@@ -6683,222 +6432,666 @@ color:#949EB4;
 
 display:inline-flex;
 
-margin-top:35px;
+align-items:center;
 
-padding:10px 16px;
+justify-content:center;
 
-border:
-1px solid rgba(255,255,255,.10);
+padding:9px 13px;
 
-border-radius:7px;
+border-radius:100px;
 
 font-family:var(--orbitron);
 
-font-size:7px;
+font-size:6px;
 
 font-weight:900;
 
-letter-spacing:3px;
+letter-spacing:2px;
 
-color:#7C869D;
+}
+
+
+.roadmap-status.completed{
+
+color:var(--green);
+
+border:
+
+1px solid rgba(20,241,149,.18);
+
+background:
+
+rgba(20,241,149,.06);
 
 }
 
 
 .roadmap-status.active{
 
-border-color:
-rgba(20,241,149,.35);
+color:#8DA7FF;
 
-color:var(--green);
+border:
+
+1px solid rgba(91,124,255,.22);
 
 background:
-rgba(20,241,149,.05);
+
+rgba(91,124,255,.07);
 
 }
 
 
-.roadmap-orbit{
+.roadmap-status.future{
 
-right:-100px;
+color:#B98BFF;
 
-top:10%;
+border:
 
-}
+1px solid rgba(153,69,255,.22);
 
+background:
 
-
-/* =========================
-PART 5 MOBILE
-========================= */
-
-@media(max-width:800px){
-
-.core-section,
-.source-section,
-.roadmap-section{
-
-padding:
-125px 22px;
+rgba(153,69,255,.07);
 
 }
 
 
-.core-wrap{
+.roadmap-card h3{
 
-grid-template-columns:1fr;
+margin-top:28px;
 
-gap:45px;
+font-family:var(--orbitron);
 
-}
+font-size:
 
+clamp(25px,2.5vw,40px);
 
-.core-visual{
-
-min-height:420px;
-
-}
-
-
-.core-coin{
-
-width:min(250px,68%);
+font-weight:900;
 
 }
 
 
-.core-glow{
+.roadmap-card p{
 
-width:330px;
+max-width:750px;
 
-height:330px;
-
-}
-
-
-.core-ring-one{
-
-width:300px;
-
-height:300px;
-
-}
-
-
-.core-ring-two{
-
-width:380px;
-
-height:380px;
-
-}
-
-
-.core-orbit{
-
-width:300px;
-
-height:300px;
-
-}
-
-
-.core-copy p{
+margin-top:22px;
 
 font-size:17px;
 
+line-height:1.85;
+
+color:#99A4B7;
+
 }
 
 
-.source-terminal{
+.roadmap-tags{
+
+display:flex;
+
+align-items:center;
+
+flex-wrap:wrap;
+
+gap:10px;
+
+margin-top:30px;
+
+}
+
+
+.roadmap-tags span{
+
+padding:9px 12px;
+
+border:
+
+1px solid rgba(255,255,255,.07);
+
+border-radius:7px;
+
+font-family:var(--orbitron);
+
+font-size:6px;
+
+font-weight:800;
+
+letter-spacing:2px;
+
+color:#707C91;
+
+}
+
+
+/* =========================
+ROADMAP ORBIT
+========================= */
+
+.roadmap-orbit{
+
+position:absolute;
+
+right:-220px;
+
+top:25%;
+
+width:470px;
+
+height:470px;
+
+border:
+
+1px solid rgba(91,124,255,.07);
+
+border-radius:50%;
+
+pointer-events:none;
+
+}
+
+
+.roadmap-orbit::before{
+
+content:"";
+
+position:absolute;
+
+inset:100px;
+
+border:
+
+1px solid rgba(153,69,255,.07);
+
+border-radius:50%;
+
+}
+
+
+.roadmap-core{
+
+position:absolute;
+
+left:50%;
+
+top:50%;
+
+width:24px;
+
+height:24px;
+
+border-radius:50%;
+
+background:var(--blue);
+
+transform:translate(-50%,-50%);
+
+box-shadow:
+
+0 0 50px rgba(91,124,255,.65);
+
+}
+
+
+.roadmap-traveler{
+
+position:absolute;
+
+left:50%;
+
+top:50%;
+
+width:9px;
+
+height:9px;
+
+margin:-4.5px;
+
+border-radius:50%;
+
+background:white;
+
+box-shadow:
+
+0 0 20px white;
+
+animation:
+
+roadmapOrbit 20s linear infinite;
+
+}
+
+
+@keyframes roadmapOrbit{
+
+from{
+
+transform:
+
+rotate(0deg)
+
+translateX(235px)
+
+rotate(0deg);
+
+}
+
+to{
+
+transform:
+
+rotate(360deg)
+
+translateX(235px)
+
+rotate(-360deg);
+
+}
+
+}
+
+
+/* =========================
+MANIFESTO
+========================= */
+
+.manifesto-section{
+
+position:relative;
+
+min-height:950px;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+padding:130px 25px;
+
+background:
+
+radial-gradient(
+circle at center,
+rgba(91,124,255,.11),
+transparent 38%
+),
+
+#03050D;
+
+}
+
+
+.manifesto-inner{
+
+position:relative;
+
+z-index:5;
+
+max-width:1000px;
+
+text-align:center;
+
+}
+
+
+.manifesto-logo-wrap{
+
+position:relative;
+
+width:150px;
+
+height:150px;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+margin:0 auto 50px;
+
+}
+
+
+.manifesto-logo-glow{
+
+position:absolute;
+
+inset:0;
+
+border-radius:50%;
+
+background:
+
+radial-gradient(
+circle,
+rgba(91,124,255,.28),
+transparent 65%
+);
+
+filter:blur(15px);
+
+}
+
+
+.manifesto-logo{
+
+position:relative;
+
+z-index:2;
+
+width:120px;
+
+height:120px;
+
+border-radius:50%;
+
+object-fit:cover;
+
+/* FLOAT ONLY — NO ROTATION */
+
+animation:
+
+manifestoFloat 6s ease-in-out infinite;
+
+}
+
+
+@keyframes manifestoFloat{
+
+0%,
+100%{
+
+transform:translateY(0);
+
+}
+
+50%{
+
+transform:translateY(-14px);
+
+}
+
+}
+
+
+.manifesto-label{
+
+font-family:var(--orbitron);
+
+font-size:8px;
+
+font-weight:900;
+
+letter-spacing:6px;
+
+color:#7C879C;
+
+}
+
+
+.manifesto-inner h2{
+
+margin-top:40px;
+
+font-family:var(--orbitron);
+
+font-size:
+
+clamp(45px,7vw,110px);
+
+font-weight:900;
+
+line-height:.98;
+
+letter-spacing:-5px;
+
+}
+
+
+.manifesto-inner h2 span{
+
+background:
+
+linear-gradient(
+90deg,
+var(--green),
+var(--blue),
+var(--purple)
+);
+
+-webkit-background-clip:text;
+
+background-clip:text;
+
+color:transparent;
+
+}
+
+
+.manifesto-inner > p{
+
+max-width:720px;
+
+margin:
+
+45px auto 0;
+
+font-size:
+
+clamp(17px,1.5vw,21px);
+
+line-height:1.9;
+
+color:#9CA6B8;
+
+}
+
+
+.manifesto-inner .manifesto-highlight{
+
+font-family:var(--orbitron);
+
+font-size:
+
+clamp(18px,2vw,29px);
+
+font-weight:700;
+
+line-height:1.8;
+
+color:white;
+
+}
+
+
+.manifesto-final{
 
 margin-top:65px;
 
+font-family:var(--orbitron);
+
+font-size:
+
+clamp(19px,2.7vw,40px);
+
+font-weight:900;
+
+word-spacing:10px;
+
 }
 
 
-.source-code{
+.manifesto-final span{
+
+color:var(--green);
+
+}
+
+
+.manifesto-relax{
+
+display:block;
+
+margin-top:35px;
+
+font-family:var(--orbitron);
+
+font-size:
+
+clamp(28px,4vw,65px);
+
+background:
+
+linear-gradient(
+90deg,
+var(--green),
+var(--blue),
+var(--purple)
+);
+
+-webkit-background-clip:text;
+
+background-clip:text;
+
+color:transparent;
+
+}
+
+
+/* =========================
+PART 4 MOBILE
+========================= */
+
+@media(max-width:900px){
+
+.vision-layout{
+
+grid-template-columns:1fr;
+
+gap:65px;
+
+}
+
+
+.vision-quote{
 
 padding:
-30px 12px;
 
-}
-
-
-.source-code > div{
-
-gap:12px;
-
-padding:0 10px;
-
-}
-
-
-.source-code code{
-
-font-size:11px;
-
-}
-
-
-.source-terminal-bottom{
-
-align-items:flex-start;
-
-flex-direction:column;
-
-padding:25px 22px;
-
-}
-
-
-.roadmap-line{
-
-margin-top:90px;
-
-}
-
-
-.roadmap-line::before{
-
-left:12px;
+45px 30px 45px 45px;
 
 }
 
 
 .roadmap-item{
 
-margin-left:48px;
+grid-template-columns:
 
-padding:
-0 0 90px 28px;
+50px 1fr;
 
-}
-
-
-.roadmap-node{
-
-left:-48px;
-
-width:24px;
-
-height:24px;
+gap:15px;
 
 }
 
 
-.roadmap-item p{
+.roadmap-phase{
 
-font-size:16px;
+grid-column:2;
+
+padding-top:8px;
+
+}
+
+
+.roadmap-card{
+
+grid-column:2;
+
+padding:35px;
+
+}
+
+
+.roadmap-line{
+
+left:18px;
 
 }
 
 
 .roadmap-orbit{
 
-right:-140px;
+opacity:.4;
 
-top:5%;
+transform:scale(.6);
+
+}
+
+
+.manifesto-section{
+
+min-height:800px;
+
+padding:100px 22px;
+
+}
+
+
+.manifesto-inner h2{
+
+letter-spacing:-3px;
+
+}
+
+}
+
+
+@media(max-width:520px){
+
+.roadmap-card{
+
+padding:28px 25px;
+
+}
+
+
+.roadmap-orbit{
+
+display:none;
+
+}
+
+
+.manifesto-logo-wrap{
+
+width:120px;
+
+height:120px;
+
+}
+
+
+.manifesto-logo{
+
+width:95px;
+
+height:95px;
+
+}
+
+
+.manifesto-final{
+
+display:flex;
+
+align-items:center;
+
+flex-direction:column;
+
+gap:12px;
+
+word-spacing:0;
 
 }
 
@@ -6915,41 +7108,39 @@ class="faq-section"
 id="faq"
 >
 
-<div class="faq-wrap">
+<div class="section-shell">
 
+<div class="faq-layout">
 
-<div class="faq-head reveal">
+<div class="faq-heading reveal">
 
 <div class="section-label">
 
-RELAX FAQ
+07 // FAQ
 
 </div>
 
-
 <h2 class="section-title">
 
-QUESTIONS.<br>
+QUESTIONS.
 
-<span class="gradient-text">
-CALM ANSWERS.
+<br>
+
+<span>
+
+STAY CALM.
+
 </span>
 
 </h2>
 
+<p class="section-description">
 
-<p class="section-copy">
-
-No complicated language.
-
-No unnecessary noise.
-
-Just the basics.
+The simple answers are usually the best ones.
 
 </p>
 
 </div>
-
 
 
 <div class="faq-list">
@@ -6972,19 +7163,21 @@ WHAT IS RELAX?
 
 </button>
 
-
 <div class="faq-answer">
 
 <p>
 
-RELAX is a Solana-based meme token built around a simple idea: markets are chaotic, but your reaction does not have to be.
+RELAX is a Solana token built around a simple mindset:
+
+don't let fear, panic and market noise control every decision.
+
+0 Fear. 0 Panic. 0 Regrets.
 
 </p>
 
 </div>
 
 </div>
-
 
 
 <div class="faq-item reveal">
@@ -6995,7 +7188,7 @@ type="button"
 >
 
 <span>
-WHY “JUST RELAX BRO”?
+DOES THE CREATOR CONTROL THE TOKEN?
 </span>
 
 <strong>
@@ -7004,19 +7197,19 @@ WHY “JUST RELAX BRO”?
 
 </button>
 
-
 <div class="faq-answer">
 
 <p>
 
-Because markets constantly create fear, urgency and regret. RELAX is the calm signal inside that noise.
+The creator has no special authority to mint additional RELAX tokens or arbitrarily change the supply.
+
+RELAX was released into the market without a hidden control room.
 
 </p>
 
 </div>
 
 </div>
-
 
 
 <div class="faq-item reveal">
@@ -7027,7 +7220,7 @@ type="button"
 >
 
 <span>
-IS THERE A PRIVATE CREATOR ALLOCATION?
+DID THE CREATOR RECEIVE A LARGE FREE ALLOCATION?
 </span>
 
 <strong>
@@ -7036,19 +7229,19 @@ IS THERE A PRIVATE CREATOR ALLOCATION?
 
 </button>
 
-
 <div class="faq-answer">
 
 <p>
 
-No reserved creator bag is presented as part of the RELAX launch. The creator entered the market using personal funds and acquired tokens through the market.
+No giant creator allocation is part of the RELAX story.
+
+The creator entered the market with personal funds and acquired around 1% of the token.
 
 </p>
 
 </div>
 
 </div>
-
 
 
 <div class="faq-item reveal">
@@ -7059,7 +7252,7 @@ type="button"
 >
 
 <span>
-CAN THE SUPPLY BE INCREASED?
+IS RELAX PROMISING PROFITS?
 </span>
 
 <strong>
@@ -7068,19 +7261,23 @@ CAN THE SUPPLY BE INCREASED?
 
 </button>
 
-
 <div class="faq-answer">
 
 <p>
 
-RELAX is presented as a fixed-supply token with no additional creator-controlled minting. Always verify current on-chain contract data yourself.
+No.
+
+RELAX does not promise profits, guaranteed returns or a specific future price.
+
+Crypto markets involve risk.
+
+Understand the risk and make your own decisions.
 
 </p>
 
 </div>
 
 </div>
-
 
 
 <div class="faq-item reveal">
@@ -7091,7 +7288,7 @@ type="button"
 >
 
 <span>
-WHERE CAN I VERIFY RELAX?
+WHAT IS THE RELAX ROADMAP?
 </span>
 
 <strong>
@@ -7100,19 +7297,27 @@ WHERE CAN I VERIFY RELAX?
 
 </button>
 
-
 <div class="faq-answer">
 
 <p>
 
-Use the official contract address and inspect public Solana market and on-chain data. The contract is displayed directly on this website.
+Build the identity.
+
+Improve the experience.
+
+Create original content.
+
+Grow organically.
+
+Experiment.
+
+And keep moving without inventing fake deadlines.
 
 </p>
 
 </div>
 
 </div>
-
 
 
 <div class="faq-item reveal">
@@ -7123,7 +7328,7 @@ type="button"
 >
 
 <span>
-IS RELAX FINANCIAL ADVICE?
+WHERE CAN I FOLLOW RELAX?
 </span>
 
 <strong>
@@ -7132,12 +7337,13 @@ IS RELAX FINANCIAL ADVICE?
 
 </button>
 
-
 <div class="faq-answer">
 
 <p>
 
-No. RELAX is a meme token and community project. Nothing on this website should be considered financial advice.
+Follow RELAX on X and watch the project evolve in public.
+
+The website source is also available through GitHub.
 
 </p>
 
@@ -7148,6 +7354,7 @@ No. RELAX is a meme token and community project. Nothing on this website should 
 
 </div>
 
+</div>
 
 </div>
 
@@ -7159,69 +7366,61 @@ No. RELAX is a meme token and community project. Nothing on this website should 
 FINAL CTA
 ========================= -->
 
-<section
-class="final-section"
-id="community"
->
+<section class="final-cta">
 
+<div class="final-cta-orbit">
 
-<div class="final-video-shade"></div>
+<span class="final-orbit-one"></span>
 
-
-<div
-class="orbit-zone final-orbit"
-aria-hidden="true"
->
-
-<div class="orbit-ring"></div>
-
-<div class="orbit-ring second"></div>
-
-<span class="orbit-traveler"></span>
-
-<span class="orbit-traveler second"></span>
+<span class="final-orbit-two"></span>
 
 </div>
 
 
-<div class="final-content reveal">
+<div class="final-cta-inner reveal">
 
 
-<img
-src="logo.png"
-alt="RELAX"
-class="final-logo relax-logo"
->
+<div class="final-small">
 
-
-<div class="section-label final-label">
-
-THE MARKET IS STILL MOVING
+MARKET STATUS // UNKNOWN
 
 </div>
 
 
 <h2>
 
-YOU DON'T HAVE<br>
+WHATEVER
 
-TO CHASE IT.
+<br>
+
+HAPPENS NEXT...
 
 </h2>
 
 
+<div class="final-relax">
+
+RELAX.
+
+</div>
+
+
 <p>
 
-Fear creates bad decisions.
+The candles will move.
 
-Panic creates worse ones.
+The timeline will scream.
+
+Someone will always say it's too late.
+
+Someone will always say it's over.
 
 </p>
 
 
-<strong class="gradient-text">
+<strong>
 
-JUST RELAX BRO.
+You already know the code.
 
 </strong>
 
@@ -7233,7 +7432,7 @@ JUST RELAX BRO.
 href="https://pump.fun/coin/6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump"
 target="_blank"
 rel="noopener noreferrer"
-class="hero-button primary"
+class="final-button primary"
 >
 
 BUY $RELAX
@@ -7242,13 +7441,25 @@ BUY $RELAX
 
 
 <a
+href="https://dexscreener.com/solana/5ztferjiljz3u4kzkwmguyujxcwkpagzfqwwyja7yzx3"
+target="_blank"
+rel="noopener noreferrer"
+class="final-button secondary"
+>
+
+VIEW LIVE CHART ↗
+
+</a>
+
+
+<a
 href="https://x.com/0relaxbro"
 target="_blank"
 rel="noopener noreferrer"
-class="hero-button secondary"
+class="final-button secondary"
 >
 
-JOIN X COMMUNITY
+FOLLOW ON X ↗
 
 </a>
 
@@ -7266,9 +7477,10 @@ JOIN X COMMUNITY
 FOOTER 2.0
 ========================= -->
 
-<footer class="site-footer">
+<footer class="footer">
 
-<div class="footer-wrap">
+
+<div class="footer-shell">
 
 
 <div class="footer-main">
@@ -7276,82 +7488,50 @@ FOOTER 2.0
 
 <div class="footer-brand">
 
-<a
-href="#top"
-class="footer-logo-link"
->
+
+<div class="footer-brand-line">
 
 <img
 src="logo.png"
-alt="RELAX Logo"
+alt="RELAX"
 class="footer-logo relax-logo"
 >
-
-<span>
-
-RELAX
-
-</span>
-
-</a>
-
-
-<p>
-
-0 Fear. 0 Panic. 0 Regrets.
-
-</p>
 
 
 <strong>
 
-JUST RELAX BRO.
+RELAX
 
 </strong>
 
 </div>
 
 
+<p>
 
-<div class="footer-links">
+0 Fear.
 
+0 Panic.
 
-<div>
+0 Regrets.
 
-<span>
-MARKET
-</span>
+<br>
 
+Just RELAX Bro.
 
-<a
-href="https://pump.fun/coin/6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump"
-target="_blank"
-rel="noopener noreferrer"
->
+</p>
 
-Pump.fun
-
-</a>
-
-
-<a
-href="https://dexscreener.com/solana/5ztferjiljz3u4kzkwmguyujxcwkpagzfqwwyja7yzx3"
-target="_blank"
-rel="noopener noreferrer"
->
-
-DexScreener
-
-</a>
 
 </div>
 
 
 
-<div>
+<div class="footer-column">
 
-<span>
-RELAX
+<span class="footer-title">
+
+EXPLORE
+
 </span>
 
 
@@ -7369,6 +7549,20 @@ The Code
 </a>
 
 
+<a href="#market">
+
+Market
+
+</a>
+
+
+<a href="#token">
+
+Token
+
+</a>
+
+
 <a href="#roadmap">
 
 Roadmap
@@ -7376,20 +7570,51 @@ Roadmap
 </a>
 
 
-<a href="#faq">
+</div>
 
-FAQ
+
+
+<div class="footer-column">
+
+<span class="footer-title">
+
+MARKET
+
+</span>
+
+
+<a
+href="https://pump.fun/coin/6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump"
+target="_blank"
+rel="noopener noreferrer"
+>
+
+Pump.fun ↗
 
 </a>
+
+
+<a
+href="https://dexscreener.com/solana/5ztferjiljz3u4kzkwmguyujxcwkpagzfqwwyja7yzx3"
+target="_blank"
+rel="noopener noreferrer"
+>
+
+DexScreener ↗
+
+</a>
+
 
 </div>
 
 
 
-<div>
+<div class="footer-column">
 
-<span>
-SOCIAL
+<span class="footer-title">
+
+RELAX
+
 </span>
 
 
@@ -7399,7 +7624,7 @@ target="_blank"
 rel="noopener noreferrer"
 >
 
-X
+X ↗
 
 </a>
 
@@ -7410,11 +7635,20 @@ target="_blank"
 rel="noopener noreferrer"
 >
 
-GitHub
+GitHub ↗
 
 </a>
 
-</div>
+
+<button
+type="button"
+class="footer-copy"
+id="footerCopy"
+>
+
+Copy Contract
+
+</button>
 
 
 </div>
@@ -7428,7 +7662,7 @@ GitHub
 
 <span>
 
-OFFICIAL CONTRACT
+CONTRACT
 
 </span>
 
@@ -7438,16 +7672,6 @@ OFFICIAL CONTRACT
 6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump
 
 </code>
-
-
-<button
-type="button"
-id="footerCopyContract"
->
-
-COPY
-
-</button>
 
 </div>
 
@@ -7460,37 +7684,43 @@ COPY
 
 © <span id="currentYear"></span> RELAX.
 
-All rights reserved.
+ALL CHAOS RESERVED.
 
 </p>
 
 
 <p>
 
-RELAX is a meme token.
+BUILT ON
 
-Not financial advice.
+<span class="footer-solana">
 
-Always verify the contract.
+SOLANA
+
+</span>
 
 </p>
 
 
-<div class="footer-status">
+<p>
 
-<span></span>
+NOT FINANCIAL ADVICE.
 
-SOLANA NETWORK
+JUST RELAX BRO.
 
-</div>
-
-
-</div>
+</p>
 
 
 </div>
+
+
+</div>
+
 
 </footer>
+
+
+</main>
 
 
 
@@ -7502,37 +7732,57 @@ FAQ
 
 .faq-section{
 
-padding:
-190px max(7vw,40px);
-
 background:
-rgba(5,7,19,.94);
+
+radial-gradient(
+circle at 15% 30%,
+rgba(153,69,255,.09),
+transparent 30%
+),
+
+#050713;
 
 }
 
 
-.faq-wrap{
+.faq-layout{
 
-width:min(1300px,100%);
+display:grid;
 
-margin:auto;
+grid-template-columns:
+
+minmax(0,.8fr)
+
+minmax(0,1.2fr);
+
+gap:9vw;
 
 }
 
 
-.faq-head{
+.faq-heading{
 
-max-width:950px;
+position:sticky;
+
+top:150px;
+
+align-self:start;
+
+}
+
+
+.faq-heading .section-title{
+
+margin-top:28px;
 
 }
 
 
 .faq-list{
 
-margin-top:100px;
-
 border-top:
-1px solid rgba(255,255,255,.09);
+
+1px solid rgba(255,255,255,.08);
 
 }
 
@@ -7540,7 +7790,8 @@ border-top:
 .faq-item{
 
 border-bottom:
-1px solid rgba(255,255,255,.09);
+
+1px solid rgba(255,255,255,.08);
 
 }
 
@@ -7559,7 +7810,7 @@ justify-content:space-between;
 
 gap:30px;
 
-padding:20px 10px;
+padding:25px 5px;
 
 background:transparent;
 
@@ -7577,22 +7828,25 @@ cursor:pointer;
 font-family:var(--orbitron);
 
 font-size:
-clamp(15px,2vw,24px);
+
+clamp(13px,1.3vw,18px);
 
 font-weight:800;
 
-line-height:1.5;
+line-height:1.6;
+
+letter-spacing:1px;
 
 }
 
 
 .faq-question strong{
 
-flex-shrink:0;
+flex:0 0 auto;
 
-width:45px;
+width:42px;
 
-height:45px;
+height:42px;
 
 display:flex;
 
@@ -7601,31 +7855,33 @@ align-items:center;
 justify-content:center;
 
 border:
+
 1px solid rgba(255,255,255,.10);
 
 border-radius:50%;
 
-font-size:25px;
+font-size:22px;
 
-font-weight:300;
+font-weight:400;
 
 transition:
+
 transform .35s ease,
-color .35s ease,
-border-color .35s ease;
+
+background .35s ease,
+
+color .35s ease;
 
 }
 
 
-.faq-item.active
-.faq-question strong{
+.faq-item.active .faq-question strong{
 
 transform:rotate(45deg);
 
-color:var(--green);
+background:var(--green);
 
-border-color:
-rgba(20,241,149,.40);
+color:#050713;
 
 }
 
@@ -7636,34 +7892,33 @@ max-height:0;
 
 overflow:hidden;
 
-transition:
-max-height .45s ease;
+transition:max-height .5s ease;
 
 }
 
 
 .faq-answer p{
 
-max-width:850px;
+max-width:700px;
 
 padding:
-0 10px 45px;
 
-font-size:18px;
+0 70px 40px 5px;
+
+font-size:17px;
 
 line-height:1.9;
 
-color:#969FB5;
+color:#98A3B7;
 
 }
-
 
 
 /* =========================
 FINAL CTA
 ========================= */
 
-.final-section{
+.final-cta{
 
 position:relative;
 
@@ -7675,22 +7930,30 @@ align-items:center;
 
 justify-content:center;
 
-padding:
-160px max(7vw,40px);
-
 overflow:hidden;
 
+padding:130px 25px;
+
 background:
-linear-gradient(
-180deg,
-rgba(4,6,16,.95),
-rgba(4,6,16,.86)
-);
+
+radial-gradient(
+circle at center,
+rgba(153,69,255,.14),
+transparent 28%
+),
+
+radial-gradient(
+circle at 30% 70%,
+rgba(20,241,149,.07),
+transparent 25%
+),
+
+#03050D;
 
 }
 
 
-.final-section::before{
+.final-cta::before{
 
 content:"";
 
@@ -7700,10 +7963,12 @@ inset:0;
 
 background:
 
-radial-gradient(
-circle at center,
-rgba(91,124,255,.13),
-transparent 55%
+linear-gradient(
+180deg,
+#050713,
+transparent 25%,
+transparent 75%,
+#050713
 );
 
 pointer-events:none;
@@ -7711,109 +7976,125 @@ pointer-events:none;
 }
 
 
-.final-video-shade{
-
-position:absolute;
-
-inset:0;
-
-background:
-
-linear-gradient(
-90deg,
-rgba(4,6,16,.90),
-rgba(4,6,16,.45),
-rgba(4,6,16,.90)
-);
-
-}
-
-
-.final-content{
+.final-cta-inner{
 
 position:relative;
 
 z-index:5;
 
-width:min(1100px,100%);
-
-margin:auto;
+max-width:1100px;
 
 text-align:center;
 
 }
 
 
-.final-logo{
+.final-small{
 
-width:
-clamp(110px,13vw,180px);
+font-family:var(--orbitron);
 
-aspect-ratio:1;
+font-size:8px;
 
-border-radius:50%;
+font-weight:900;
 
-object-fit:cover;
+letter-spacing:5px;
 
-filter:
-drop-shadow(
-0 0 40px rgba(91,124,255,.38)
-);
+color:#79859A;
 
 }
 
 
-.final-label{
-
-justify-content:center;
-
-margin-top:45px;
-
-}
-
-
-.final-content h2{
+.final-cta h2{
 
 margin-top:40px;
 
 font-family:var(--orbitron);
 
 font-size:
-clamp(55px,9vw,135px);
+
+clamp(48px,7vw,110px);
 
 font-weight:900;
 
-line-height:.86;
+line-height:.95;
+
+letter-spacing:-5px;
 
 }
 
 
-.final-content p{
+.final-relax{
 
-margin-top:45px;
-
-font-size:
-clamp(18px,2vw,26px);
-
-line-height:1.7;
-
-color:#9BA5BA;
-
-}
-
-
-.final-content > strong{
-
-display:block;
-
-margin-top:35px;
+margin-top:15px;
 
 font-family:var(--orbitron);
 
 font-size:
-clamp(28px,5vw,70px);
+
+clamp(75px,13vw,210px);
 
 font-weight:900;
+
+line-height:.9;
+
+letter-spacing:-8px;
+
+background:
+
+linear-gradient(
+90deg,
+var(--green),
+var(--blue),
+var(--purple)
+);
+
+-webkit-background-clip:text;
+
+background-clip:text;
+
+color:transparent;
+
+filter:
+
+drop-shadow(
+0 0 35px rgba(91,124,255,.15)
+);
+
+}
+
+
+.final-cta-inner p{
+
+max-width:720px;
+
+margin:
+
+50px auto 0;
+
+font-size:
+
+clamp(17px,1.5vw,21px);
+
+line-height:1.9;
+
+color:#99A4B7;
+
+}
+
+
+.final-cta-inner > strong{
+
+display:block;
+
+margin-top:30px;
+
+font-family:var(--orbitron);
+
+font-size:
+
+clamp(17px,2vw,28px);
+
+color:white;
 
 }
 
@@ -7828,90 +8109,316 @@ justify-content:center;
 
 flex-wrap:wrap;
 
-gap:18px;
+gap:15px;
 
-margin-top:60px;
+margin-top:55px;
 
 }
 
 
-.final-orbit{
+.final-button{
+
+min-height:58px;
+
+display:inline-flex;
+
+align-items:center;
+
+justify-content:center;
+
+padding:0 28px;
+
+border-radius:12px;
+
+font-family:var(--orbitron);
+
+font-size:8px;
+
+font-weight:900;
+
+letter-spacing:2px;
+
+text-decoration:none;
+
+transition:
+
+transform .35s ease,
+
+box-shadow .35s ease,
+
+border-color .35s ease;
+
+}
+
+
+.final-button.primary{
+
+background:
+
+linear-gradient(
+90deg,
+var(--green),
+var(--blue),
+var(--purple)
+);
+
+color:#050713;
+
+}
+
+
+.final-button.secondary{
+
+border:
+
+1px solid rgba(255,255,255,.13);
+
+background:
+
+rgba(255,255,255,.035);
+
+color:white;
+
+}
+
+
+.final-button:hover{
+
+transform:translateY(-5px);
+
+box-shadow:
+
+0 20px 50px rgba(0,0,0,.3);
+
+}
+
+
+/* =========================
+FINAL ORBIT
+========================= */
+
+.final-cta-orbit{
+
+position:absolute;
+
+width:700px;
+
+height:700px;
+
+border:
+
+1px solid rgba(255,255,255,.035);
+
+border-radius:50%;
+
+pointer-events:none;
+
+animation:
+
+finalOrbitBreath 8s ease-in-out infinite;
+
+}
+
+
+.final-cta-orbit::before{
+
+content:"";
+
+position:absolute;
+
+inset:130px;
+
+border:
+
+1px solid rgba(91,124,255,.06);
+
+border-radius:50%;
+
+}
+
+
+.final-orbit-one,
+.final-orbit-two{
+
+position:absolute;
 
 left:50%;
 
 top:50%;
 
-width:650px;
+border-radius:50%;
 
-height:650px;
+}
+
+
+.final-orbit-one{
+
+width:10px;
+
+height:10px;
+
+margin:-5px;
+
+background:var(--green);
+
+box-shadow:
+
+0 0 25px var(--green);
+
+animation:
+
+finalTravelerOne 22s linear infinite;
+
+}
+
+
+.final-orbit-two{
+
+width:7px;
+
+height:7px;
+
+margin:-3.5px;
+
+background:var(--purple);
+
+box-shadow:
+
+0 0 20px var(--purple);
+
+animation:
+
+finalTravelerTwo 15s linear infinite reverse;
+
+}
+
+
+@keyframes finalTravelerOne{
+
+from{
 
 transform:
-translate(-50%,-50%);
+
+rotate(0deg)
+
+translateX(350px)
+
+rotate(0deg);
+
+}
+
+to{
+
+transform:
+
+rotate(360deg)
+
+translateX(350px)
+
+rotate(-360deg);
+
+}
+
+}
+
+
+@keyframes finalTravelerTwo{
+
+from{
+
+transform:
+
+rotate(0deg)
+
+translateX(220px)
+
+rotate(0deg);
+
+}
+
+to{
+
+transform:
+
+rotate(360deg)
+
+translateX(220px)
+
+rotate(-360deg);
+
+}
+
+}
+
+
+@keyframes finalOrbitBreath{
+
+0%,
+100%{
 
 opacity:.55;
 
 }
 
+50%{
 
+opacity:1;
 
-/* =========================
-FOOTER
-========================= */
-
-.site-footer{
-
-padding:
-90px max(7vw,40px)
-40px;
-
-background:#03050D;
-
-border-top:
-1px solid rgba(255,255,255,.07);
+}
 
 }
 
 
-.footer-wrap{
+/* =========================
+FOOTER 2.0
+========================= */
 
-width:min(1400px,100%);
+.footer{
+
+background:#02040A;
+
+border-top:
+
+1px solid rgba(255,255,255,.06);
+
+}
+
+
+.footer-shell{
+
+width:min(1500px,100%);
 
 margin:auto;
+
+padding:
+
+80px max(7vw,45px)
+
+35px;
 
 }
 
 
 .footer-main{
 
+display:grid;
+
+grid-template-columns:
+
+2fr 1fr 1fr 1fr;
+
+gap:70px;
+
+}
+
+
+.footer-brand-line{
+
 display:flex;
-
-align-items:flex-start;
-
-justify-content:space-between;
-
-gap:80px;
-
-}
-
-
-.footer-brand{
-
-max-width:420px;
-
-}
-
-
-.footer-logo-link{
-
-display:inline-flex;
 
 align-items:center;
 
 gap:15px;
-
-text-decoration:none;
-
-color:white;
 
 }
 
@@ -7926,10 +8433,34 @@ border-radius:50%;
 
 object-fit:cover;
 
+/* FLOAT ONLY */
+
+animation:
+
+footerFloat 6s ease-in-out infinite;
+
 }
 
 
-.footer-logo-link span{
+@keyframes footerFloat{
+
+0%,
+100%{
+
+transform:translateY(0);
+
+}
+
+50%{
+
+transform:translateY(-7px);
+
+}
+
+}
+
+
+.footer-brand-line strong{
 
 font-family:var(--orbitron);
 
@@ -7937,122 +8468,107 @@ font-size:25px;
 
 font-weight:900;
 
-letter-spacing:3px;
+letter-spacing:4px;
 
 }
 
 
 .footer-brand p{
 
-margin-top:30px;
+margin-top:25px;
 
-font-size:17px;
+font-size:15px;
 
-color:#778198;
+line-height:1.9;
 
-}
-
-
-.footer-brand strong{
-
-display:block;
-
-margin-top:15px;
-
-font-family:var(--orbitron);
-
-font-size:13px;
-
-letter-spacing:2px;
+color:#758096;
 
 }
 
 
-.footer-links{
-
-display:grid;
-
-grid-template-columns:
-repeat(3,1fr);
-
-gap:
-50px 90px;
-
-}
-
-
-.footer-links > div{
+.footer-column{
 
 display:flex;
 
-flex-direction:column;
-
 align-items:flex-start;
 
-gap:18px;
+flex-direction:column;
+
+gap:17px;
 
 }
 
 
-.footer-links span{
+.footer-title{
 
 margin-bottom:10px;
 
 font-family:var(--orbitron);
 
-font-size:8px;
+font-size:7px;
 
 font-weight:900;
 
 letter-spacing:4px;
+
+color:#5E697E;
+
+}
+
+
+.footer-column a,
+.footer-copy{
+
+background:transparent;
+
+border:0;
+
+padding:0;
+
+color:#9CA6B8;
+
+font-size:14px;
+
+text-decoration:none;
+
+cursor:pointer;
+
+transition:color .3s ease;
+
+}
+
+
+.footer-column a:hover,
+.footer-copy:hover{
 
 color:var(--green);
 
 }
 
 
-.footer-links a{
-
-color:#8D97AD;
-
-font-size:15px;
-
-text-decoration:none;
-
-transition:
-color .3s ease;
-
-}
-
-
-.footer-links a:hover{
-
-color:white;
-
-}
-
-
 .footer-contract{
 
-margin-top:80px;
-
-padding:
-28px 30px;
-
-display:grid;
-
-grid-template-columns:
-180px 1fr auto;
+display:flex;
 
 align-items:center;
 
-gap:25px;
+justify-content:space-between;
+
+gap:30px;
+
+margin-top:70px;
+
+padding:
+
+28px 0;
 
 border-top:
-1px solid rgba(255,255,255,.07);
+
+1px solid rgba(255,255,255,.06);
 
 border-bottom:
-1px solid rgba(255,255,255,.07);
+
+1px solid rgba(255,255,255,.06);
 
 }
 
@@ -8061,55 +8577,24 @@ border-bottom:
 
 font-family:var(--orbitron);
 
-font-size:8px;
+font-size:7px;
 
 font-weight:900;
 
-letter-spacing:3px;
+letter-spacing:4px;
 
-color:#687289;
+color:#5F6B80;
 
 }
 
 
 .footer-contract code{
 
-font-family:var(--orbitron);
+font-size:13px;
 
-font-size:
-clamp(7px,1vw,11px);
-
-color:#A6AFC1;
+color:#829DFF;
 
 word-break:break-all;
-
-}
-
-
-.footer-contract button{
-
-padding:
-12px 20px;
-
-border:
-1px solid rgba(20,241,149,.30);
-
-border-radius:8px;
-
-background:
-rgba(20,241,149,.05);
-
-color:var(--green);
-
-font-family:var(--orbitron);
-
-font-size:7px;
-
-font-weight:900;
-
-letter-spacing:2px;
-
-cursor:pointer;
 
 }
 
@@ -8131,172 +8616,119 @@ padding-top:35px;
 
 .footer-bottom p{
 
-font-size:12px;
-
-line-height:1.7;
-
-color:#555F75;
-
-}
-
-
-.footer-status{
-
-display:flex;
-
-align-items:center;
-
-gap:10px;
-
 font-family:var(--orbitron);
 
-font-size:7px;
+font-size:6px;
 
-font-weight:900;
+font-weight:800;
 
 letter-spacing:2px;
 
-color:#687289;
+line-height:1.8;
+
+color:#596479;
 
 }
 
 
-.footer-status span{
+.footer-solana{
 
-width:7px;
+background:
 
-height:7px;
+linear-gradient(
+90deg,
+var(--green),
+var(--purple)
+);
 
-border-radius:50%;
+-webkit-background-clip:text;
 
-background:var(--green);
+background-clip:text;
 
-box-shadow:
-0 0 12px var(--green);
-
-animation:
-statusPulse 2s infinite;
+color:transparent;
 
 }
-
 
 
 /* =========================
-PART 6 MOBILE
+PART 5 MOBILE
 ========================= */
 
-@media(max-width:800px){
+@media(max-width:900px){
 
-.faq-section{
+.faq-layout{
 
-padding:
-125px 22px;
-
-}
-
-
-.faq-list{
-
-margin-top:70px;
-
-}
-
-
-.faq-question{
-
-min-height:95px;
-
-padding:
-20px 0;
-
-}
-
-
-.faq-question strong{
-
-width:38px;
-
-height:38px;
-
-}
-
-
-.faq-answer p{
-
-padding:
-0 0 35px;
-
-font-size:16px;
-
-}
-
-
-.final-section{
-
-min-height:780px;
-
-padding:
-120px 22px;
-
-}
-
-
-.final-orbit{
-
-width:380px;
-
-height:380px;
-
-}
-
-
-.site-footer{
-
-padding:
-70px 22px 35px;
-
-}
-
-
-.footer-main{
-
-flex-direction:column;
+grid-template-columns:1fr;
 
 gap:65px;
 
 }
 
 
-.footer-links{
+.faq-heading{
 
-width:100%;
+position:relative;
+
+top:auto;
+
+}
+
+
+.final-cta{
+
+min-height:800px;
+
+padding:100px 22px;
+
+}
+
+
+.final-relax{
+
+letter-spacing:-5px;
+
+}
+
+
+.final-cta-orbit{
+
+transform:scale(.65);
+
+}
+
+
+.footer-shell{
+
+padding:
+
+65px 22px 30px;
+
+}
+
+
+.footer-main{
 
 grid-template-columns:
-repeat(2,1fr);
 
-gap:
-50px 35px;
+repeat(2,minmax(0,1fr));
+
+gap:55px 35px;
+
+}
+
+
+.footer-brand{
+
+grid-column:1 / -1;
 
 }
 
 
 .footer-contract{
 
-margin-top:60px;
+align-items:flex-start;
 
-padding:
-25px 0;
-
-grid-template-columns:1fr;
-
-}
-
-
-.footer-contract button{
-
-width:100%;
-
-min-height:45px;
+flex-direction:column;
 
 }
 
@@ -8311,33 +8743,84 @@ flex-direction:column;
 
 }
 
+
+@media(max-width:520px){
+
+.faq-question{
+
+min-height:95px;
+
+}
+
+
+.faq-answer p{
+
+padding-right:10px;
+
+}
+
+
+.final-actions{
+
+align-items:stretch;
+
+flex-direction:column;
+
+}
+
+
+.final-button{
+
+width:100%;
+
+}
+
+
+.final-cta-orbit{
+
+transform:scale(.45);
+
+}
+
+
+.footer-main{
+
+grid-template-columns:1fr 1fr;
+
+}
+
+
+.footer-brand{
+
+grid-column:1 / -1;
+
+}
+
+}
+
 </style>
 
 <!-- =========================
-JAVASCRIPT ENGINE
+RELAX V3 ENGINE
 ========================= -->
 
 <script>
 
-const RELAX_CA =
-"6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump";
+document.addEventListener("DOMContentLoaded", () => {
 
-const RELAX_PAIR =
-"5ztferjiljz3u4kzkwmguyujxcwkpagzfqwwyja7yzx3";
+const CONTRACT =
+"6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump";
 
 
 /* =========================
 LOADER
 ========================= */
 
-window.addEventListener("load",()=>{
+const loader = document.querySelector(".loader");
 
-const loader =
-document.querySelector(".loader");
+window.addEventListener("load", () => {
 
-document.body.classList.remove("loading");
-
-setTimeout(()=>{
+setTimeout(() => {
 
 if(loader){
 
@@ -8345,158 +8828,168 @@ loader.classList.add("loader-hidden");
 
 }
 
-},900);
+document.body.classList.add("site-loaded");
+
+}, 900);
 
 });
 
 
 /* =========================
-FORCE LOGO FLOAT
-NO ROTATION
+CURRENT YEAR
 ========================= */
 
-const relaxLogos =
-document.querySelectorAll(".relax-logo");
+const currentYear =
+document.getElementById("currentYear");
 
-relaxLogos.forEach((logo,index)=>{
+if(currentYear){
 
-logo.style.animation =
-`relaxFloat ${5 + (index % 3)}s ease-in-out infinite`;
-
-});
-
-
-/* =========================
-STAR FIELD
-========================= */
-
-const starField =
-document.querySelector(".star-field");
-
-if(starField){
-
-const starCount =
-window.innerWidth < 800 ? 80 : 180;
-
-for(let i = 0; i < starCount; i++){
-
-const star =
-document.createElement("span");
-
-star.className = "star";
-
-const size =
-Math.random() * 2.2 + .5;
-
-star.style.width =
-`${size}px`;
-
-star.style.height =
-`${size}px`;
-
-star.style.left =
-`${Math.random() * 100}%`;
-
-star.style.top =
-`${Math.random() * 100}%`;
-
-star.style.opacity =
-Math.random() * .7 + .15;
-
-star.style.animationDuration =
-`${Math.random() * 4 + 3}s`;
-
-star.style.animationDelay =
-`${Math.random() * 5}s`;
-
-starField.appendChild(star);
-
-}
+currentYear.textContent =
+new Date().getFullYear();
 
 }
 
 
 /* =========================
-SHOOTING STARS
+LIVE CLOCK
 ========================= */
 
-const shootingLayer =
-document.querySelector(".shooting-stars");
+const clock =
+document.getElementById("liveClock");
 
-function createShootingStar(){
+function updateClock(){
 
-if(!shootingLayer) return;
+if(!clock) return;
 
-const shootingStar =
-document.createElement("span");
+const now = new Date();
 
-shootingStar.className =
-"shooting-star";
-
-shootingStar.style.left =
-`${Math.random() * 75}%`;
-
-shootingStar.style.top =
-`${Math.random() * 45}%`;
-
-shootingStar.style.animationDuration =
-`${Math.random() * 1.2 + 1.2}s`;
-
-shootingLayer.appendChild(shootingStar);
-
-setTimeout(()=>{
-
-shootingStar.remove();
-
-},3000);
+clock.textContent =
+now.toUTCString()
+.split(" ")[4]
++ " UTC";
 
 }
 
-if(shootingLayer){
+updateClock();
 
-setInterval(()=>{
-
-if(Math.random() > .35){
-
-createShootingStar();
-
-}
-
-},2600);
-
-}
+setInterval(updateClock,1000);
 
 
 /* =========================
-MOUSE GLOW
+CONTRACT COPY
 ========================= */
 
-const mouseGlow =
-document.querySelector(".mouse-glow");
+const copyButtons = [
 
-if(
-mouseGlow &&
-window.matchMedia("(pointer:fine)").matches
-){
+document.getElementById("copyContract"),
 
-window.addEventListener(
-"pointermove",
-event=>{
+document.getElementById("footerCopy")
 
-mouseGlow.style.transform =
-`translate3d(
-${event.clientX}px,
-${event.clientY}px,
-0
-) translate(-50%,-50%)`;
+].filter(Boolean);
 
-},
-{
-passive:true
+
+copyButtons.forEach(button => {
+
+button.addEventListener("click", async () => {
+
+try{
+
+await navigator.clipboard.writeText(CONTRACT);
+
+button.classList.add("copied");
+
+const original =
+button.dataset.original ||
+button.textContent.trim();
+
+button.dataset.original = original;
+
+if(button.id === "footerCopy"){
+
+button.textContent = "Copied ✓";
+
 }
+
+setTimeout(() => {
+
+button.classList.remove("copied");
+
+if(button.id === "footerCopy"){
+
+button.textContent =
+button.dataset.original;
+
+}
+
+},1800);
+
+}catch(error){
+
+console.warn(
+"Contract copy failed.",
+error
 );
 
 }
+
+});
+
+});
+
+
+/* =========================
+FAQ
+========================= */
+
+const faqItems =
+document.querySelectorAll(".faq-item");
+
+
+faqItems.forEach(item => {
+
+const button =
+item.querySelector(".faq-question");
+
+const answer =
+item.querySelector(".faq-answer");
+
+if(!button || !answer) return;
+
+
+button.addEventListener("click", () => {
+
+const active =
+item.classList.contains("active");
+
+
+faqItems.forEach(otherItem => {
+
+otherItem.classList.remove("active");
+
+const otherAnswer =
+otherItem.querySelector(".faq-answer");
+
+if(otherAnswer){
+
+otherAnswer.style.maxHeight = null;
+
+}
+
+});
+
+
+if(!active){
+
+item.classList.add("active");
+
+answer.style.maxHeight =
+answer.scrollHeight + "px";
+
+}
+
+});
+
+});
 
 
 /* =========================
@@ -8506,16 +8999,17 @@ SCROLL REVEAL
 const revealElements =
 document.querySelectorAll(".reveal");
 
+
 const revealObserver =
 new IntersectionObserver(
 
-entries=>{
+entries => {
 
-entries.forEach(entry=>{
+entries.forEach(entry => {
 
 if(entry.isIntersecting){
 
-entry.target.classList.add("visible");
+entry.target.classList.add("revealed");
 
 revealObserver.unobserve(
 entry.target
@@ -8538,7 +9032,8 @@ rootMargin:
 
 );
 
-revealElements.forEach(element=>{
+
+revealElements.forEach(element => {
 
 revealObserver.observe(element);
 
@@ -8546,619 +9041,81 @@ revealObserver.observe(element);
 
 
 /* =========================
-NAVBAR SCROLL
+ROADMAP PROGRESS
 ========================= */
 
-const navbar =
-document.querySelector(".navbar");
+const roadmap =
+document.querySelector(".roadmap-timeline");
+
+const roadmapProgress =
+document.getElementById("roadmapProgress");
+
+
+function updateRoadmap(){
+
+if(
+!roadmap ||
+!roadmapProgress
+) return;
+
+
+const rect =
+roadmap.getBoundingClientRect();
+
+const viewport =
+window.innerHeight;
+
+const start =
+viewport * .65;
+
+const distance =
+rect.height + start;
+
+const progress =
+Math.min(
+Math.max(
+(start - rect.top) / distance,
+0
+),
+1
+);
+
+
+roadmapProgress.style.height =
+(progress * 100) + "%";
+
+}
+
 
 window.addEventListener(
 "scroll",
-()=>{
-
-if(!navbar) return;
-
-navbar.classList.toggle(
-"scrolled",
-window.scrollY > 40
+updateRoadmap,
+{passive:true}
 );
 
-},
-{
-passive:true
-}
-);
+updateRoadmap();
 
 
 /* =========================
-MOBILE MENU
-========================= */
-
-const menuToggle =
-document.querySelector(".menu-toggle");
-
-const navLinks =
-document.querySelector(".nav-links");
-
-if(menuToggle && navLinks){
-
-menuToggle.addEventListener(
-"click",
-()=>{
-
-menuToggle.classList.toggle("active");
-
-navLinks.classList.toggle("active");
-
-document.body.classList.toggle(
-"menu-open"
-);
-
-}
-);
-
-navLinks
-.querySelectorAll("a")
-.forEach(link=>{
-
-link.addEventListener(
-"click",
-()=>{
-
-menuToggle.classList.remove("active");
-
-navLinks.classList.remove("active");
-
-document.body.classList.remove(
-"menu-open"
-);
-
-}
-);
-
-});
-
-}
-
-
-/* =========================
-FAQ ACCORDION
-========================= */
-
-const faqItems =
-document.querySelectorAll(".faq-item");
-
-faqItems.forEach(item=>{
-
-const button =
-item.querySelector(".faq-question");
-
-const answer =
-item.querySelector(".faq-answer");
-
-if(!button || !answer) return;
-
-button.addEventListener(
-"click",
-()=>{
-
-const active =
-item.classList.contains("active");
-
-faqItems.forEach(otherItem=>{
-
-otherItem.classList.remove("active");
-
-const otherAnswer =
-otherItem.querySelector(".faq-answer");
-
-if(otherAnswer){
-
-otherAnswer.style.maxHeight = null;
-
-}
-
-});
-
-if(!active){
-
-item.classList.add("active");
-
-answer.style.maxHeight =
-answer.scrollHeight + "px";
-
-}
-
-}
-);
-
-});
-
-
-/* =========================
-COPY CONTRACT
-========================= */
-
-async function copyRelaxContract(
-button,
-textElement
-){
-
-try{
-
-await navigator.clipboard.writeText(
-RELAX_CA
-);
-
-if(textElement){
-
-textElement.textContent =
-"COPIED ✓";
-
-}else if(button){
-
-button.textContent =
-"COPIED ✓";
-
-}
-
-if(button){
-
-button.classList.add("copied");
-
-}
-
-setTimeout(()=>{
-
-if(textElement){
-
-textElement.textContent =
-"COPY CONTRACT";
-
-}else if(button){
-
-button.textContent =
-"COPY";
-
-}
-
-if(button){
-
-button.classList.remove("copied");
-
-}
-
-},1800);
-
-}catch(error){
-
-console.warn(
-"Contract copy failed",
-error
-);
-
-}
-
-}
-
-
-const primaryCopy =
-document.querySelector("#copyContract");
-
-const primaryCopyText =
-document.querySelector("#copyText");
-
-if(primaryCopy){
-
-primaryCopy.addEventListener(
-"click",
-()=>{
-
-copyRelaxContract(
-primaryCopy,
-primaryCopyText
-);
-
-}
-);
-
-}
-
-
-const secondCopy =
-document.querySelector(
-"#copyContractSecond"
-);
-
-const secondCopyText =
-document.querySelector(
-"#copyTextSecond"
-);
-
-if(secondCopy){
-
-secondCopy.addEventListener(
-"click",
-()=>{
-
-copyRelaxContract(
-secondCopy,
-secondCopyText
-);
-
-}
-);
-
-}
-
-
-const footerCopy =
-document.querySelector(
-"#footerCopyContract"
-);
-
-if(footerCopy){
-
-footerCopy.addEventListener(
-"click",
-()=>{
-
-copyRelaxContract(
-footerCopy,
-null
-);
-
-}
-);
-
-}
-
-
-/* =========================
-MARKET FORMAT
-========================= */
-
-function formatMoney(value){
-
-const number =
-Number(value);
-
-if(!Number.isFinite(number)){
-
-return "—";
-
-}
-
-if(number >= 1000000000){
-
-return "$" +
-(number / 1000000000)
-.toFixed(2) +
-"B";
-
-}
-
-if(number >= 1000000){
-
-return "$" +
-(number / 1000000)
-.toFixed(2) +
-"M";
-
-}
-
-if(number >= 1000){
-
-return "$" +
-(number / 1000)
-.toFixed(2) +
-"K";
-
-}
-
-return "$" +
-number.toFixed(2);
-
-}
-
-
-function formatPrice(value){
-
-const number =
-Number(value);
-
-if(!Number.isFinite(number)){
-
-return "—";
-
-}
-
-if(number >= 1){
-
-return "$" +
-number.toFixed(4);
-
-}
-
-if(number >= .01){
-
-return "$" +
-number.toFixed(6);
-
-}
-
-return "$" +
-number.toFixed(10)
-.replace(/0+$/,"");
-
-}
-
-
-/* =========================
-LIVE DEXSCREENER DATA
-========================= */
-
-async function loadRelaxMarket(){
-
-const livePrice =
-document.querySelector("#livePrice");
-
-const priceChange =
-document.querySelector("#priceChange");
-
-const marketCap =
-document.querySelector("#marketCap");
-
-const liquidity =
-document.querySelector("#liquidity");
-
-const volume24h =
-document.querySelector("#volume24h");
-
-const marketStatus =
-document.querySelector("#marketStatus");
-
-try{
-
-const response =
-await fetch(
-`https://api.dexscreener.com/latest/dex/pairs/solana/${RELAX_PAIR}`,
-{
-cache:"no-store"
-}
-);
-
-if(!response.ok){
-
-throw new Error(
-"Market API unavailable"
-);
-
-}
-
-const data =
-await response.json();
-
-const pair =
-data.pair ||
-(data.pairs && data.pairs[0]);
-
-if(!pair){
-
-throw new Error(
-"RELAX pair not found"
-);
-
-}
-
-
-if(livePrice){
-
-livePrice.textContent =
-formatPrice(pair.priceUsd);
-
-}
-
-
-const change =
-Number(
-pair.priceChange?.h24
-);
-
-if(priceChange){
-
-if(Number.isFinite(change)){
-
-priceChange.textContent =
-`${change >= 0 ? "+" : ""}${change.toFixed(2)}% / 24H`;
-
-priceChange.classList.remove(
-"positive",
-"negative"
-);
-
-priceChange.classList.add(
-change >= 0
-? "positive"
-: "negative"
-);
-
-}else{
-
-priceChange.textContent =
-"24H CHANGE UNAVAILABLE";
-
-}
-
-}
-
-
-if(marketCap){
-
-marketCap.textContent =
-formatMoney(
-pair.marketCap ||
-pair.fdv
-);
-
-}
-
-
-if(liquidity){
-
-liquidity.textContent =
-formatMoney(
-pair.liquidity?.usd
-);
-
-}
-
-
-if(volume24h){
-
-volume24h.textContent =
-formatMoney(
-pair.volume?.h24
-);
-
-}
-
-
-if(marketStatus){
-
-marketStatus.textContent =
-"MARKET DATA CONNECTED";
-
-}
-
-
-}catch(error){
-
-console.warn(
-"RELAX market data error",
-error
-);
-
-if(livePrice){
-
-livePrice.textContent =
-"VIEW LIVE CHART";
-
-}
-
-if(priceChange){
-
-priceChange.textContent =
-"MARKET FEED TEMPORARILY UNAVAILABLE";
-
-priceChange.classList.remove(
-"positive",
-"negative"
-);
-
-}
-
-if(marketStatus){
-
-marketStatus.textContent =
-"DEX FEED OFFLINE";
-
-}
-
-}
-
-}
-
-
-loadRelaxMarket();
-
-setInterval(
-loadRelaxMarket,
-30000
-);
-
-
-/* =========================
-LIVE CLOCK
-========================= */
-
-function updateRelaxClock(){
-
-const clock =
-document.querySelector(
-"#liveClock"
-);
-
-if(!clock) return;
-
-const now =
-new Date();
-
-clock.textContent =
-now.toLocaleTimeString(
-"en-US",
-{
-
-hour:"2-digit",
-
-minute:"2-digit",
-
-second:"2-digit",
-
-hour12:false
-
-}
-);
-
-}
-
-
-updateRelaxClock();
-
-setInterval(
-updateRelaxClock,
-1000
-);
-
-
-/* =========================
-CURRENT YEAR
-========================= */
-
-const currentYear =
-document.querySelector(
-"#currentYear"
-);
-
-if(currentYear){
-
-currentYear.textContent =
-new Date().getFullYear();
-
-}
-
-
-/* =========================
-SMOOTH ANCHOR SCROLL
+SMOOTH ANCHORS
 ========================= */
 
 document
-.querySelectorAll(
-'a[href^="#"]'
-)
-.forEach(anchor=>{
+.querySelectorAll('a[href^="#"]')
+.forEach(link => {
 
-anchor.addEventListener(
-"click",
-event=>{
+link.addEventListener("click", event => {
 
-const href =
-anchor.getAttribute("href");
+const targetId =
+link.getAttribute("href");
 
-if(!href || href === "#") return;
+if(
+!targetId ||
+targetId === "#"
+) return;
 
 const target =
-document.querySelector(href);
+document.querySelector(targetId);
 
 if(!target) return;
 
@@ -9172,105 +9129,659 @@ block:"start"
 
 });
 
-}
-);
+});
 
 });
 
 
 /* =========================
-VIDEO SAFETY
-MUTED AUTOPLAY
+NAVBAR SCROLL
 ========================= */
 
-const backgroundVideos =
-document.querySelectorAll(
-"video"
+const navbar =
+document.querySelector(".navbar");
+
+
+function updateNavbar(){
+
+if(!navbar) return;
+
+navbar.classList.toggle(
+"navbar-scrolled",
+window.scrollY > 40
 );
-
-backgroundVideos.forEach(video=>{
-
-video.muted = true;
-
-video.defaultMuted = true;
-
-video.volume = 0;
-
-video.setAttribute(
-"muted",
-""
-);
-
-video.setAttribute(
-"playsinline",
-""
-);
-
-const playPromise =
-video.play();
-
-if(
-playPromise &&
-typeof playPromise.catch === "function"
-){
-
-playPromise.catch(()=>{});
 
 }
 
-});
-
-
-/* =========================
-PARALLAX WAR BACKGROUND
-========================= */
-
-const heroVideo =
-document.querySelector(
-".hero-video"
-);
-
-if(
-heroVideo &&
-window.matchMedia(
-"(min-width:801px)"
-).matches
-){
 
 window.addEventListener(
 "scroll",
-()=>{
-
-const scroll =
-Math.min(
-window.scrollY,
-window.innerHeight
+updateNavbar,
+{passive:true}
 );
 
-heroVideo.style.transform =
-`translate3d(
-0,
-${scroll * .08}px,
-0
-) scale(1.06)`;
+updateNavbar();
+
+
+/* =========================
+MOBILE MENU
+========================= */
+
+const menuButton =
+document.querySelector(".menu-toggle");
+
+const navLinks =
+document.querySelector(".nav-links");
+
+
+if(menuButton && navLinks){
+
+menuButton.addEventListener("click", () => {
+
+document.body.classList.toggle(
+"menu-open"
+);
+
+});
+
+
+navLinks
+.querySelectorAll("a")
+.forEach(link => {
+
+link.addEventListener("click", () => {
+
+document.body.classList.remove(
+"menu-open"
+);
+
+});
+
+});
+
+}
+
+
+/* =========================
+STAR FIELD
+========================= */
+
+const starContainers = [
+
+document.querySelector(".stars"),
+
+document.querySelector(".manifesto-stars")
+
+].filter(Boolean);
+
+
+function createStars(container,count){
+
+for(let i = 0; i < count; i++){
+
+const star =
+document.createElement("span");
+
+star.className = "relax-star";
+
+const size =
+Math.random() * 2.2 + .5;
+
+star.style.width =
+size + "px";
+
+star.style.height =
+size + "px";
+
+star.style.left =
+Math.random() * 100 + "%";
+
+star.style.top =
+Math.random() * 100 + "%";
+
+star.style.opacity =
+Math.random() * .75 + .15;
+
+star.style.animationDelay =
+Math.random() * 6 + "s";
+
+star.style.animationDuration =
+Math.random() * 5 + 3 + "s";
+
+container.appendChild(star);
+
+}
+
+}
+
+
+starContainers.forEach(container => {
+
+createStars(
+
+container,
+
+window.innerWidth < 700
+? 55
+: 120
+
+);
+
+});
+
+
+/* =========================
+SHOOTING STARS
+========================= */
+
+const shootingLayer =
+document.createElement("div");
+
+shootingLayer.className =
+"shooting-star-layer";
+
+document.body.appendChild(
+shootingLayer
+);
+
+
+function createShootingStar(){
+
+const star =
+document.createElement("span");
+
+star.className =
+"shooting-star";
+
+star.style.left =
+Math.random() * 80 + "%";
+
+star.style.top =
+Math.random() * 45 + "%";
+
+star.style.animationDuration =
+Math.random() * 1.4 + 1.2 + "s";
+
+shootingLayer.appendChild(star);
+
+
+setTimeout(() => {
+
+star.remove();
+
+},3000);
+
+}
+
+
+function shootingLoop(){
+
+createShootingStar();
+
+setTimeout(
+
+shootingLoop,
+
+Math.random() * 5500 + 3500
+
+);
+
+}
+
+
+setTimeout(
+shootingLoop,
+1800
+);
+
+
+/* =========================
+FLOATING DUST
+========================= */
+
+const dustLayer =
+document.createElement("div");
+
+dustLayer.className =
+"dust-layer";
+
+document.body.appendChild(
+dustLayer
+);
+
+
+const dustCount =
+window.innerWidth < 700
+? 20
+: 45;
+
+
+for(let i = 0; i < dustCount; i++){
+
+const dust =
+document.createElement("span");
+
+dust.className =
+"dust-particle";
+
+dust.style.left =
+Math.random() * 100 + "%";
+
+dust.style.top =
+Math.random() * 100 + "%";
+
+dust.style.animationDelay =
+Math.random() * 12 + "s";
+
+dust.style.animationDuration =
+Math.random() * 12 + 10 + "s";
+
+dustLayer.appendChild(dust);
+
+}
+
+
+/* =========================
+MOUSE GLOW
+========================= */
+
+if(
+window.matchMedia(
+"(pointer:fine)"
+).matches
+){
+
+const mouseGlow =
+document.createElement("div");
+
+mouseGlow.className =
+"mouse-glow";
+
+document.body.appendChild(
+mouseGlow
+);
+
+
+window.addEventListener(
+"pointermove",
+event => {
+
+mouseGlow.style.transform =
+`translate3d(${event.clientX}px, ${event.clientY}px, 0)`;
 
 },
-{
-passive:true
-}
+{passive:true}
 );
 
 }
 
 
 /* =========================
-RELAX READY
+DEXSCREENER LIVE DATA
 ========================= */
 
-console.log(
-"%c JUST RELAX BRO. ",
-"background:#050713;color:#14F195;padding:10px 18px;font-weight:bold;"
+const priceElement =
+document.getElementById("livePrice");
+
+const marketCapElement =
+document.getElementById("marketCap");
+
+const liquidityElement =
+document.getElementById("liquidity");
+
+const volumeElement =
+document.getElementById("volume24h");
+
+const changeElement =
+document.getElementById("priceChange");
+
+
+function formatMoney(value){
+
+const number =
+Number(value);
+
+if(
+!Number.isFinite(number)
+) return "--";
+
+
+if(number >= 1000000000){
+
+return "$" +
+(number / 1000000000)
+.toFixed(2) +
+"B";
+
+}
+
+
+if(number >= 1000000){
+
+return "$" +
+(number / 1000000)
+.toFixed(2) +
+"M";
+
+}
+
+
+if(number >= 1000){
+
+return "$" +
+(number / 1000)
+.toFixed(2) +
+"K";
+
+}
+
+
+return "$" +
+number.toFixed(2);
+
+}
+
+
+function formatPrice(value){
+
+const number =
+Number(value);
+
+if(
+!Number.isFinite(number)
+) return "--";
+
+
+if(number < .000001){
+
+return "$" +
+number.toFixed(10);
+
+}
+
+
+if(number < .001){
+
+return "$" +
+number.toFixed(8);
+
+}
+
+
+return "$" +
+number.toFixed(6);
+
+}
+
+
+async function loadMarketData(){
+
+try{
+
+const response =
+await fetch(
+
+"https://api.dexscreener.com/latest/dex/tokens/"
++ CONTRACT
+
 );
+
+
+if(!response.ok){
+
+throw new Error(
+"Market API unavailable"
+);
+
+}
+
+
+const data =
+await response.json();
+
+const pairs =
+Array.isArray(data.pairs)
+? data.pairs
+: [];
+
+
+const solanaPairs =
+pairs.filter(pair =>
+
+pair.chainId === "solana"
+
+);
+
+
+if(!solanaPairs.length){
+
+throw new Error(
+"No Solana pair found"
+);
+
+}
+
+
+const pair =
+solanaPairs.sort((a,b) =>
+
+Number(
+b.liquidity?.usd || 0
+)
+-
+Number(
+a.liquidity?.usd || 0
+)
+
+)[0];
+
+
+if(priceElement){
+
+priceElement.textContent =
+formatPrice(pair.priceUsd);
+
+}
+
+
+if(marketCapElement){
+
+marketCapElement.textContent =
+formatMoney(
+
+pair.marketCap ||
+pair.fdv
+
+);
+
+}
+
+
+if(liquidityElement){
+
+const liquidity =
+pair.liquidity?.usd;
+
+liquidityElement.textContent =
+liquidity
+? formatMoney(liquidity)
+: "BONDING CURVE";
+
+}
+
+
+if(volumeElement){
+
+volumeElement.textContent =
+formatMoney(
+pair.volume?.h24
+);
+
+}
+
+
+if(changeElement){
+
+const change =
+Number(
+pair.priceChange?.h24
+);
+
+if(Number.isFinite(change)){
+
+changeElement.textContent =
+
+(change > 0 ? "+" : "")
++
+change.toFixed(2)
++
+"%";
+
+
+changeElement.classList.toggle(
+"positive",
+change >= 0
+);
+
+changeElement.classList.toggle(
+"negative",
+change < 0
+);
+
+}
+
+}
+
+
+const marketStatus =
+document.querySelector(
+".market-live-status"
+);
+
+if(marketStatus){
+
+marketStatus.classList.add(
+"is-live"
+);
+
+}
+
+}catch(error){
+
+console.warn(
+"RELAX market data:",
+error
+);
+
+
+if(liquidityElement){
+
+liquidityElement.textContent =
+"BONDING CURVE";
+
+}
+
+}
+
+}
+
+
+loadMarketData();
+
+setInterval(
+loadMarketData,
+30000
+);
+
+
+/* =========================
+COUNTER ANIMATION
+========================= */
+
+const counters =
+document.querySelectorAll(
+"[data-counter]"
+);
+
+
+const counterObserver =
+new IntersectionObserver(entries => {
+
+entries.forEach(entry => {
+
+if(!entry.isIntersecting) return;
+
+const element =
+entry.target;
+
+const target =
+Number(
+element.dataset.counter
+);
+
+if(
+!Number.isFinite(target)
+) return;
+
+
+let current = 0;
+
+const duration = 1300;
+
+const start =
+performance.now();
+
+
+function animateCounter(time){
+
+const progress =
+Math.min(
+(time - start) / duration,
+1
+);
+
+current =
+Math.floor(
+target * progress
+);
+
+element.textContent =
+current.toLocaleString();
+
+
+if(progress < 1){
+
+requestAnimationFrame(
+animateCounter
+);
+
+}
+
+}
+
+
+requestAnimationFrame(
+animateCounter
+);
+
+counterObserver.unobserve(
+element
+);
+
+});
+
+});
+
+
+counters.forEach(counter => {
+
+counterObserver.observe(counter);
+
+});
+
+
+});
+
 
 </script>
 
@@ -9279,83 +9790,74 @@ console.log(
 <style>
 
 /* =========================
-JS SUPPORT
+SCROLL FIX
 ========================= */
 
-body.loading{
+html{
+
+overflow-x:hidden;
+
+overflow-y:auto;
+
+scroll-behavior:smooth;
+
+}
+
+
+body{
+
+overflow-x:hidden;
+
+overflow-y:visible;
+
+}
+
+
+body.menu-open{
 
 overflow:hidden;
-
-}
-
-
-.loader{
-
-transition:
-opacity .7s ease,
-visibility .7s ease;
-
-}
-
-
-.loader-hidden{
-
-opacity:0;
-
-visibility:hidden;
-
-pointer-events:none;
-
-}
-
-
-.relax-logo{
-
-animation:
-relaxFloat 6s ease-in-out infinite !important;
-
-transform-origin:center center !important;
-
-}
-
-
-@keyframes relaxFloat{
-
-0%{
-
-transform:
-translate3d(0,0,0);
-
-}
-
-50%{
-
-transform:
-translate3d(0,-14px,0);
-
-}
-
-100%{
-
-transform:
-translate3d(0,0,0);
-
-}
 
 }
 
 
 /* =========================
-STARS
+REVEAL ENGINE
 ========================= */
 
-.star-field{
+.reveal{
 
-position:fixed;
+opacity:0;
+
+transform:translateY(45px);
+
+transition:
+
+opacity .9s cubic-bezier(.2,.7,.2,1),
+
+transform .9s cubic-bezier(.2,.7,.2,1);
+
+}
+
+
+.reveal.revealed{
+
+opacity:1;
+
+transform:translateY(0);
+
+}
+
+
+/* =========================
+STAR FIELD
+========================= */
+
+.stars,
+.manifesto-stars{
+
+position:absolute;
 
 inset:0;
-
-z-index:1;
 
 overflow:hidden;
 
@@ -9364,7 +9866,7 @@ pointer-events:none;
 }
 
 
-.star{
+.relax-star{
 
 position:absolute;
 
@@ -9375,20 +9877,22 @@ border-radius:50%;
 background:white;
 
 box-shadow:
-0 0 6px rgba(255,255,255,.8);
+
+0 0 7px rgba(255,255,255,.8);
 
 animation:
-starTwinkle 4s ease-in-out infinite;
+
+relaxTwinkle 5s ease-in-out infinite;
 
 }
 
 
-@keyframes starTwinkle{
+@keyframes relaxTwinkle{
 
 0%,
 100%{
 
-transform:scale(.65);
+transform:scale(.7);
 
 opacity:.2;
 
@@ -9396,7 +9900,7 @@ opacity:.2;
 
 50%{
 
-transform:scale(1.35);
+transform:scale(1.5);
 
 opacity:1;
 
@@ -9409,7 +9913,7 @@ opacity:1;
 SHOOTING STARS
 ========================= */
 
-.shooting-stars{
+.shooting-star-layer{
 
 position:fixed;
 
@@ -9428,28 +9932,56 @@ pointer-events:none;
 
 position:absolute;
 
-width:140px;
+width:120px;
 
 height:1px;
 
 background:
+
 linear-gradient(
 90deg,
-rgba(255,255,255,0),
-rgba(255,255,255,.95)
+transparent,
+rgba(255,255,255,.9)
 );
 
+transform:rotate(-35deg);
+
 filter:
+
 drop-shadow(
 0 0 6px rgba(91,124,255,.8)
 );
 
-transform:
-rotate(-35deg)
-translate3d(0,0,0);
-
 animation:
+
 shootingStarMove 1.8s linear forwards;
+
+}
+
+
+.shooting-star::after{
+
+content:"";
+
+position:absolute;
+
+right:0;
+
+top:50%;
+
+width:4px;
+
+height:4px;
+
+border-radius:50%;
+
+background:white;
+
+transform:translateY(-50%);
+
+box-shadow:
+
+0 0 15px white;
 
 }
 
@@ -9461,8 +9993,10 @@ shootingStarMove 1.8s linear forwards;
 opacity:0;
 
 transform:
-rotate(-35deg)
-translate3d(0,0,0);
+
+translate3d(-100px,-100px,0)
+
+rotate(-35deg);
 
 }
 
@@ -9477,8 +10011,10 @@ opacity:1;
 opacity:0;
 
 transform:
-rotate(-35deg)
-translate3d(900px,0,0);
+
+translate3d(650px,650px,0)
+
+rotate(-35deg);
 
 }
 
@@ -9486,112 +10022,201 @@ translate3d(900px,0,0);
 
 
 /* =========================
-REVEAL
+FLOATING DUST
 ========================= */
 
-.reveal{
+.dust-layer{
 
-opacity:0;
+position:fixed;
 
-transform:
-translate3d(0,45px,0);
+inset:0;
 
-transition:
-opacity .9s ease,
-transform .9s cubic-bezier(
-.2,.7,.2,1
-);
+z-index:1;
+
+overflow:hidden;
+
+pointer-events:none;
 
 }
 
 
-.reveal.visible{
+.dust-particle{
 
-opacity:1;
+position:absolute;
 
-transform:
-translate3d(0,0,0);
+width:2px;
 
-}
+height:2px;
 
-
-/* =========================
-NAV SCROLL
-========================= */
-
-.navbar.scrolled{
+border-radius:50%;
 
 background:
-rgba(4,6,16,.86);
 
-border-color:
-rgba(255,255,255,.10);
+rgba(255,255,255,.25);
 
-box-shadow:
-0 20px 60px rgba(0,0,0,.25);
+animation:
+
+dustFloat 16s ease-in-out infinite;
+
+}
+
+
+@keyframes dustFloat{
+
+0%,
+100%{
+
+transform:
+
+translate3d(0,0,0);
+
+opacity:.1;
+
+}
+
+50%{
+
+transform:
+
+translate3d(
+30px,
+-90px,
+0
+);
+
+opacity:.7;
+
+}
 
 }
 
 
 /* =========================
-COPY SUCCESS
+MOUSE GLOW
 ========================= */
-
-.copied{
-
-box-shadow:
-0 0 30px rgba(20,241,149,.25);
-
-}
-
-
-/* =========================
-MOBILE PERFORMANCE
-========================= */
-
-@media(max-width:800px){
 
 .mouse-glow{
 
-display:none;
+position:fixed;
+
+left:-220px;
+
+top:-220px;
+
+z-index:1;
+
+width:440px;
+
+height:440px;
+
+border-radius:50%;
+
+pointer-events:none;
+
+background:
+
+radial-gradient(
+circle,
+rgba(91,124,255,.09),
+rgba(153,69,255,.035) 35%,
+transparent 70%
+);
+
+will-change:transform;
 
 }
 
 
-.star-field{
+/* =========================
+NAVBAR GLASS SCROLL
+========================= */
 
-opacity:.75;
+.navbar{
+
+transition:
+
+background .35s ease,
+
+border-color .35s ease,
+
+box-shadow .35s ease;
+
+}
+
+
+.navbar.navbar-scrolled{
+
+background:
+
+rgba(3,5,13,.82);
+
+border-color:
+
+rgba(255,255,255,.08);
+
+box-shadow:
+
+0 20px 60px rgba(0,0,0,.28);
+
+backdrop-filter:blur(22px);
+
+-webkit-backdrop-filter:blur(22px);
 
 }
 
 
-.shooting-star{
+/* =========================
+LIVE MARKET COLORS
+========================= */
 
-width:90px;
+.positive{
+
+color:var(--green) !important;
+
+}
+
+
+.negative{
+
+color:#FF5F6D !important;
 
 }
 
 
-.reveal{
+.market-live-status.is-live{
 
-transform:
-translate3d(0,28px,0);
+color:var(--green);
 
 }
 
+
+/* =========================
+ALL LOGOS — NO ROTATION
+========================= */
 
 .relax-logo{
 
-animation:
-relaxFloatMobile
-5s ease-in-out infinite !important;
+animation-name:
+relaxGlobalFloat !important;
+
+animation-duration:
+6s !important;
+
+animation-timing-function:
+ease-in-out !important;
+
+animation-iteration-count:
+infinite !important;
+
+transform-origin:center !important;
 
 }
 
 
-@keyframes relaxFloatMobile{
+@keyframes relaxGlobalFloat{
 
-0%{
+0%,
+100%{
 
 transform:
 translate3d(0,0,0);
@@ -9601,16 +10226,64 @@ translate3d(0,0,0);
 50%{
 
 transform:
-translate3d(0,-8px,0);
+translate3d(0,-10px,0);
 
 }
 
-100%{
+}
 
-transform:
-translate3d(0,0,0);
+
+/* TOP NAV LOGO COMPLETELY STATIC */
+
+.navbar .relax-logo,
+.nav-logo .relax-logo,
+.navbar-logo,
+.nav-logo img{
+
+animation:none !important;
+
+transform:none !important;
 
 }
+
+
+/* =========================
+MOBILE PERFORMANCE
+========================= */
+
+@media(max-width:700px){
+
+.mouse-glow{
+
+display:none;
+
+}
+
+
+.dust-particle:nth-child(n+21){
+
+display:none;
+
+}
+
+
+.shooting-star{
+
+width:80px;
+
+}
+
+
+.reveal{
+
+transform:translateY(28px);
+
+}
+
+
+.reveal.revealed{
+
+transform:translateY(0);
 
 }
 
@@ -9621,29 +10294,20 @@ translate3d(0,0,0);
 prefers-reduced-motion:reduce
 ){
 
-*{
+*,
+*::before,
+*::after{
+
+animation-duration:
+.01ms !important;
+
+animation-iteration-count:
+1 !important;
 
 scroll-behavior:auto !important;
 
-}
-
-
-.relax-logo,
-.star,
-.shooting-star{
-
-animation:none !important;
-
-}
-
-
-.reveal{
-
-opacity:1;
-
-transform:none;
-
-transition:none;
+transition-duration:
+.01ms !important;
 
 }
 
@@ -9651,6 +10315,657 @@ transition:none;
 
 </style>
 
-</body>
+<!-- =========================
+RELAX V3 FINAL FIX PACK
+========================= -->
 
-</html>
+<style>
+
+/* =========================
+GLOBAL HARD FIX
+========================= */
+
+*{
+box-sizing:border-box;
+}
+
+html,
+body{
+width:100%;
+max-width:100%;
+margin:0;
+padding:0;
+}
+
+html{
+overflow-x:hidden !important;
+overflow-y:auto !important;
+}
+
+body{
+min-height:100%;
+overflow-x:hidden !important;
+overflow-y:visible !important;
+}
+
+main{
+position:relative;
+width:100%;
+overflow:visible;
+}
+
+section{
+position:relative;
+width:100%;
+}
+
+
+/* =========================
+TOP NAV FULL WIDTH
+========================= */
+
+.navbar{
+left:0 !important;
+right:0 !important;
+top:0 !important;
+
+width:100% !important;
+max-width:none !important;
+
+margin:0 !important;
+
+border-radius:0 !important;
+}
+
+.navbar-inner,
+.nav-inner{
+width:100% !important;
+max-width:none !important;
+
+padding-left:max(4vw,25px) !important;
+padding-right:max(4vw,25px) !important;
+}
+
+
+/* =========================
+ABSOLUTELY NO LOGO ROTATION
+========================= */
+
+.relax-logo,
+.loader-logo,
+.hero-logo,
+.manifesto-logo,
+.footer-logo,
+.navbar-logo,
+.nav-logo img,
+img[src*="logo"]{
+transform-origin:center center;
+}
+
+.relax-logo:not(.nav-logo img):not(.navbar-logo){
+animation:relaxFinalFloat 6s ease-in-out infinite !important;
+}
+
+@keyframes relaxFinalFloat{
+
+0%,
+100%{
+transform:translate3d(0,0,0) !important;
+}
+
+50%{
+transform:translate3d(0,-10px,0) !important;
+}
+
+}
+
+
+/* TOP LOGO STATIC */
+
+.navbar img,
+.nav-logo img,
+.navbar-logo{
+animation:none !important;
+transform:none !important;
+}
+
+
+/* =========================
+LOADER LOGO FLOAT ONLY
+========================= */
+
+.loader-logo{
+animation:loaderRelaxFloat 2.8s ease-in-out infinite !important;
+}
+
+@keyframes loaderRelaxFloat{
+
+0%,
+100%{
+transform:translate3d(0,0,0) scale(1);
+}
+
+50%{
+transform:translate3d(0,-12px,0) scale(1.035);
+}
+
+}
+
+.loader-hidden{
+opacity:0 !important;
+visibility:hidden !important;
+pointer-events:none !important;
+}
+
+
+/* =========================
+VIDEO BACKGROUND FIX
+========================= */
+
+.hero-video,
+.hero-bg-video,
+.background-video,
+video.hero-background{
+position:absolute;
+
+inset:0;
+
+width:100%;
+height:100%;
+
+object-fit:cover;
+object-position:center center;
+
+pointer-events:none;
+
+z-index:0;
+}
+
+.hero-video{
+filter:
+brightness(.46)
+contrast(1.08)
+saturate(.88);
+}
+
+.hero::after{
+content:"";
+
+position:absolute;
+inset:0;
+
+z-index:1;
+
+pointer-events:none;
+
+background:
+linear-gradient(
+90deg,
+rgba(3,5,13,.82) 0%,
+rgba(3,5,13,.43) 48%,
+rgba(3,5,13,.60) 100%
+),
+
+linear-gradient(
+180deg,
+rgba(3,5,13,.20),
+rgba(3,5,13,.08) 50%,
+#050713 100%
+);
+}
+
+.hero > *:not(video){
+position:relative;
+z-index:3;
+}
+
+
+/* =========================
+STAR VISIBILITY BOOST
+========================= */
+
+.stars,
+.manifesto-stars{
+z-index:2 !important;
+}
+
+.relax-star{
+min-width:1px;
+min-height:1px;
+
+background:#fff !important;
+
+box-shadow:
+0 0 5px rgba(255,255,255,.9),
+0 0 12px rgba(91,124,255,.45) !important;
+}
+
+.relax-star:nth-child(3n){
+background:var(--green) !important;
+}
+
+.relax-star:nth-child(5n){
+background:#A87BFF !important;
+}
+
+
+/* =========================
+SECTION ORBIT BOOST
+========================= */
+
+.token-orbit,
+.roadmap-orbit,
+.final-cta-orbit{
+z-index:1;
+}
+
+.token-orbit-traveler,
+.roadmap-traveler,
+.final-orbit-one,
+.final-orbit-two{
+will-change:transform;
+}
+
+
+/* =========================
+SECTION WIDTH IMPROVEMENT
+========================= */
+
+.section-shell{
+width:min(1600px,100%) !important;
+
+margin-left:auto !important;
+margin-right:auto !important;
+
+padding-left:max(6vw,35px) !important;
+padding-right:max(6vw,35px) !important;
+}
+
+.section-description{
+max-width:850px;
+}
+
+.story-layout,
+.philosophy-grid,
+.market-layout,
+.token-truth-grid,
+.vision-layout,
+.faq-layout{
+width:100%;
+}
+
+
+/* =========================
+TEXT SPREAD
+========================= */
+
+.story-content,
+.vision-content{
+max-width:820px;
+}
+
+.story-content p,
+.vision-content > p,
+.creator-truth-right p{
+letter-spacing:.01em;
+}
+
+.section-title{
+max-width:1100px;
+}
+
+
+/* =========================
+BUTTON GLOW
+========================= */
+
+.hero-button,
+.final-button,
+.terminal-copy{
+position:relative;
+overflow:hidden;
+}
+
+.hero-button::before,
+.final-button::before,
+.terminal-copy::before{
+content:"";
+
+position:absolute;
+
+top:-100%;
+left:-80%;
+
+width:45%;
+height:300%;
+
+transform:rotate(25deg);
+
+background:
+linear-gradient(
+90deg,
+transparent,
+rgba(255,255,255,.20),
+transparent
+);
+
+transition:left .7s ease;
+}
+
+.hero-button:hover::before,
+.final-button:hover::before,
+.terminal-copy:hover::before{
+left:140%;
+}
+
+
+/* =========================
+CUSTOM CURSOR
+========================= */
+
+@media(pointer:fine){
+
+a,
+button{
+cursor:pointer;
+}
+
+}
+
+
+/* =========================
+MOBILE VIDEO
+========================= */
+
+@media(max-width:700px){
+
+.hero-video,
+.hero-bg-video,
+.background-video,
+video.hero-background{
+object-position:center center;
+}
+
+.hero-video{
+filter:
+brightness(.38)
+contrast(1.08)
+saturate(.82);
+}
+
+.hero::after{
+background:
+linear-gradient(
+180deg,
+rgba(3,5,13,.48) 0%,
+rgba(3,5,13,.30) 45%,
+#050713 100%
+);
+}
+
+.section-shell{
+padding-left:22px !important;
+padding-right:22px !important;
+}
+
+.navbar-inner,
+.nav-inner{
+padding-left:18px !important;
+padding-right:18px !important;
+}
+
+}
+
+
+/* =========================
+VERY SMALL MOBILE
+========================= */
+
+@media(max-width:420px){
+
+.section-title{
+letter-spacing:-2px !important;
+}
+
+.final-relax{
+letter-spacing:-4px !important;
+}
+
+.hero-title{
+letter-spacing:-3px !important;
+}
+
+}
+
+
+/* =========================
+GPU PERFORMANCE
+========================= */
+
+.hero-video,
+.relax-logo,
+.relax-star,
+.shooting-star,
+.dust-particle,
+.token-orbit-traveler,
+.roadmap-traveler,
+.final-orbit-one,
+.final-orbit-two{
+backface-visibility:hidden;
+-webkit-backface-visibility:hidden;
+}
+
+
+/* =========================
+IMAGE SAFETY
+========================= */
+
+img{
+max-width:100%;
+}
+
+
+/* =========================
+OLD SPIN KILL SWITCH
+========================= */
+
+.logo-spin,
+.spin,
+.spinning,
+.rotating-logo{
+animation:none !important;
+transform:none !important;
+}
+
+
+/* NEVER ROTATE LOGO PNG */
+
+img[src="logo.png"],
+img[src="./logo.png"],
+img[src="/logo.png"]{
+rotate:0deg !important;
+}
+
+</style>
+
+
+<script>
+
+/* =========================
+RELAX FINAL SAFETY ENGINE
+========================= */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+
+/* FORCE ALL VIDEOS SILENT */
+
+document
+.querySelectorAll("video")
+.forEach(video => {
+
+video.muted = true;
+
+video.defaultMuted = true;
+
+video.volume = 0;
+
+video.setAttribute("muted","");
+
+video.setAttribute("playsinline","");
+
+video.setAttribute(
+"webkit-playsinline",
+""
+);
+
+const playPromise = video.play();
+
+if(
+playPromise &&
+typeof playPromise.catch === "function"
+){
+
+playPromise.catch(() => {});
+
+}
+
+});
+
+
+/* =========================
+LOGO ROTATION CLEANER
+========================= */
+
+const logoImages =
+document.querySelectorAll(
+'img[src*="logo"]'
+);
+
+
+logoImages.forEach(logo => {
+
+logo.classList.remove(
+"logo-spin",
+"spin",
+"spinning",
+"rotating-logo"
+);
+
+});
+
+
+/* =========================
+NAV LOGO STATIC
+========================= */
+
+const navLogos =
+document.querySelectorAll(
+".navbar img, .nav-logo img, .navbar-logo"
+);
+
+
+navLogos.forEach(logo => {
+
+logo.style.animation = "none";
+
+logo.style.transform = "none";
+
+});
+
+
+/* =========================
+VIDEO PERFORMANCE
+========================= */
+
+const videos =
+document.querySelectorAll("video");
+
+
+const videoObserver =
+new IntersectionObserver(
+
+entries => {
+
+entries.forEach(entry => {
+
+const video = entry.target;
+
+if(entry.isIntersecting){
+
+video.play().catch(() => {});
+
+}else{
+
+video.pause();
+
+}
+
+});
+
+},
+
+{
+threshold:.05
+}
+
+);
+
+
+videos.forEach(video => {
+
+videoObserver.observe(video);
+
+});
+
+
+/* =========================
+BROKEN IMAGE CHECK
+========================= */
+
+document
+.querySelectorAll("img")
+.forEach(image => {
+
+image.addEventListener(
+"error",
+() => {
+
+console.warn(
+"RELAX missing image:",
+image.getAttribute("src")
+);
+
+}
+);
+
+});
+
+
+/* =========================
+RESIZE FAQ FIX
+========================= */
+
+window.addEventListener(
+"resize",
+() => {
+
+document
+.querySelectorAll(
+".faq-item.active .faq-answer"
+)
+.forEach(answer => {
+
+answer.style.maxHeight =
+answer.scrollHeight + "px";
+
+});
+
+},
+{passive:true}
+);
+
+
+});
+
+</script>
