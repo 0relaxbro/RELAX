@@ -256,6 +256,118 @@ translateY(-8px);
 }
 
 
+/* =========================
+MINI LOGO ORBIT (loader + hero)
+========================= */
+
+.logo-orbit-wrap{
+
+position:relative;
+
+display:inline-flex;
+
+align-items:center;
+
+justify-content:center;
+
+}
+
+
+.logo-orbit-ring{
+
+position:absolute;
+
+top:50%;
+
+left:50%;
+
+border-radius:50%;
+
+pointer-events:none;
+
+}
+
+
+.logo-orbit-ring.ring-a{
+
+width:150%;
+
+height:150%;
+
+transform:translate(-50%,-50%);
+
+border:1px solid rgba(130,150,220,.2);
+
+animation:orbitSpin 9s linear infinite;
+
+}
+
+
+.logo-orbit-ring.ring-a::before{
+
+content:"";
+
+position:absolute;
+
+top:-3px;
+
+left:50%;
+
+transform:translateX(-50%);
+
+width:6px;
+
+height:6px;
+
+border-radius:50%;
+
+background:#5B7CFF;
+
+box-shadow:0 0 9px 2px rgba(91,124,255,.85);
+
+}
+
+
+.logo-orbit-ring.ring-b{
+
+width:215%;
+
+height:215%;
+
+transform:translate(-50%,-50%);
+
+border:1px solid rgba(153,69,255,.16);
+
+animation:orbitSpin 15s linear infinite reverse;
+
+}
+
+
+.logo-orbit-ring.ring-b::before{
+
+content:"";
+
+position:absolute;
+
+bottom:-3px;
+
+left:50%;
+
+transform:translateX(-50%);
+
+width:5px;
+
+height:5px;
+
+border-radius:50%;
+
+background:#9945FF;
+
+box-shadow:0 0 9px 2px rgba(153,69,255,.85);
+
+}
+
+
 .loader-line{
 
 width:min(320px,70vw);
@@ -557,6 +669,8 @@ HERO
 .hero{
 
 position:relative;
+
+z-index:3;
 
 min-height:100vh;
 
@@ -1221,7 +1335,15 @@ display:none;
 
 <div class="loader-brand">
 
+<div class="logo-orbit-wrap">
+
 <img src="logo.png" alt="RELAX">
+
+<div class="logo-orbit-ring ring-a"></div>
+
+<div class="logo-orbit-ring ring-b"></div>
+
+</div>
 
 <strong>RELAX</strong>
 
@@ -1343,11 +1465,19 @@ BUILT ON SOLANA
 
 <div class="hero-brand-line">
 
+<div class="logo-orbit-wrap">
+
 <img
 src="logo.png"
 alt="RELAX"
 class="hero-logo"
 >
+
+<div class="logo-orbit-ring ring-a"></div>
+
+<div class="logo-orbit-ring ring-b"></div>
+
+</div>
 
 <h1 class="hero-title">
 
@@ -1413,6 +1543,18 @@ class="hero-button"
 >
 
 FOLLOW ON X
+
+</a>
+
+
+<a
+href="https://www.youtube.com/@0relaxbro"
+target="_blank"
+rel="noopener noreferrer"
+class="hero-button"
+>
+
+YOUTUBE
 
 </a>
 
@@ -3453,6 +3595,31 @@ animation:orbitSpin 14s linear infinite;
 }
 
 
+.orbit-one::before{
+
+content:"";
+
+position:absolute;
+
+top:-4px;
+
+left:50%;
+
+transform:translateX(-50%);
+
+width:9px;
+
+height:9px;
+
+border-radius:50%;
+
+background:#5B7CFF;
+
+box-shadow:0 0 12px 3px rgba(91,124,255,.8);
+
+}
+
+
 .orbit-two{
 
 width:380px;
@@ -3466,6 +3633,31 @@ animation:orbitSpin 20s linear infinite reverse;
 }
 
 
+.orbit-two::before{
+
+content:"";
+
+position:absolute;
+
+bottom:-4px;
+
+left:50%;
+
+transform:translateX(-50%);
+
+width:8px;
+
+height:8px;
+
+border-radius:50%;
+
+background:#9945FF;
+
+box-shadow:0 0 12px 3px rgba(153,69,255,.8);
+
+}
+
+
 .orbit-three{
 
 width:500px;
@@ -3475,6 +3667,31 @@ height:500px;
 border-color:rgba(20,241,149,.1);
 
 animation:orbitSpin 28s linear infinite;
+
+}
+
+
+.orbit-three::before{
+
+content:"";
+
+position:absolute;
+
+top:50%;
+
+left:-4px;
+
+transform:translateY(-50%);
+
+width:7px;
+
+height:7px;
+
+border-radius:50%;
+
+background:#14F195;
+
+box-shadow:0 0 12px 3px rgba(20,241,149,.8);
 
 }
 
@@ -4310,6 +4527,31 @@ animation:coreSpin 16s linear infinite;
 }
 
 
+.core-ring-one::before{
+
+content:"";
+
+position:absolute;
+
+top:-5px;
+
+left:50%;
+
+transform:translateX(-50%);
+
+width:11px;
+
+height:11px;
+
+border-radius:50%;
+
+background:#5B7CFF;
+
+box-shadow:0 0 14px 4px rgba(91,124,255,.85);
+
+}
+
+
 .core-ring-two{
 
 width:65%;
@@ -4323,6 +4565,31 @@ animation:coreSpin 24s linear infinite reverse;
 }
 
 
+.core-ring-two::before{
+
+content:"";
+
+position:absolute;
+
+bottom:-5px;
+
+left:50%;
+
+transform:translateX(-50%);
+
+width:10px;
+
+height:10px;
+
+border-radius:50%;
+
+background:#9945FF;
+
+box-shadow:0 0 14px 4px rgba(153,69,255,.85);
+
+}
+
+
 .core-ring-three{
 
 width:90%;
@@ -4332,6 +4599,31 @@ height:90%;
 border-color:rgba(20,241,149,.09);
 
 animation:coreSpin 35s linear infinite;
+
+}
+
+
+.core-ring-three::before{
+
+content:"";
+
+position:absolute;
+
+top:50%;
+
+left:-5px;
+
+transform:translateY(-50%);
+
+width:9px;
+
+height:9px;
+
+border-radius:50%;
+
+background:#14F195;
+
+box-shadow:0 0 14px 4px rgba(20,241,149,.85);
 
 }
 
@@ -5382,6 +5674,17 @@ X
 
 
 <a
+href="https://www.youtube.com/@0relaxbro"
+target="_blank"
+rel="noopener noreferrer"
+>
+
+YOUTUBE
+
+</a>
+
+
+<a
 href="https://pump.fun/coin/6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump"
 target="_blank"
 rel="noopener noreferrer"
@@ -5632,6 +5935,8 @@ FINAL CINEMATIC
 .final-section{
 
 position:relative;
+
+z-index:3;
 
 min-height:100vh;
 
@@ -7042,6 +7347,91 @@ starField.appendChild(star);
 
 }
 
+
+function spawnDriftingStar(){
+
+const star =
+document.createElement("span");
+
+star.className =
+"generated-star drifting";
+
+const size =
+Math.random() * 2.2 + .5;
+
+star.style.width =
+size + "px";
+
+star.style.height =
+size + "px";
+
+star.style.left =
+Math.random() * 100 + "%";
+
+star.style.top =
+Math.random() * 100 + "%";
+
+star.style.opacity =
+Math.random() * .5 + .3;
+
+const spread =
+.4 + Math.random() * .8;
+
+const dx =
+(Math.random() * 2 - 1) *
+window.innerWidth *
+spread;
+
+const dy =
+(Math.random() * 2 - 1) *
+window.innerHeight *
+spread;
+
+star.style.setProperty("--dx",dx + "px");
+
+star.style.setProperty("--dy",dy + "px");
+
+const duration =
+Math.random() * 14 + 12;
+
+star.style.animationDuration =
+duration + "s";
+
+star.addEventListener(
+"animationend",
+()=>{
+
+star.remove();
+
+spawnDriftingStar();
+
+}
+);
+
+starField.appendChild(star);
+
+}
+
+
+const driftCount =
+window.innerWidth < 700
+? 8
+: 18;
+
+
+for(
+let i = 0;
+i < driftCount;
+i++
+){
+
+setTimeout(
+()=>spawnDriftingStar(),
+Math.random() * 12000
+);
+
+}
+
 }
 
 
@@ -7299,18 +7689,89 @@ starPulse 4s ease-in-out infinite;
 0%,
 100%{
 
-transform:scale(.6);
+transform:scale(.6) translate(0,0);
 
 opacity:.15;
 
 }
 
 
+25%{
+
+transform:scale(1.1) translate(2px,-1px);
+
+opacity:.55;
+
+}
+
+
 50%{
 
-transform:scale(1.5);
+transform:scale(1.5) translate(-1px,2px);
 
 opacity:.9;
+
+}
+
+
+75%{
+
+transform:scale(1.1) translate(1px,1px);
+
+opacity:.55;
+
+}
+
+}
+
+
+.generated-star.drifting{
+
+animation-name:starDrift;
+
+animation-timing-function:ease-in-out;
+
+animation-iteration-count:1;
+
+animation-fill-mode:forwards;
+
+}
+
+
+@keyframes starDrift{
+
+0%{
+
+transform:translate(0,0) scale(.6);
+
+opacity:0;
+
+}
+
+
+10%{
+
+opacity:.85;
+
+}
+
+
+85%{
+
+opacity:.5;
+
+}
+
+
+100%{
+
+transform:
+
+translate(var(--dx,0px),var(--dy,0px))
+
+scale(1.1);
+
+opacity:0;
 
 }
 
