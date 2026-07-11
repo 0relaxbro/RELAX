@@ -7816,3 +7816,380 @@ letter-spacing:1px;
 }
 
 </style>
+
+<!-- =========================
+RELAX V3 VISUAL ATMOSPHERE FIX
+========================= -->
+
+<style>
+
+/* =========================
+FULL WIDTH NAVBAR
+========================= */
+
+.navbar{
+
+width:calc(100% - 32px) !important;
+max-width:none !important;
+
+left:16px !important;
+right:16px !important;
+
+transform:none !important;
+
+}
+
+
+/* =========================
+LOGO FLOAT ONLY
+========================= */
+
+.hero-logo,
+.logo img,
+.nav-logo img,
+.brand img{
+
+animation:
+relaxLogoFloat 5s ease-in-out infinite
+!important;
+
+transform-origin:center !important;
+
+}
+
+
+@keyframes relaxLogoFloat{
+
+0%,
+100%{
+
+transform:
+translate3d(0,0,0)
+rotate(0deg);
+
+}
+
+50%{
+
+transform:
+translate3d(0,-14px,0)
+rotate(0deg);
+
+}
+
+}
+
+
+/* =========================
+DEEP SPACE STARS
+========================= */
+
+body::after{
+
+content:"";
+
+position:fixed;
+
+inset:0;
+
+z-index:-20;
+
+pointer-events:none;
+
+background-image:
+
+radial-gradient(
+circle,
+rgba(255,255,255,.9) 1px,
+transparent 1.5px
+),
+
+radial-gradient(
+circle,
+rgba(91,124,255,.75) 1px,
+transparent 1.5px
+),
+
+radial-gradient(
+circle,
+rgba(153,69,255,.6) 1px,
+transparent 1.5px
+);
+
+background-size:
+
+73px 73px,
+127px 127px,
+191px 191px;
+
+background-position:
+
+0 0,
+35px 55px,
+90px 20px;
+
+opacity:.45;
+
+animation:
+relaxStarDrift 80s linear infinite;
+
+}
+
+
+@keyframes relaxStarDrift{
+
+from{
+
+background-position:
+0 0,
+35px 55px,
+90px 20px;
+
+}
+
+to{
+
+background-position:
+0 700px,
+35px 1055px,
+90px 1420px;
+
+}
+
+}
+
+
+/* =========================
+STAR GLOW
+========================= */
+
+.stars{
+
+position:fixed !important;
+
+inset:0 !important;
+
+z-index:-15 !important;
+
+display:block !important;
+
+overflow:hidden !important;
+
+pointer-events:none !important;
+
+}
+
+
+.generated-star{
+
+opacity:.8 !important;
+
+box-shadow:
+
+0 0 5px white,
+0 0 12px rgba(91,124,255,.7)
+
+!important;
+
+}
+
+
+/* =========================
+ORBIT ATMOSPHERE
+========================= */
+
+.core-head,
+.roadmap-head,
+.faq-head{
+
+position:relative;
+
+isolation:isolate;
+
+}
+
+
+.core-head::before,
+.roadmap-head::before,
+.faq-head::before{
+
+content:"";
+
+position:absolute;
+
+width:18px;
+
+height:18px;
+
+border-radius:50%;
+
+z-index:-1;
+
+background:
+linear-gradient(
+135deg,
+#14F195,
+#5B7CFF,
+#9945FF
+);
+
+box-shadow:
+
+0 0 20px rgba(20,241,149,.8),
+0 0 45px rgba(91,124,255,.5);
+
+animation:
+relaxOrbit 12s linear infinite;
+
+}
+
+
+.core-head::after,
+.roadmap-head::after,
+.faq-head::after{
+
+content:"";
+
+position:absolute;
+
+width:8px;
+
+height:8px;
+
+border-radius:50%;
+
+z-index:-1;
+
+background:#9945FF;
+
+box-shadow:
+
+0 0 15px #9945FF,
+0 0 35px rgba(153,69,255,.8);
+
+animation:
+relaxOrbitReverse 17s linear infinite;
+
+}
+
+
+@keyframes relaxOrbit{
+
+0%{
+
+transform:
+translate(-80px,-30px)
+rotate(0deg)
+translateX(170px)
+rotate(0deg);
+
+}
+
+100%{
+
+transform:
+translate(-80px,-30px)
+rotate(360deg)
+translateX(170px)
+rotate(-360deg);
+
+}
+
+}
+
+
+@keyframes relaxOrbitReverse{
+
+0%{
+
+transform:
+translate(60px,20px)
+rotate(360deg)
+translateX(230px)
+rotate(-360deg);
+
+}
+
+100%{
+
+transform:
+translate(60px,20px)
+rotate(0deg)
+translateX(230px)
+rotate(0deg);
+
+}
+
+}
+
+
+/* =========================
+SUBTLE SECTION SPACE
+========================= */
+
+.core-section,
+.roadmap-section,
+.faq-section{
+
+background-color:
+rgba(5,7,19,.88)
+!important;
+
+}
+
+
+/* =========================
+MOBILE
+========================= */
+
+@media(max-width:768px){
+
+.navbar{
+
+width:calc(100% - 20px) !important;
+
+left:10px !important;
+right:10px !important;
+
+}
+
+
+body::after{
+
+opacity:.32;
+
+background-size:
+
+65px 65px,
+110px 110px,
+170px 170px;
+
+}
+
+
+.core-head::before,
+.roadmap-head::before,
+.faq-head::before{
+
+width:12px;
+height:12px;
+
+animation-duration:15s;
+
+}
+
+
+.core-head::after,
+.roadmap-head::after,
+.faq-head::after{
+
+width:6px;
+height:6px;
+
+animation-duration:20s;
+
+}
+
+}
+
+</style>
