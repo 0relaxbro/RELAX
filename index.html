@@ -7663,3 +7663,156 @@ display:none !important;
 }
 
 </style>
+
+<!-- =========================
+RELAX MARKET STAGE FIX
+========================= -->
+
+<script>
+
+(function(){
+
+const liquidityValue =
+document.getElementById("liquidity");
+
+if(!liquidityValue) return;
+
+const liquidityCard =
+liquidityValue.closest(".market-stat");
+
+if(!liquidityCard) return;
+
+const liquidityLabel =
+liquidityCard.querySelector("span");
+
+
+async function updateRelaxMarketStage(){
+
+try{
+
+const response = await fetch(
+
+"https://api.dexscreener.com/token-pairs/v1/solana/" +
+RELAX.contract,
+
+{
+cache:"no-store"
+}
+
+);
+
+if(!response.ok){
+
+throw new Error("Market stage unavailable");
+
+}
+
+const pairs = await response.json();
+
+const activePair = pairs.find(pair =>
+
+Number(pair?.liquidity?.usd) > 0
+
+);
+
+
+if(activePair){
+
+if(liquidityLabel){
+
+liquidityLabel.textContent =
+"LIQUIDITY";
+
+}
+
+liquidityValue.textContent =
+formatMarketNumber(
+activePair.liquidity.usd
+);
+
+liquidityValue.classList.remove(
+"bonding-stage"
+);
+
+}
+
+else{
+
+if(liquidityLabel){
+
+liquidityLabel.textContent =
+"MARKET STAGE";
+
+}
+
+liquidityValue.textContent =
+"BONDING CURVE";
+
+liquidityValue.classList.add(
+"bonding-stage"
+);
+
+}
+
+}
+
+catch(error){
+
+if(liquidityLabel){
+
+liquidityLabel.textContent =
+"MARKET STAGE";
+
+}
+
+liquidityValue.textContent =
+"BONDING CURVE";
+
+liquidityValue.classList.add(
+"bonding-stage"
+);
+
+}
+
+}
+
+
+updateRelaxMarketStage();
+
+setInterval(
+updateRelaxMarketStage,
+30000
+);
+
+})();
+
+</script>
+
+
+<style>
+
+.bonding-stage{
+
+font-size:
+clamp(16px,2vw,28px)
+!important;
+
+background:
+linear-gradient(
+90deg,
+#14F195,
+#5B7CFF,
+#9945FF
+);
+
+-webkit-background-clip:text;
+
+background-clip:text;
+
+color:transparent !important;
+
+letter-spacing:1px;
+
+}
+
+</style>
