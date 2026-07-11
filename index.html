@@ -1029,7 +1029,7 @@ left:0;
 
 right:0;
 
-display:none;
+display:flex;
 
 flex-direction:column;
 
@@ -1037,7 +1037,17 @@ align-items:stretch;
 
 gap:0;
 
-padding:15px;
+max-height:0;
+
+overflow:hidden;
+
+opacity:0;
+
+visibility:hidden;
+
+transform:translateY(-10px);
+
+padding:0 15px;
 
 border:1px solid var(--border);
 
@@ -1047,12 +1057,42 @@ background:rgba(5,7,19,.95);
 
 backdrop-filter:blur(20px);
 
+transition:
+
+max-height .4s ease,
+
+opacity .3s ease,
+
+transform .35s ease,
+
+padding .4s ease,
+
+visibility 0s linear .4s;
+
 }
 
 
 .nav-links.open{
 
-display:flex;
+max-height:420px;
+
+opacity:1;
+
+visibility:visible;
+
+transform:translateY(0);
+
+padding:15px;
+
+transition:
+
+max-height .4s ease,
+
+opacity .3s ease,
+
+transform .35s ease,
+
+padding .4s ease;
 
 }
 
@@ -1067,6 +1107,17 @@ padding:16px;
 .nav-toggle{
 
 display:block;
+
+transition:transform .3s ease,color .3s ease;
+
+}
+
+
+.nav-toggle.active{
+
+transform:rotate(90deg);
+
+color:var(--green);
 
 }
 
@@ -1154,6 +1205,7 @@ display:none;
 }
 
 }
+
 
 </style>
 
@@ -6193,9 +6245,18 @@ if(menuToggle && navLinks){
 
 menuToggle.addEventListener("click",()=>{
 
-menuToggle.classList.toggle("active");
+const isOpen =
+navLinks.classList.toggle("open");
 
-navLinks.classList.toggle("active");
+menuToggle.classList.toggle("active",isOpen);
+
+menuToggle.setAttribute(
+"aria-expanded",
+isOpen ? "true" : "false"
+);
+
+menuToggle.textContent =
+isOpen ? "✕" : "☰";
 
 });
 
@@ -6208,7 +6269,14 @@ link.addEventListener("click",()=>{
 
 menuToggle.classList.remove("active");
 
-navLinks.classList.remove("active");
+navLinks.classList.remove("open");
+
+menuToggle.setAttribute(
+"aria-expanded",
+"false"
+);
+
+menuToggle.textContent = "☰";
 
 });
 
