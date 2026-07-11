@@ -1057,89 +1057,6 @@ opacity:.25;
 
 
 
-/* =========================
-SHOOTING STAR
-========================= */
-
-
-.shooting-star{
-
-position:absolute;
-
-top:15%;
-
-left:-20%;
-
-width:180px;
-
-height:1px;
-
-z-index:4;
-
-opacity:0;
-
-background:linear-gradient(
-90deg,
-transparent,
-rgba(255,255,255,.8)
-);
-
-transform:rotate(-18deg);
-
-animation:shootingStar 8s ease-in infinite;
-
-}
-
-
-@keyframes shootingStar{
-
-0%,
-70%{
-
-opacity:0;
-
-transform:
-
-translateX(0)
-
-translateY(0)
-
-rotate(-18deg);
-
-}
-
-
-72%{
-
-opacity:1;
-
-}
-
-
-82%{
-
-opacity:0;
-
-transform:
-
-translateX(140vw)
-
-translateY(40vh)
-
-rotate(-18deg);
-
-}
-
-
-100%{
-
-opacity:0;
-
-}
-
-}
-
-
 
 /* =========================
 MOBILE PART 1
@@ -1472,8 +1389,6 @@ poster="Market.png"
 <div class="edge-fade edge-fade-top" id="heroFadeTop"></div>
 
 <div class="edge-fade edge-fade-bottom" id="heroFadeBottom"></div>
-
-<div class="shooting-star"></div>
 
 
 <div class="hero-content">
