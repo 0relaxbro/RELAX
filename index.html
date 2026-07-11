@@ -5,73 +5,130 @@
 
 <meta charset="UTF-8">
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0"
+>
 
 <title>RELAX | Just RELAX Bro.</title>
 
-<meta name="description" content="The world panics. RELAX doesn't. 0 Fear. 0 Panic. 0 Regrets. Built on Solana.">
+<meta
+name="description"
+content="0 Fear. 0 Panic. 0 Regrets. Just RELAX Bro."
+>
 
-<meta name="theme-color" content="#050713">
+<meta
+name="theme-color"
+content="#050713"
+>
 
-<meta property="og:type" content="website">
+<meta
+property="og:title"
+content="RELAX | Just RELAX Bro."
+>
 
-<meta property="og:title" content="RELAX | Just RELAX Bro.">
+<meta
+property="og:description"
+content="The world panics. RELAX remains calm."
+>
 
-<meta property="og:description" content="The world panics. RELAX doesn't. 0 Fear. 0 Panic. 0 Regrets.">
+<meta
+property="og:image"
+content="logo.png"
+>
 
-<meta property="og:image" content="logo.png">
+<meta
+property="og:type"
+content="website"
+>
 
-<meta property="og:url" content="https://0relaxbro.xyz">
+<meta
+property="og:url"
+content="https://0relaxbro.xyz"
+>
 
-<meta name="twitter:card" content="summary_large_image">
+<meta
+name="twitter:card"
+content="summary_large_image"
+>
 
-<meta name="twitter:title" content="RELAX | Just RELAX Bro.">
+<meta
+name="twitter:title"
+content="RELAX | Just RELAX Bro."
+>
 
-<meta name="twitter:description" content="The world panics. RELAX doesn't.">
+<meta
+name="twitter:description"
+content="0 Fear. 0 Panic. 0 Regrets."
+>
 
-<meta name="twitter:image" content="logo.png">
+<meta
+name="twitter:image"
+content="logo.png"
+>
 
-<link rel="icon" href="logo.png">
+<link
+rel="icon"
+href="logo.png"
+>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<link
+rel="preconnect"
+href="https://fonts.googleapis.com"
+>
 
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+rel="preconnect"
+href="https://fonts.gstatic.com"
+crossorigin
+>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link
+href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@400;600;700;800;900&display=swap"
+rel="stylesheet"
+>
 
 
 <style>
+
+/* =========================
+ROOT
+========================= */
 
 :root{
 
 --bg:#050713;
 
---bg-soft:#080B19;
+--bg-soft:#080B18;
 
---panel:rgba(10,14,32,.68);
+--panel:#0D1225;
 
---panel-strong:rgba(8,11,25,.9);
+--panel-soft:#10172E;
 
---text:#F5F7FF;
+--white:#FFFFFF;
 
---muted:#929BB5;
+--text:#E9ECF5;
+
+--muted:#939DB4;
 
 --green:#14F195;
 
---purple:#9945FF;
-
 --blue:#5B7CFF;
+
+--purple:#9945FF;
 
 --danger:#FF5F87;
 
---border:rgba(132,151,220,.18);
-
 --orbitron:'Orbitron',sans-serif;
 
---inter:'Inter',sans-serif;
+--inter:'Inter',Arial,sans-serif;
 
 }
 
+
+/* =========================
+RESET
+========================= */
 
 *{
 
@@ -88,10 +145,20 @@ html{
 
 scroll-behavior:smooth;
 
+overflow-x:hidden;
+
+overflow-y:auto;
+
 }
 
 
 body{
+
+min-height:100vh;
+
+overflow-x:hidden;
+
+overflow-y:auto;
 
 background:var(--bg);
 
@@ -99,14 +166,17 @@ color:var(--text);
 
 font-family:var(--inter);
 
-overflow-x:hidden;
+-webkit-font-smoothing:antialiased;
+
+touch-action:pan-y;
 
 }
 
 
-body.loading{
+button,
+a{
 
-overflow:hidden;
+font:inherit;
 
 }
 
@@ -118,11 +188,18 @@ color:inherit;
 }
 
 
-button,
+button{
 
-a{
+border:0;
 
--webkit-tap-highlight-color:transparent;
+}
+
+
+img{
+
+display:block;
+
+max-width:100%;
 
 }
 
@@ -131,42 +208,223 @@ a{
 
 background:var(--green);
 
-color:#050713;
+color:var(--bg);
 
 }
-
-
-::-webkit-scrollbar{
-
-width:8px;
-
-}
-
-
-::-webkit-scrollbar-track{
-
-background:#03040B;
-
-}
-
-
-::-webkit-scrollbar-thumb{
-
-background:linear-gradient(
-var(--green),
-var(--purple)
-);
-
-border-radius:10px;
-
-}
-
 
 
 /* =========================
-LOADING SCREEN
+GLOBAL SPACE BACKGROUND
 ========================= */
 
+#spaceField{
+
+position:fixed;
+
+inset:0;
+
+z-index:0;
+
+overflow:hidden;
+
+pointer-events:none;
+
+background:
+
+radial-gradient(
+circle at 20% 20%,
+rgba(91,124,255,.10),
+transparent 30%
+),
+
+radial-gradient(
+circle at 80% 60%,
+rgba(153,69,255,.08),
+transparent 35%
+),
+
+#050713;
+
+}
+
+
+.space-star{
+
+position:absolute;
+
+display:block;
+
+border-radius:50%;
+
+background:white;
+
+box-shadow:
+
+0 0 5px rgba(255,255,255,.9),
+
+0 0 12px rgba(91,124,255,.55);
+
+animation:
+starTwinkle var(--star-speed)
+ease-in-out infinite;
+
+}
+
+
+@keyframes starTwinkle{
+
+0%,
+100%{
+
+opacity:.15;
+
+transform:scale(.65);
+
+}
+
+50%{
+
+opacity:1;
+
+transform:scale(1.5);
+
+}
+
+}
+
+
+.shooting-star{
+
+position:absolute;
+
+width:160px;
+
+height:1px;
+
+background:
+
+linear-gradient(
+90deg,
+transparent,
+rgba(255,255,255,.95)
+);
+
+filter:
+
+drop-shadow(
+0 0 7px rgba(91,124,255,.9)
+);
+
+transform:rotate(-35deg);
+
+animation:
+shootingStar 1.8s linear forwards;
+
+}
+
+
+@keyframes shootingStar{
+
+0%{
+
+opacity:0;
+
+transform:
+
+translate3d(0,0,0)
+
+rotate(-35deg);
+
+}
+
+10%{
+
+opacity:1;
+
+}
+
+100%{
+
+opacity:0;
+
+transform:
+
+translate3d(
+600px,
+600px,
+0
+)
+
+rotate(-35deg);
+
+}
+
+}
+
+
+/* =========================
+PAGE LAYERS
+========================= */
+
+.page-shell{
+
+position:relative;
+
+z-index:2;
+
+}
+
+
+section{
+
+position:relative;
+
+isolation:isolate;
+
+}
+
+
+/* =========================
+MOUSE GLOW
+========================= */
+
+.mouse-glow{
+
+position:fixed;
+
+top:0;
+
+left:0;
+
+width:500px;
+
+height:500px;
+
+z-index:1;
+
+pointer-events:none;
+
+border-radius:50%;
+
+background:
+
+radial-gradient(
+circle,
+rgba(91,124,255,.12),
+rgba(153,69,255,.05) 35%,
+transparent 70%
+);
+
+filter:blur(10px);
+
+will-change:transform;
+
+}
+
+
+/* =========================
+LOADER
+========================= */
 
 .loader{
 
@@ -199,126 +457,65 @@ opacity:0;
 
 visibility:hidden;
 
+pointer-events:none;
+
 }
 
 
 .loader-inner{
+
+display:flex;
+
+flex-direction:column;
+
+align-items:center;
+
+justify-content:center;
 
 text-align:center;
 
 }
 
 
-.loader-brand{
+.loader-logo{
 
-display:flex;
+width:130px;
 
-align-items:center;
-
-justify-content:center;
-
-gap:18px;
-
-}
-
-
-.loader-brand img{
-
-width:62px;
-
-height:62px;
+height:130px;
 
 object-fit:cover;
 
 border-radius:50%;
 
-box-shadow:
+animation:
 
-0 0 35px rgba(91,124,255,.5);
+logoFloat 4.8s ease-in-out infinite;
 
-animation:loaderCoin 2.5s ease-in-out infinite;
+filter:
+
+drop-shadow(
+0 0 30px rgba(91,124,255,.45)
+);
 
 }
 
 
-.loader-brand strong{
+.loader-title{
+
+margin-top:28px;
 
 font-family:var(--orbitron);
 
-font-size:clamp(35px,6vw,70px);
+font-size:clamp(28px,5vw,55px);
 
-letter-spacing:7px;
+font-weight:900;
 
-}
-
-
-@keyframes loaderCoin{
-
-50%{
-
-transform:
-
-translateY(-8px)
-
-rotate(5deg);
-
-}
+letter-spacing:8px;
 
 }
 
 
-.loader-line{
-
-width:min(320px,70vw);
-
-height:2px;
-
-margin:30px auto 0;
-
-background:rgba(255,255,255,.08);
-
-overflow:hidden;
-
-}
-
-
-.loader-progress{
-
-width:40%;
-
-height:100%;
-
-background:linear-gradient(
-90deg,
-var(--green),
-var(--blue),
-var(--purple)
-);
-
-animation:loaderMove 1.4s ease-in-out infinite;
-
-}
-
-
-@keyframes loaderMove{
-
-0%{
-
-transform:translateX(-120%);
-
-}
-
-
-100%{
-
-transform:translateX(350%);
-
-}
-
-}
-
-
-.loader-text{
+.loader-signal{
 
 margin-top:18px;
 
@@ -326,432 +523,289 @@ font-family:var(--orbitron);
 
 font-size:9px;
 
-letter-spacing:4px;
-
-color:#69728C;
-
-}
-
-
-
-/* =========================
-GLOBAL EFFECT LAYERS
-========================= */
-
-
-#stars,
-
-#dust{
-
-position:fixed;
-
-inset:0;
-
-pointer-events:none;
-
-overflow:hidden;
-
-}
-
-
-#stars{
-
-z-index:1;
-
-}
-
-
-#dust{
-
-z-index:2;
-
-}
-
-
-.star{
-
-position:absolute;
-
-width:2px;
-
-height:2px;
-
-border-radius:50%;
-
-background:white;
-
-opacity:.4;
-
-animation:starFloat linear infinite;
-
-}
-
-
-@keyframes starFloat{
-
-from{
-
-transform:translateY(105vh);
-
-}
-
-
-to{
-
-transform:translateY(-10vh);
-
-}
-
-}
-
-
-.dust{
-
-position:absolute;
-
-width:3px;
-
-height:3px;
-
-border-radius:50%;
-
-background:rgba(170,190,255,.45);
-
-filter:blur(.4px);
-
-animation:dustFloat linear infinite;
-
-}
-
-
-@keyframes dustFloat{
-
-from{
-
-transform:
-
-translate3d(0,110vh,0)
-
-rotate(0deg);
-
-}
-
-
-to{
-
-transform:
-
-translate3d(120px,-15vh,0)
-
-rotate(360deg);
-
-}
-
-}
-
-
-.mouse-glow{
-
-position:fixed;
-
-left:0;
-
-top:0;
-
-width:500px;
-
-height:500px;
-
-border-radius:50%;
-
-pointer-events:none;
-
-z-index:3;
-
-background:
-
-radial-gradient(
-circle,
-rgba(91,124,255,.10),
-rgba(153,69,255,.035) 35%,
-transparent 70%
-);
-
-filter:blur(10px);
-
-transform:translate(-50%,-50%);
-
-}
-
-
-
-/* =========================
-NAVBAR
-========================= */
-
-
-.nav-wrap{
-
-position:fixed;
-
-top:22px;
-
-left:50%;
-
-transform:translateX(-50%);
-
-z-index:500;
-
-width:min(1180px,92%);
-
-}
-
-
-.navbar{
-
-display:flex;
-
-align-items:center;
-
-justify-content:space-between;
-
-padding:13px 15px 13px 20px;
-
-border:1px solid rgba(145,160,220,.18);
-
-border-radius:18px;
-
-background:rgba(5,7,19,.58);
-
-backdrop-filter:blur(22px);
-
--webkit-backdrop-filter:blur(22px);
-
-box-shadow:
-
-0 20px 60px rgba(0,0,0,.25);
-
-}
-
-
-.nav-brand{
-
-display:flex;
-
-align-items:center;
-
-gap:11px;
-
-text-decoration:none;
-
-font-family:var(--orbitron);
-
-font-weight:900;
-
-letter-spacing:3px;
-
-}
-
-
-.nav-brand img{
-
-width:37px;
-
-height:37px;
-
-object-fit:cover;
-
-border-radius:50%;
-
-box-shadow:
-
-0 0 18px rgba(91,124,255,.4);
-
-}
-
-
-.nav-links{
-
-display:flex;
-
-align-items:center;
-
-gap:28px;
-
-}
-
-
-.nav-links a{
-
-font-family:var(--orbitron);
-
-font-size:9px;
-
 font-weight:700;
 
-letter-spacing:2px;
+letter-spacing:5px;
 
-color:#AAB1C5;
-
-text-decoration:none;
-
-transition:.3s;
+color:var(--green);
 
 }
 
 
-.nav-links a:hover{
-
-color:white;
-
-}
-
-
-.nav-buy{
-
-padding:12px 18px;
-
-border-radius:11px;
-
-background:linear-gradient(
-120deg,
-var(--green),
-var(--purple)
-);
-
-color:#050713 !important;
-
-}
-
-
-.nav-toggle{
-
-display:none;
-
-border:0;
-
-background:none;
-
-color:white;
-
-font-size:24px;
-
-cursor:pointer;
-
-}
-
-
-
-/* =========================
-HERO
-========================= */
-
-
-.hero{
+.loader-line{
 
 position:relative;
 
-min-height:100vh;
+width:220px;
 
-display:flex;
+height:1px;
 
-align-items:center;
+margin-top:30px;
 
 overflow:hidden;
 
-isolation:isolate;
-
-padding:
-
-150px max(6vw,30px)
-
-80px;
+background:rgba(255,255,255,.1);
 
 }
 
 
-.hero-video{
+.loader-line::after{
+
+content:"";
 
 position:absolute;
 
-inset:-4%;
+top:0;
 
-width:108%;
+left:-50%;
 
-height:108%;
+width:50%;
 
-object-fit:cover;
-
-z-index:-6;
-
-filter:
-
-brightness(.72)
-
-saturate(1.08);
-
-}
-
-
-.hero-image-fallback{
-
-position:absolute;
-
-inset:-4%;
-
-z-index:-7;
-
-background-image:url("Market.png");
-
-background-size:cover;
-
-background-position:center;
-
-}
-
-
-.hero-overlay{
-
-position:absolute;
-
-inset:0;
-
-z-index:-5;
+height:100%;
 
 background:
 
 linear-gradient(
 90deg,
-rgba(5,7,19,.96) 0%,
-rgba(5,7,19,.76) 36%,
-rgba(5,7,19,.25) 68%,
-rgba(5,7,19,.52) 100%
-),
-
-linear-gradient(
-0deg,
-#050713 0%,
-transparent 30%,
-rgba(5,7,19,.35) 100%
+transparent,
+var(--green),
+var(--purple)
 );
 
-}
-
-
-.hero-content{
-
-position:relative;
-
-z-index:10;
-
-width:min(820px,100%);
+animation:
+loaderSignal 1.5s ease-in-out infinite;
 
 }
 
 
-.hero-kicker{
+@keyframes loaderSignal{
 
-display:flex;
+0%{
+
+left:-50%;
+
+}
+
+100%{
+
+left:110%;
+
+}
+
+}
+
+
+/* =========================
+THE ONLY LOGO ANIMATION
+NO ROTATION
+========================= */
+
+@keyframes logoFloat{
+
+0%,
+100%{
+
+transform:
+translate3d(0,0,0);
+
+}
+
+50%{
+
+transform:
+translate3d(0,-14px,0);
+
+}
+
+}
+
+
+.relax-logo{
+
+animation:
+
+logoFloat 5s ease-in-out infinite;
+
+transform-origin:center center;
+
+}
+
+
+/* =========================
+ORBIT SYSTEM
+========================= */
+
+.orbit-zone{
+
+position:absolute;
+
+width:420px;
+
+height:420px;
+
+pointer-events:none;
+
+z-index:-1;
+
+}
+
+
+.orbit-ring{
+
+position:absolute;
+
+inset:0;
+
+border-radius:50%;
+
+border:
+
+1px solid rgba(91,124,255,.10);
+
+transform:rotate(-18deg);
+
+}
+
+
+.orbit-ring.second{
+
+inset:70px;
+
+border-color:
+
+rgba(20,241,149,.08);
+
+transform:rotate(35deg);
+
+}
+
+
+.orbit-traveler{
+
+position:absolute;
+
+top:50%;
+
+left:50%;
+
+width:15px;
+
+height:15px;
+
+margin:-7.5px;
+
+border-radius:50%;
+
+background:
+
+linear-gradient(
+135deg,
+var(--green),
+var(--blue),
+var(--purple)
+);
+
+box-shadow:
+
+0 0 15px rgba(20,241,149,.9),
+
+0 0 40px rgba(91,124,255,.6);
+
+animation:
+
+travelerOrbit 13s linear infinite;
+
+}
+
+
+.orbit-traveler.second{
+
+width:8px;
+
+height:8px;
+
+margin:-4px;
+
+background:var(--purple);
+
+box-shadow:
+
+0 0 14px var(--purple),
+
+0 0 30px rgba(153,69,255,.7);
+
+animation:
+
+travelerOrbitSmall 18s linear infinite reverse;
+
+}
+
+
+@keyframes travelerOrbit{
+
+from{
+
+transform:
+
+rotate(0deg)
+
+translateX(210px)
+
+rotate(0deg);
+
+}
+
+to{
+
+transform:
+
+rotate(360deg)
+
+translateX(210px)
+
+rotate(-360deg);
+
+}
+
+}
+
+
+@keyframes travelerOrbitSmall{
+
+from{
+
+transform:
+
+rotate(0deg)
+
+translateX(140px)
+
+rotate(0deg);
+
+}
+
+to{
+
+transform:
+
+rotate(360deg)
+
+translateX(140px)
+
+rotate(-360deg);
+
+}
+
+}
+
+
+/* =========================
+COMMON TYPOGRAPHY
+========================= */
+
+.section-label{
+
+display:inline-flex;
 
 align-items:center;
 
@@ -759,121 +813,44 @@ gap:12px;
 
 font-family:var(--orbitron);
 
-font-size:10px;
-
-font-weight:700;
-
-letter-spacing:5px;
-
-color:#A8B0C7;
-
-}
-
-
-.hero-kicker::before{
-
-content:"";
-
-width:45px;
-
-height:1px;
-
-background:var(--green);
-
-box-shadow:
-
-0 0 12px var(--green);
-
-}
-
-
-.hero-brand-line{
-
-display:flex;
-
-align-items:center;
-
-gap:25px;
-
-margin-top:30px;
-
-}
-
-
-.hero-logo{
-
-width:clamp(72px,8vw,110px);
-
-height:clamp(72px,8vw,110px);
-
-object-fit:cover;
-
-border-radius:50%;
-
-border:1px solid rgba(255,255,255,.16);
-
-box-shadow:
-
-0 0 35px rgba(91,124,255,.45),
-
-0 0 70px rgba(153,69,255,.18);
-
-animation:heroCoin 5s ease-in-out infinite;
-
-}
-
-
-@keyframes heroCoin{
-
-50%{
-
-transform:
-
-translateY(-8px)
-
-rotate(3deg);
-
-}
-
-}
-
-
-.hero-title{
-
-font-family:var(--orbitron);
-
-font-size:clamp(58px,10vw,145px);
-
-font-weight:900;
-
-letter-spacing:4px;
-
-line-height:.9;
-
-}
-
-
-.hero-tagline{
-
-margin-top:35px;
-
-font-family:var(--orbitron);
-
-font-size:clamp(20px,3vw,40px);
+font-size:9px;
 
 font-weight:800;
 
-line-height:1.35;
+letter-spacing:5px;
+
+color:var(--green);
 
 }
 
 
-.hero-tagline span{
+.section-label::before{
 
-background:linear-gradient(
+content:"";
+
+width:38px;
+
+height:1px;
+
+background:
+
+linear-gradient(
 90deg,
 var(--green),
-#70A7FF,
+var(--purple)
+);
+
+}
+
+
+.gradient-text{
+
+background:
+
+linear-gradient(
+90deg,
+var(--green),
+var(--blue),
 var(--purple)
 );
 
@@ -886,363 +863,287 @@ color:transparent;
 }
 
 
-.hero-copy{
+.section-title{
 
-max-width:620px;
-
-margin-top:28px;
-
-font-size:clamp(17px,1.5vw,21px);
-
-line-height:1.8;
-
-color:#C7CDDC;
-
-text-shadow:0 3px 15px #000;
-
-}
-
-
-.hero-actions{
-
-display:flex;
-
-flex-wrap:wrap;
-
-gap:14px;
-
-margin-top:38px;
-
-}
-
-
-.hero-button{
-
-padding:16px 22px;
-
-border-radius:12px;
+margin-top:30px;
 
 font-family:var(--orbitron);
 
-font-size:10px;
+font-size:clamp(45px,7vw,105px);
 
 font-weight:900;
 
-letter-spacing:2px;
+line-height:.95;
 
-text-decoration:none;
-
-border:1px solid rgba(145,160,220,.3);
-
-background:rgba(8,11,25,.62);
-
-backdrop-filter:blur(15px);
-
-transition:.35s;
+letter-spacing:-2px;
 
 }
 
 
-.hero-button:hover{
+.section-copy{
 
-transform:translateY(-5px);
+max-width:680px;
 
-border-color:var(--green);
+margin-top:35px;
 
-box-shadow:
+font-size:18px;
 
-0 0 30px rgba(20,241,149,.16);
+line-height:1.9;
 
-}
-
-
-.hero-button.primary{
-
-border:0;
-
-color:#050713;
-
-background:linear-gradient(
-120deg,
-var(--green),
-var(--purple)
-);
+color:var(--muted);
 
 }
 
 
-.hero-status{
+/* =========================
+BUTTONS
+========================= */
 
-display:flex;
+.relax-button{
+
+position:relative;
+
+display:inline-flex;
 
 align-items:center;
 
-gap:12px;
+justify-content:center;
 
-margin-top:35px;
+min-height:54px;
+
+padding:0 27px;
+
+overflow:hidden;
+
+border:
+
+1px solid rgba(255,255,255,.13);
+
+border-radius:12px;
+
+background:
+
+rgba(12,17,36,.68);
+
+color:white;
 
 font-family:var(--orbitron);
 
 font-size:9px;
 
-letter-spacing:3px;
+font-weight:800;
 
-color:#79829C;
+letter-spacing:2px;
 
-}
+text-decoration:none;
 
+backdrop-filter:blur(18px);
 
-.status-dot{
+-webkit-backdrop-filter:blur(18px);
 
-width:8px;
+transition:
 
-height:8px;
+transform .35s ease,
 
-border-radius:50%;
+border-color .35s ease,
 
-background:var(--green);
+box-shadow .35s ease,
 
-box-shadow:0 0 15px var(--green);
-
-animation:statusPulse 1.5s infinite;
-
-}
-
-
-@keyframes statusPulse{
-
-50%{
-
-opacity:.25;
-
-}
+background .35s ease;
 
 }
 
 
+.relax-button:hover{
 
-/* =========================
-SHOOTING STAR
-========================= */
+transform:translateY(-5px);
 
+border-color:
 
-.shooting-star{
+rgba(20,241,149,.55);
 
-position:absolute;
+box-shadow:
 
-top:15%;
-
-left:-20%;
-
-width:180px;
-
-height:1px;
-
-z-index:4;
-
-opacity:0;
-
-background:linear-gradient(
-90deg,
-transparent,
-rgba(255,255,255,.8)
-);
-
-transform:rotate(-18deg);
-
-animation:shootingStar 8s ease-in infinite;
+0 15px 45px rgba(20,241,149,.10);
 
 }
 
 
-@keyframes shootingStar{
+.relax-button.primary{
 
-0%,
-70%{
-
-opacity:0;
-
-transform:
-
-translateX(0)
-
-translateY(0)
-
-rotate(-18deg);
-
-}
-
-
-72%{
-
-opacity:1;
-
-}
-
-
-82%{
-
-opacity:0;
-
-transform:
-
-translateX(140vw)
-
-translateY(40vh)
-
-rotate(-18deg);
-
-}
-
-
-100%{
-
-opacity:0;
-
-}
-
-}
-
-
-
-/* =========================
-MOBILE PART 1
-========================= */
-
-
-@media(max-width:850px){
-
-.nav-links{
-
-position:absolute;
-
-top:70px;
-
-left:0;
-
-right:0;
-
-display:none;
-
-flex-direction:column;
-
-align-items:stretch;
-
-gap:0;
-
-padding:15px;
-
-border:1px solid var(--border);
-
-border-radius:16px;
-
-background:rgba(5,7,19,.95);
-
-backdrop-filter:blur(20px);
-
-}
-
-
-.nav-links.open{
-
-display:flex;
-
-}
-
-
-.nav-links a{
-
-padding:16px;
-
-}
-
-
-.nav-toggle{
-
-display:block;
-
-}
-
-
-.hero{
-
-padding-top:145px;
-
-}
-
-
-.hero-overlay{
+border-color:transparent;
 
 background:
 
 linear-gradient(
-90deg,
-rgba(5,7,19,.92),
-rgba(5,7,19,.52)
-),
-
-linear-gradient(
-0deg,
-#050713,
-transparent 45%
+100deg,
+var(--green),
+var(--blue),
+var(--purple)
 );
 
-}
-
-
-.hero-brand-line{
-
-gap:15px;
+color:#050713;
 
 }
 
 
-.hero-logo{
+.relax-button.primary:hover{
 
-width:68px;
+box-shadow:
 
-height:68px;
-
-}
-
-
-.hero-title{
-
-font-size:clamp(50px,17vw,90px);
-
-}
+0 15px 50px rgba(91,124,255,.28);
 
 }
 
 
-@media(max-width:480px){
+/* =========================
+SCROLL REVEAL
+========================= */
 
-.hero-brand-line{
+.reveal{
 
-align-items:center;
+opacity:0;
+
+transform:translateY(45px);
+
+transition:
+
+opacity .9s ease,
+
+transform .9s ease;
+
+}
+
+
+.reveal.active{
+
+opacity:1;
+
+transform:translateY(0);
 
 }
 
 
-.hero-logo{
+/* =========================
+MOBILE GLOBAL
+========================= */
 
-width:55px;
-
-height:55px;
-
-}
-
-
-.hero-title{
-
-font-size:14vw;
-
-}
-
+@media(max-width:768px){
 
 .mouse-glow{
 
 display:none;
+
+}
+
+
+.orbit-zone{
+
+width:250px;
+
+height:250px;
+
+opacity:.7;
+
+}
+
+
+@keyframes travelerOrbit{
+
+from{
+
+transform:
+
+rotate(0deg)
+
+translateX(125px)
+
+rotate(0deg);
+
+}
+
+to{
+
+transform:
+
+rotate(360deg)
+
+translateX(125px)
+
+rotate(-360deg);
+
+}
+
+}
+
+
+@keyframes travelerOrbitSmall{
+
+from{
+
+transform:
+
+rotate(0deg)
+
+translateX(82px)
+
+rotate(0deg);
+
+}
+
+to{
+
+transform:
+
+rotate(360deg)
+
+translateX(82px)
+
+rotate(-360deg);
+
+}
+
+}
+
+
+.section-title{
+
+letter-spacing:-1px;
+
+}
+
+
+.section-copy{
+
+font-size:16px;
+
+}
+
+}
+
+
+/* =========================
+REDUCED MOTION
+========================= */
+
+@media(prefers-reduced-motion:reduce){
+
+html{
+
+scroll-behavior:auto;
+
+}
+
+
+*,
+*::before,
+*::after{
+
+animation-duration:.01ms !important;
+
+animation-iteration-count:1 !important;
+
+transition-duration:.01ms !important;
 
 }
 
@@ -1253,69 +1154,133 @@ display:none;
 </head>
 
 
-<body class="loading">
+<body>
 
 
-<div class="loader" id="loader">
+<!-- =========================
+LOADING SCREEN
+========================= -->
+
+<div
+class="loader"
+id="loader"
+>
 
 <div class="loader-inner">
 
-<div class="loader-brand">
+<img
+src="logo.png"
+alt="RELAX"
+class="loader-logo"
+>
 
-<img src="logo.png" alt="RELAX">
+<div class="loader-title">
 
-<strong>RELAX</strong>
-
-</div>
-
-<div class="loader-line">
-
-<div class="loader-progress"></div>
+RELAX
 
 </div>
 
-<div class="loader-text">
+<div class="loader-signal">
 
 THE WORLD PANICS. WE RELAX.
 
 </div>
 
-</div>
+<div class="loader-line"></div>
 
 </div>
 
-
-<div id="stars"></div>
-
-<div id="dust"></div>
-
-<div class="mouse-glow" id="mouseGlow"></div>
+</div>
 
 
-<div class="nav-wrap">
+<!-- =========================
+GLOBAL SPACE
+========================= -->
 
-<nav class="navbar">
+<div id="spaceField"></div>
 
-<a href="#home" class="nav-brand">
+<div
+class="mouse-glow"
+id="mouseGlow"
+></div>
 
-<img src="logo.png" alt="RELAX Logo">
 
-<span>RELAX</span>
+<!-- =========================
+PAGE
+========================= -->
+
+<div class="page-shell">
+
+<!-- =========================
+NAVBAR
+========================= -->
+
+<nav
+class="navbar"
+id="navbar"
+>
+
+<a
+href="#home"
+class="nav-brand"
+aria-label="RELAX Home"
+>
+
+<img
+src="logo.png"
+alt="RELAX Logo"
+class="nav-logo relax-logo"
+>
+
+<span>
+RELAX
+</span>
 
 </a>
 
 
-<div class="nav-links" id="navLinks">
+<div class="nav-links">
 
-<a href="#story">STORY</a>
+<a href="#story">
+STORY
+</a>
 
-<a href="#market">MARKET</a>
+<a href="#philosophy">
+PHILOSOPHY
+</a>
 
-<a href="#code">THE CODE</a>
+<a href="#market">
+MARKET
+</a>
 
-<a href="#roadmap">ROADMAP</a>
+<a href="#token">
+TOKEN
+</a>
 
-<a href="#faq">FAQ</a>
+<a href="#roadmap">
+ROADMAP
+</a>
+
+<a href="#faq">
+FAQ
+</a>
+
+</div>
+
+
+<div class="nav-actions">
+
+<a
+href="https://github.com/0relaxbro/RELAX"
+target="_blank"
+rel="noopener noreferrer"
+class="nav-source"
+>
+
+SOURCE
+
+</a>
+
 
 <a
 href="https://pump.fun/coin/6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump"
@@ -1332,24 +1297,33 @@ BUY RELAX
 
 
 <button
-class="nav-toggle"
-id="navToggle"
+class="menu-toggle"
+id="menuToggle"
+type="button"
 aria-label="Open navigation"
 >
 
-☰
+<span></span>
+<span></span>
+<span></span>
 
 </button>
 
 </nav>
 
-</div>
 
 
-<section class="hero" id="home">
+<!-- =========================
+HERO
+========================= -->
+
+<header
+class="hero"
+id="home"
+>
 
 
-<div class="hero-image-fallback"></div>
+<div class="hero-video-fallback"></div>
 
 
 <video
@@ -1362,35 +1336,59 @@ preload="metadata"
 poster="Market.png"
 >
 
-<source src="RELAX-BG.mp4" type="video/mp4">
+<source
+src="RELAX-BG.mp4"
+type="video/mp4"
+>
 
 </video>
 
 
 <div class="hero-overlay"></div>
 
-<div class="shooting-star"></div>
+<div class="hero-fog hero-fog-one"></div>
+
+<div class="hero-fog hero-fog-two"></div>
+
+
+<div
+class="orbit-zone hero-orbit"
+aria-hidden="true"
+>
+
+<div class="orbit-ring"></div>
+
+<div class="orbit-ring second"></div>
+
+<span class="orbit-traveler"></span>
+
+<span class="orbit-traveler second"></span>
+
+</div>
 
 
 <div class="hero-content">
 
 
-<div class="hero-kicker">
+<div class="hero-status reveal">
 
-BUILT ON SOLANA
+<span class="status-dot"></span>
+
+LIVE ON SOLANA
 
 </div>
 
 
-<div class="hero-brand-line">
+<div class="hero-brand reveal">
 
 <img
 src="logo.png"
 alt="RELAX"
-class="hero-logo"
+class="hero-logo relax-logo"
 >
 
-<h1 class="hero-title">
+
+<h1>
 
 RELAX
 
@@ -1399,34 +1397,38 @@ RELAX
 </div>
 
 
-<div class="hero-tagline">
+<p class="hero-tagline reveal">
 
-0 FEAR. 0 PANIC. <span>0 REGRETS.</span>
-
-</div>
-
-
-<p class="hero-copy">
-
-The world moves fast.
-
-Markets move faster.
-
-While everyone else chases the noise,
-
-RELAX watches the risk.
+0 FEAR.
+<span>0 PANIC.</span>
+0 REGRETS.
 
 </p>
 
 
-<div class="hero-actions">
+<p class="hero-copy reveal">
+
+The world is loud.
+
+Markets move fast.
+
+Crowds chase green candles and run from red ones.
+
+<strong>
+RELAX stays calm.
+</strong>
+
+</p>
+
+
+<div class="hero-actions reveal">
 
 
 <a
 href="https://pump.fun/coin/6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump"
 target="_blank"
 rel="noopener noreferrer"
-class="hero-button primary"
+class="relax-button primary"
 >
 
 BUY RELAX
@@ -1438,10 +1440,10 @@ BUY RELAX
 href="https://dexscreener.com/solana/5ztferjiljz3u4kzkwmguyujxcwkpagzfqwwyja7yzx3"
 target="_blank"
 rel="noopener noreferrer"
-class="hero-button"
+class="relax-button"
 >
 
-WATCH CHART
+DEXSCREENER
 
 </a>
 
@@ -1450,10 +1452,10 @@ WATCH CHART
 href="https://x.com/0relaxbro"
 target="_blank"
 rel="noopener noreferrer"
-class="hero-button"
+class="relax-button"
 >
 
-FOLLOW ON X
+X COMMUNITY
 
 </a>
 
@@ -1461,11 +1463,31 @@ FOLLOW ON X
 </div>
 
 
-<div class="hero-status">
+<div class="hero-contract reveal">
 
-<span class="status-dot"></span>
+<div>
 
-THE MARKET MOVES. RELAX REMAINS.
+<span>
+OFFICIAL CONTRACT
+</span>
+
+<code>
+6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump
+</code>
+
+</div>
+
+
+<button
+type="button"
+id="copyContract"
+>
+
+<span id="copyText">
+COPY
+</span>
+
+</button>
 
 </div>
 
@@ -1473,254 +1495,1676 @@ THE MARKET MOVES. RELAX REMAINS.
 </div>
 
 
-</section>
+<div class="scroll-signal">
+
+<span>
+SCROLL TO RELAX
+</span>
+
+<div class="scroll-line"></div>
+
+</div>
+
+
+</header>
+
+
+
+<style>
+
+/* =========================
+NAVBAR
+========================= */
+
+.navbar{
+
+position:fixed;
+
+top:18px;
+
+left:24px;
+
+right:24px;
+
+z-index:9000;
+
+min-height:72px;
+
+display:flex;
+
+align-items:center;
+
+justify-content:space-between;
+
+gap:30px;
+
+padding:0 20px;
+
+border:
+
+1px solid rgba(255,255,255,.10);
+
+border-radius:18px;
+
+background:
+
+rgba(5,7,19,.58);
+
+box-shadow:
+
+0 20px 60px rgba(0,0,0,.18);
+
+backdrop-filter:blur(24px);
+
+-webkit-backdrop-filter:blur(24px);
+
+transition:
+
+background .35s ease,
+
+border-color .35s ease,
+
+box-shadow .35s ease;
+
+}
+
+
+.navbar.scrolled{
+
+background:
+
+rgba(5,7,19,.88);
+
+border-color:
+
+rgba(91,124,255,.22);
+
+box-shadow:
+
+0 20px 60px rgba(0,0,0,.35);
+
+}
+
+
+.nav-brand{
+
+display:flex;
+
+align-items:center;
+
+gap:13px;
+
+flex-shrink:0;
+
+color:white;
+
+text-decoration:none;
+
+}
+
+
+.nav-logo{
+
+width:42px;
+
+height:42px;
+
+border-radius:50%;
+
+object-fit:cover;
+
+filter:
+
+drop-shadow(
+0 0 15px rgba(91,124,255,.35)
+);
+
+}
+
+
+.nav-brand span{
+
+font-family:var(--orbitron);
+
+font-size:18px;
+
+font-weight:900;
+
+letter-spacing:4px;
+
+}
+
+
+.nav-links{
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+gap:clamp(18px,2.5vw,42px);
+
+}
+
+
+.nav-links a,
+
+.nav-source{
+
+position:relative;
+
+font-family:var(--orbitron);
+
+font-size:8px;
+
+font-weight:800;
+
+letter-spacing:2px;
+
+color:#9DA6BB;
+
+text-decoration:none;
+
+transition:color .3s ease;
+
+}
+
+
+.nav-links a::after{
+
+content:"";
+
+position:absolute;
+
+left:0;
+
+bottom:-9px;
+
+width:0;
+
+height:1px;
+
+background:
+
+linear-gradient(
+90deg,
+var(--green),
+var(--purple)
+);
+
+transition:width .3s ease;
+
+}
+
+
+.nav-links a:hover{
+
+color:white;
+
+}
+
+
+.nav-links a:hover::after{
+
+width:100%;
+
+}
+
+
+.nav-actions{
+
+display:flex;
+
+align-items:center;
+
+gap:18px;
+
+flex-shrink:0;
+
+}
+
+
+.nav-source:hover{
+
+color:var(--green);
+
+}
+
+
+.nav-buy{
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+min-height:42px;
+
+padding:0 19px;
+
+border-radius:10px;
+
+background:
+
+linear-gradient(
+100deg,
+var(--green),
+var(--blue),
+var(--purple)
+);
+
+color:#050713;
+
+font-family:var(--orbitron);
+
+font-size:8px;
+
+font-weight:900;
+
+letter-spacing:2px;
+
+text-decoration:none;
+
+transition:
+
+transform .3s ease,
+
+box-shadow .3s ease;
+
+}
+
+
+.nav-buy:hover{
+
+transform:translateY(-3px);
+
+box-shadow:
+
+0 12px 35px rgba(91,124,255,.28);
+
+}
+
+
+.menu-toggle{
+
+display:none;
+
+width:44px;
+
+height:44px;
+
+align-items:center;
+
+justify-content:center;
+
+flex-direction:column;
+
+gap:5px;
+
+border-radius:10px;
+
+background:
+
+rgba(255,255,255,.05);
+
+cursor:pointer;
+
+}
+
+
+.menu-toggle span{
+
+width:20px;
+
+height:1px;
+
+background:white;
+
+transition:
+
+transform .3s ease,
+
+opacity .3s ease;
+
+}
+
+
+
+/* =========================
+HERO
+========================= */
+
+.hero{
+
+position:relative;
+
+min-height:100vh;
+
+display:flex;
+
+align-items:center;
+
+overflow:hidden;
+
+padding:
+
+150px max(7vw,40px)
+
+100px;
+
+}
+
+
+.hero-video-fallback,
+
+.hero-video{
+
+position:absolute;
+
+inset:-3%;
+
+width:106%;
+
+height:106%;
+
+}
+
+
+.hero-video-fallback{
+
+z-index:-8;
+
+background-image:
+
+url("Market.png");
+
+background-size:cover;
+
+background-position:center;
+
+}
+
+
+.hero-video{
+
+z-index:-7;
+
+object-fit:cover;
+
+filter:
+
+brightness(.58)
+
+saturate(.9)
+
+contrast(1.08);
+
+}
+
+
+.hero-overlay{
+
+position:absolute;
+
+inset:0;
+
+z-index:-6;
+
+pointer-events:none;
+
+background:
+
+linear-gradient(
+90deg,
+rgba(5,7,19,.92) 0%,
+rgba(5,7,19,.68) 43%,
+rgba(5,7,19,.25) 72%,
+rgba(5,7,19,.52) 100%
+),
+
+linear-gradient(
+0deg,
+#050713 0%,
+transparent 28%,
+rgba(5,7,19,.35) 100%
+);
+
+}
+
+
+.hero-fog{
+
+position:absolute;
+
+z-index:-5;
+
+pointer-events:none;
+
+width:80vw;
+
+height:280px;
+
+border-radius:50%;
+
+filter:blur(70px);
+
+opacity:.20;
+
+}
+
+
+.hero-fog-one{
+
+left:-25%;
+
+bottom:10%;
+
+background:#5B7CFF;
+
+animation:
+
+fogMoveOne 18s ease-in-out infinite alternate;
+
+}
+
+
+.hero-fog-two{
+
+right:-30%;
+
+top:25%;
+
+background:#9945FF;
+
+animation:
+
+fogMoveTwo 22s ease-in-out infinite alternate;
+
+}
+
+
+@keyframes fogMoveOne{
+
+from{
+
+transform:
+translate3d(-10%,20px,0)
+scale(1);
+
+}
+
+to{
+
+transform:
+translate3d(35%,-30px,0)
+scale(1.2);
+
+}
+
+}
+
+
+@keyframes fogMoveTwo{
+
+from{
+
+transform:
+translate3d(20%,0,0)
+scale(1);
+
+}
+
+to{
+
+transform:
+translate3d(-30%,50px,0)
+scale(1.25);
+
+}
+
+}
+
+
+.hero-orbit{
+
+right:5%;
+
+top:18%;
+
+opacity:.75;
+
+}
+
+
+.hero-content{
+
+position:relative;
+
+z-index:10;
+
+width:min(900px,100%);
+
+}
+
+
+.hero-status{
+
+display:inline-flex;
+
+align-items:center;
+
+gap:12px;
+
+font-family:var(--orbitron);
+
+font-size:9px;
+
+font-weight:800;
+
+letter-spacing:4px;
+
+color:#A9B2C8;
+
+}
+
+
+.status-dot{
+
+width:8px;
+
+height:8px;
+
+border-radius:50%;
+
+background:var(--green);
+
+box-shadow:
+
+0 0 8px var(--green),
+
+0 0 22px rgba(20,241,149,.65);
+
+animation:
+
+statusPulse 2s ease-in-out infinite;
+
+}
+
+
+@keyframes statusPulse{
+
+0%,
+100%{
+
+opacity:.45;
+
+transform:scale(.8);
+
+}
+
+50%{
+
+opacity:1;
+
+transform:scale(1.2);
+
+}
+
+}
+
+
+.hero-brand{
+
+display:flex;
+
+align-items:center;
+
+gap:clamp(20px,3vw,42px);
+
+margin-top:40px;
+
+}
+
+
+.hero-logo{
+
+width:
+
+clamp(90px,11vw,160px);
+
+height:
+
+clamp(90px,11vw,160px);
+
+flex-shrink:0;
+
+border-radius:50%;
+
+object-fit:cover;
+
+filter:
+
+drop-shadow(
+0 0 25px rgba(91,124,255,.45)
+)
+
+drop-shadow(
+0 0 60px rgba(153,69,255,.18)
+);
+
+}
+
+
+.hero h1{
+
+font-family:var(--orbitron);
+
+font-size:
+
+clamp(70px,12vw,180px);
+
+font-weight:900;
+
+line-height:.8;
+
+letter-spacing:-5px;
+
+text-shadow:
+
+0 20px 70px rgba(0,0,0,.5);
+
+}
+
+
+.hero-tagline{
+
+margin-top:45px;
+
+font-family:var(--orbitron);
+
+font-size:
+
+clamp(15px,2vw,27px);
+
+font-weight:800;
+
+letter-spacing:
+
+clamp(2px,.6vw,8px);
+
+line-height:1.7;
+
+}
+
+
+.hero-tagline span{
+
+color:var(--danger);
+
+}
+
+
+.hero-copy{
+
+max-width:660px;
+
+margin-top:30px;
+
+font-size:
+
+clamp(17px,1.5vw,21px);
+
+line-height:1.9;
+
+color:#B7BED0;
+
+}
+
+
+.hero-copy strong{
+
+color:white;
+
+}
+
+
+.hero-actions{
+
+display:flex;
+
+flex-wrap:wrap;
+
+gap:14px;
+
+margin-top:42px;
+
+}
+
+
+.hero-contract{
+
+width:min(720px,100%);
+
+margin-top:45px;
+
+padding:20px 22px;
+
+display:flex;
+
+align-items:center;
+
+justify-content:space-between;
+
+gap:25px;
+
+border:
+
+1px solid rgba(255,255,255,.10);
+
+border-radius:15px;
+
+background:
+
+rgba(7,10,24,.58);
+
+backdrop-filter:blur(18px);
+
+-webkit-backdrop-filter:blur(18px);
+
+}
+
+
+.hero-contract > div{
+
+min-width:0;
+
+}
+
+
+.hero-contract span{
+
+display:block;
+
+font-family:var(--orbitron);
+
+font-size:7px;
+
+font-weight:800;
+
+letter-spacing:4px;
+
+color:#727D96;
+
+}
+
+
+.hero-contract code{
+
+display:block;
+
+margin-top:11px;
+
+font-family:var(--orbitron);
+
+font-size:
+
+clamp(8px,1vw,12px);
+
+color:#C7CDDB;
+
+word-break:break-all;
+
+}
+
+
+.hero-contract button{
+
+flex-shrink:0;
+
+min-width:90px;
+
+height:42px;
+
+border-radius:9px;
+
+background:
+
+rgba(91,124,255,.13);
+
+color:var(--green);
+
+font-family:var(--orbitron);
+
+font-size:8px;
+
+font-weight:900;
+
+letter-spacing:2px;
+
+cursor:pointer;
+
+transition:
+
+transform .3s ease,
+
+background .3s ease,
+
+box-shadow .3s ease;
+
+}
+
+
+.hero-contract button:hover{
+
+transform:translateY(-3px);
+
+background:
+
+rgba(20,241,149,.12);
+
+box-shadow:
+
+0 10px 30px rgba(20,241,149,.10);
+
+}
+
+
+.hero-contract button.copied{
+
+background:var(--green);
+
+color:#050713;
+
+}
+
+
+.scroll-signal{
+
+position:absolute;
+
+right:max(3vw,25px);
+
+bottom:50px;
+
+z-index:10;
+
+display:flex;
+
+align-items:center;
+
+gap:18px;
+
+transform:rotate(90deg);
+
+transform-origin:right center;
+
+}
+
+
+.scroll-signal span{
+
+font-family:var(--orbitron);
+
+font-size:7px;
+
+font-weight:800;
+
+letter-spacing:4px;
+
+color:#6D7790;
+
+}
+
+
+.scroll-line{
+
+position:relative;
+
+width:75px;
+
+height:1px;
+
+overflow:hidden;
+
+background:
+
+rgba(255,255,255,.12);
+
+}
+
+
+.scroll-line::after{
+
+content:"";
+
+position:absolute;
+
+top:0;
+
+left:-100%;
+
+width:100%;
+
+height:100%;
+
+background:var(--green);
+
+animation:
+
+scrollSignal 2.2s ease-in-out infinite;
+
+}
+
+
+@keyframes scrollSignal{
+
+0%{
+
+left:-100%;
+
+}
+
+100%{
+
+left:100%;
+
+}
+
+}
+
+
+
+/* =========================
+PART 2 MOBILE
+========================= */
+
+@media(max-width:1050px){
+
+.nav-links{
+
+display:none;
+
+position:absolute;
+
+top:82px;
+
+left:0;
+
+right:0;
+
+padding:30px;
+
+flex-direction:column;
+
+align-items:flex-start;
+
+gap:28px;
+
+border:
+
+1px solid rgba(255,255,255,.10);
+
+border-radius:18px;
+
+background:
+
+rgba(5,7,19,.96);
+
+backdrop-filter:blur(25px);
+
+-webkit-backdrop-filter:blur(25px);
+
+}
+
+
+.nav-links.active{
+
+display:flex;
+
+}
+
+
+.nav-links a{
+
+font-size:10px;
+
+}
+
+
+.nav-source{
+
+display:none;
+
+}
+
+
+.menu-toggle{
+
+display:flex;
+
+}
+
+
+.menu-toggle.active span:nth-child(1){
+
+transform:
+
+translateY(6px)
+
+rotate(45deg);
+
+}
+
+
+.menu-toggle.active span:nth-child(2){
+
+opacity:0;
+
+}
+
+
+.menu-toggle.active span:nth-child(3){
+
+transform:
+
+translateY(-6px)
+
+rotate(-45deg);
+
+}
+
+}
+
+
+@media(max-width:700px){
+
+.navbar{
+
+top:10px;
+
+left:10px;
+
+right:10px;
+
+min-height:64px;
+
+padding:0 13px;
+
+border-radius:15px;
+
+}
+
+
+.nav-logo{
+
+width:38px;
+
+height:38px;
+
+}
+
+
+.nav-brand span{
+
+font-size:14px;
+
+letter-spacing:3px;
+
+}
+
+
+.nav-buy{
+
+min-height:38px;
+
+padding:0 13px;
+
+font-size:7px;
+
+}
+
+
+.hero{
+
+min-height:100svh;
+
+padding:
+
+125px 22px
+
+90px;
+
+}
+
+
+.hero-video{
+
+filter:
+
+brightness(.48)
+
+saturate(.85);
+
+}
+
+
+.hero-overlay{
+
+background:
+
+linear-gradient(
+90deg,
+rgba(5,7,19,.90),
+rgba(5,7,19,.52)
+),
+
+linear-gradient(
+0deg,
+#050713,
+transparent 35%,
+rgba(5,7,19,.42)
+);
+
+}
+
+
+.hero-brand{
+
+gap:18px;
+
+margin-top:35px;
+
+}
+
+
+.hero-logo{
+
+width:78px;
+
+height:78px;
+
+}
+
+
+.hero h1{
+
+font-size:
+
+clamp(57px,20vw,90px);
+
+letter-spacing:-3px;
+
+}
+
+
+.hero-tagline{
+
+margin-top:35px;
+
+font-size:13px;
+
+letter-spacing:2px;
+
+}
+
+
+.hero-copy{
+
+font-size:16px;
+
+}
+
+
+.hero-actions{
+
+display:grid;
+
+grid-template-columns:
+
+repeat(2,1fr);
+
+}
+
+
+.hero-actions .relax-button{
+
+padding:0 15px;
+
+}
+
+
+.hero-actions .relax-button:first-child{
+
+grid-column:1 / -1;
+
+}
+
+
+.hero-contract{
+
+align-items:stretch;
+
+flex-direction:column;
+
+}
+
+
+.hero-contract button{
+
+width:100%;
+
+}
+
+
+.scroll-signal{
+
+display:none;
+
+}
+
+
+.hero-orbit{
+
+right:-110px;
+
+top:25%;
+
+}
+
+}
+
+</style>
 
 <!-- =========================
-THE RELAX STORY
+STORY
 ========================= -->
 
-<section class="story-section" id="story">
+<section
+class="story-section"
+id="story"
+>
 
-<div class="story-atmosphere"></div>
+<div
+class="orbit-zone story-orbit"
+aria-hidden="true"
+>
+
+<div class="orbit-ring"></div>
+
+<div class="orbit-ring second"></div>
+
+<span class="orbit-traveler"></span>
+
+<span class="orbit-traveler second"></span>
+
+</div>
+
 
 <div class="story-wrap">
 
-<div class="section-label reveal">
+
+<div class="story-head reveal">
+
+<div class="section-label">
+
 THE RELAX STORY
-</div>
-
-<div class="story-lines">
-
-<p class="story-line reveal">
-The world moves fast.
-</p>
-
-<p class="story-line reveal">
-Markets move <span class="gradient-text">faster.</span>
-</p>
-
-<div class="story-space"></div>
-
-<p class="story-small reveal">
-When prices fly, fear whispers:
-</p>
-
-<p class="story-impact danger-text reveal">
-“YOU MISSED IT.”
-</p>
-
-<p class="story-small reveal">
-The crowd runs.
-</p>
-
-<p class="story-small reveal">
-FOMO takes control.
-</p>
-
-<p class="story-impact green-text reveal">
-RELAX DOESN'T CHASE.
-</p>
-
-<p class="story-small reveal">
-He watches.
-</p>
-
-<p class="story-small reveal">
-He calculates.
-</p>
-
-<p class="story-small reveal">
-He waits.
-</p>
-
-<div class="story-space"></div>
-
-<p class="story-small reveal">
-Then the market falls.
-</p>
-
-<p class="story-line reveal">
-Red candles flood the screen.
-</p>
-
-<p class="story-small reveal">
-Fear becomes panic.
-</p>
-
-<p class="story-small reveal">
-Panic becomes a waterfall of sells.
-</p>
-
-<p class="story-small reveal">
-The crowd runs again.
-</p>
-
-<p class="story-impact purple-text reveal">
-RELAX DOESN'T.
-</p>
-
-<div class="story-space"></div>
-
-<p class="story-small reveal">
-Because the risk was measured before the trade.
-</p>
-
-<p class="story-small reveal">
-The reward was considered before the entry.
-</p>
-
-<p class="story-small reveal">
-Chaos was always part of the calculation.
-</p>
-
-<div class="story-space"></div>
-
-<p class="story-line reveal">
-The market can pump.
-</p>
-
-<p class="story-line reveal">
-The market can crash.
-</p>
-
-<p class="story-line reveal">
-The world can panic.
-</p>
-
-<p class="story-impact gradient-text reveal">
-RELAX REMAINS CALM.
-</p>
 
 </div>
 
+<h2 class="section-title">
 
-<div class="story-final reveal">
+WHEN THE WORLD<br>
 
-<p>
-NOT BECAUSE HE KNOWS THE FUTURE.
-</p>
+<span class="panic-text">
+PANICS.
+</span>
 
-<h2>
-BECAUSE HE RESPECTS THE RISK.
 </h2>
 
-<div class="story-signature">
-0 FEAR. 0 PANIC. 0 REGRETS.
 </div>
 
+
+<div class="story-grid">
+
+
+<div class="story-number reveal">
+
+<span>
+01
+</span>
+
+</div>
+
+
+<div class="story-content reveal">
+
+<p>
+
+The world is chaotic.
+
+Markets are even louder.
+
+</p>
+
+<p>
+
+When candles fly, people chase.
+
+They watch green move higher and higher until fear whispers:
+
 <strong>
+“You missed it.”
+</strong>
+
+</p>
+
+<p>
+
+Then FOMO takes control.
+
+</p>
+
+<div class="story-line"></div>
+
+<p>
+
+When markets collapse, panic spreads faster than price.
+
+Red candles become fear.
+
+Fear becomes noise.
+
+Noise becomes a waterfall of panic selling.
+
+</p>
+
+<p>
+
+<strong class="gradient-text">
+
+RELAX does neither.
+
+</strong>
+
+</p>
+
+</div>
+
+
+</div>
+
+
+<div class="story-grid reverse">
+
+
+<div class="story-number reveal">
+
+<span>
+02
+</span>
+
+</div>
+
+
+<div class="story-content reveal">
+
+<p>
+
+RELAX does not chase a market simply because it is flying.
+
+</p>
+
+<p>
+
+RELAX does not jump into the panic sell waterfall simply because the crowd is running.
+
+</p>
+
+<div class="story-line"></div>
+
+<p>
+
+Risk is measured.
+
+Reward is considered.
+
+The noise is filtered.
+
+</p>
+
+<p>
+
+The market can move.
+
+The world can panic.
+
+</p>
+
+<strong class="story-final">
+
 JUST RELAX BRO.
+
+</strong>
+
+</div>
+
+
+</div>
+
+
+</div>
+
+</section>
+
+
+
+<!-- =========================
+CINEMATIC PHILOSOPHY
+========================= -->
+
+<section
+class="philosophy-section"
+id="philosophy"
+>
+
+
+<div class="philosophy-glow"></div>
+
+
+<div
+class="orbit-zone philosophy-orbit"
+aria-hidden="true"
+>
+
+<div class="orbit-ring"></div>
+
+<div class="orbit-ring second"></div>
+
+<span class="orbit-traveler"></span>
+
+<span class="orbit-traveler second"></span>
+
+</div>
+
+
+<div class="philosophy-wrap">
+
+
+<div class="philosophy-head reveal">
+
+<div class="section-label">
+
+THE RELAX CODE
+
+</div>
+
+<h2>
+
+THE WORLD<br>
+
+<span class="panic-text">
+PANICS.
+</span>
+
+</h2>
+
+<div class="philosophy-divider"></div>
+
+<h3>
+
+RELAX<br>
+
+<span class="gradient-text">
+DOESN'T.
+</span>
+
+</h3>
+
+</div>
+
+
+<div class="philosophy-cards">
+
+
+<article class="philosophy-card reveal">
+
+<div class="card-index">
+01
+</div>
+
+<h4>
+
+NO FEAR
+
+</h4>
+
+<p>
+
+Volatility is part of the market.
+
+Fear does not need to control the decision.
+
+</p>
+
+<span class="card-signal"></span>
+
+</article>
+
+
+<article class="philosophy-card reveal">
+
+<div class="card-index">
+02
+</div>
+
+<h4>
+
+NO PANIC
+
+</h4>
+
+<p>
+
+Price moves fast.
+
+RELAX remains calm when the crowd becomes emotional.
+
+</p>
+
+<span class="card-signal"></span>
+
+</article>
+
+
+<article class="philosophy-card reveal">
+
+<div class="card-index">
+03
+</div>
+
+<h4>
+
+NO REGRETS
+
+</h4>
+
+<p>
+
+No candle deserves your peace.
+
+Observe the market.
+
+Accept the decision.
+
+Move forward.
+
+</p>
+
+<span class="card-signal"></span>
+
+</article>
+
+
+</div>
+
+
+<div class="relax-code reveal">
+
+<div class="relax-code-line">
+
+<span>
+MARKET
+</span>
+
+<strong>
+CHAOS
+</strong>
+
+</div>
+
+
+<div class="relax-code-arrow">
+
+↓
+
+</div>
+
+
+<div class="relax-code-line">
+
+<span>
+CROWD
+</span>
+
+<strong class="panic-text">
+PANIC
+</strong>
+
+</div>
+
+
+<div class="relax-code-arrow">
+
+↓
+
+</div>
+
+
+<div class="relax-code-line active">
+
+<span>
+RELAX
+</span>
+
+<strong class="gradient-text">
+CALM
 </strong>
 
 </div>
 
 </div>
-
-</section>
-
-
-
-<!-- =========================
-RELAX PHILOSOPHY
-========================= -->
-
-<section class="philosophy-section" id="philosophy">
-
-<div class="section-head reveal">
-
-<div class="section-label">
-THE PHILOSOPHY
-</div>
-
-<h2>
-CHAOS IS LOUD.<br>
-<span class="gradient-text">CALM IS POWER.</span>
-</h2>
-
-<p>
-RELAX is not about predicting every candle.
-It is about refusing to let every candle control you.
-</p>
-
-</div>
-
-
-<div class="philosophy-grid">
-
-
-<article class="philosophy-card fear-card reveal">
-
-<div class="card-number">
-01
-</div>
-
-<div class="card-glow"></div>
-
-<h3>
-NO FEAR
-</h3>
-
-<p>
-Volatility is part of the market.
-Understand the risk before the noise begins.
-</p>
-
-<div class="card-word">
-FEAR
-</div>
-
-</article>
-
-
-<article class="philosophy-card panic-card reveal">
-
-<div class="card-number">
-02
-</div>
-
-<div class="card-glow"></div>
-
-<h3>
-NO PANIC
-</h3>
-
-<p>
-Red candles do not make decisions.
-People do.
-Stay calm when the crowd loses control.
-</p>
-
-<div class="card-word">
-PANIC
-</div>
-
-</article>
-
-
-<article class="philosophy-card regret-card reveal">
-
-<div class="card-number">
-03
-</div>
-
-<div class="card-glow"></div>
-
-<h3>
-NO REGRETS
-</h3>
-
-<p>
-You cannot trade yesterday.
-Respect the decision.
-Learn from the result.
-Keep walking.
-</p>
-
-<div class="card-word">
-REGRETS
-</div>
-
-</article>
 
 
 </div>
@@ -1732,74 +3176,6 @@ REGRETS
 <style>
 
 /* =========================
-GLOBAL SECTION ELEMENTS
-========================= */
-
-.section-label{
-
-font-family:var(--orbitron);
-
-font-size:10px;
-
-font-weight:800;
-
-letter-spacing:6px;
-
-color:var(--green);
-
-}
-
-
-.gradient-text{
-
-background:linear-gradient(
-90deg,
-var(--green),
-#6EA8FF,
-var(--purple)
-);
-
--webkit-background-clip:text;
-
-background-clip:text;
-
-color:transparent;
-
-}
-
-
-.green-text{
-
-color:var(--green);
-
-text-shadow:
-0 0 35px rgba(20,241,149,.25);
-
-}
-
-
-.purple-text{
-
-color:#B57AFF;
-
-text-shadow:
-0 0 35px rgba(153,69,255,.3);
-
-}
-
-
-.danger-text{
-
-color:var(--danger);
-
-text-shadow:
-0 0 35px rgba(255,95,135,.25);
-
-}
-
-
-
-/* =========================
 STORY
 ========================= */
 
@@ -1808,44 +3184,51 @@ STORY
 position:relative;
 
 padding:
-170px max(6vw,30px)
-190px;
+
+190px max(7vw,40px)
+
+210px;
 
 overflow:hidden;
 
-background:#050713;
+background:
+
+linear-gradient(
+180deg,
+rgba(5,7,19,.82),
+rgba(5,7,19,.94)
+);
 
 }
 
 
-.story-atmosphere{
+.story-section::before{
+
+content:"";
 
 position:absolute;
 
-inset:0;
+top:15%;
 
-pointer-events:none;
+left:-20%;
+
+width:700px;
+
+height:700px;
+
+border-radius:50%;
 
 background:
 
 radial-gradient(
-circle at 80% 20%,
-rgba(153,69,255,.09),
-transparent 30%
-),
-
-radial-gradient(
-circle at 15% 60%,
-rgba(20,241,149,.055),
-transparent 30%
-),
-
-linear-gradient(
-180deg,
-#050713,
-#07091A 50%,
-#050713
+circle,
+rgba(91,124,255,.11),
+transparent 65%
 );
+
+filter:blur(30px);
+
+pointer-events:none;
 
 }
 
@@ -1856,164 +3239,192 @@ position:relative;
 
 z-index:5;
 
-width:min(1250px,100%);
+width:min(1300px,100%);
 
 margin:auto;
 
 }
 
 
-.story-lines{
+.story-head{
 
-margin-top:100px;
+position:relative;
+
+}
+
+
+.story-head .section-title{
+
+max-width:1000px;
+
+}
+
+
+.panic-text{
+
+color:var(--danger);
+
+text-shadow:
+
+0 0 40px rgba(255,95,135,.20);
+
+}
+
+
+.story-grid{
+
+display:grid;
+
+grid-template-columns:
+
+180px minmax(0,760px);
+
+justify-content:space-between;
+
+gap:80px;
+
+margin-top:130px;
+
+}
+
+
+.story-grid.reverse{
+
+grid-template-columns:
+
+minmax(0,760px) 180px;
+
+}
+
+
+.story-grid.reverse .story-number{
+
+grid-column:2;
+
+grid-row:1;
+
+}
+
+
+.story-grid.reverse .story-content{
+
+grid-column:1;
+
+grid-row:1;
+
+}
+
+
+.story-number{
+
+display:flex;
+
+align-items:flex-start;
+
+justify-content:center;
+
+}
+
+
+.story-number span{
+
+font-family:var(--orbitron);
+
+font-size:
+
+clamp(70px,10vw,150px);
+
+font-weight:900;
+
+line-height:.8;
+
+color:transparent;
+
+-webkit-text-stroke:
+
+1px rgba(255,255,255,.13);
+
+}
+
+
+.story-content{
+
+font-size:
+
+clamp(19px,2vw,28px);
+
+line-height:1.8;
+
+color:#AAB3C7;
+
+}
+
+
+.story-content p + p{
+
+margin-top:35px;
+
+}
+
+
+.story-content strong{
+
+color:white;
 
 }
 
 
 .story-line{
 
-font-family:var(--orbitron);
+width:100%;
 
-font-size:clamp(34px,5vw,76px);
+height:1px;
 
-font-weight:800;
+margin:55px 0;
 
-line-height:1.3;
+background:
 
-margin:18px 0;
+linear-gradient(
+90deg,
+var(--green),
+var(--blue),
+var(--purple),
+transparent
+);
 
-}
-
-
-.story-small{
-
-font-size:clamp(18px,2vw,27px);
-
-font-weight:500;
-
-line-height:1.7;
-
-color:#AEB6CA;
-
-margin:14px 0;
-
-}
-
-
-.story-impact{
-
-font-family:var(--orbitron);
-
-font-size:clamp(38px,6vw,90px);
-
-font-weight:900;
-
-line-height:1.15;
-
-margin:45px 0;
-
-}
-
-
-.story-space{
-
-height:90px;
+opacity:.55;
 
 }
 
 
 .story-final{
 
-margin-top:180px;
+display:block;
 
-padding:100px 50px;
-
-text-align:center;
-
-border-top:1px solid rgba(255,255,255,.08);
-
-border-bottom:1px solid rgba(255,255,255,.08);
-
-background:
-
-radial-gradient(
-circle,
-rgba(91,124,255,.07),
-transparent 60%
-);
-
-}
-
-
-.story-final p{
+margin-top:60px;
 
 font-family:var(--orbitron);
 
-font-size:clamp(13px,2vw,20px);
+font-size:
 
-font-weight:700;
-
-letter-spacing:5px;
-
-color:#7E879F;
-
-}
-
-
-.story-final h2{
-
-max-width:1100px;
-
-margin:35px auto;
-
-font-family:var(--orbitron);
-
-font-size:clamp(40px,7vw,100px);
+clamp(28px,4vw,60px);
 
 font-weight:900;
 
-line-height:1.05;
+letter-spacing:3px;
 
-background:linear-gradient(
-90deg,
-var(--green),
-#70A7FF,
-var(--purple)
-);
-
--webkit-background-clip:text;
-
-background-clip:text;
-
-color:transparent;
+color:white;
 
 }
 
 
-.story-signature{
+.story-orbit{
 
-margin-top:65px;
+right:-90px;
 
-font-family:var(--orbitron);
+top:8%;
 
-font-size:clamp(14px,2vw,24px);
-
-font-weight:800;
-
-letter-spacing:4px;
-
-}
-
-
-.story-final strong{
-
-display:block;
-
-margin-top:20px;
-
-font-family:var(--orbitron);
-
-font-size:clamp(25px,4vw,50px);
+opacity:.8;
 
 }
 
@@ -2028,74 +3439,158 @@ PHILOSOPHY
 position:relative;
 
 padding:
-160px max(6vw,30px)
-180px;
+
+190px max(7vw,40px)
+
+220px;
+
+overflow:hidden;
 
 background:
 
-radial-gradient(
-circle at 50% 0%,
-rgba(91,124,255,.08),
-transparent 35%
-),
-
-#050713;
+rgba(3,5,14,.82);
 
 }
 
 
-.section-head{
+.philosophy-glow{
 
-width:min(1000px,100%);
+position:absolute;
+
+top:20%;
+
+left:50%;
+
+width:900px;
+
+height:900px;
+
+border-radius:50%;
+
+transform:translateX(-50%);
+
+background:
+
+radial-gradient(
+circle,
+rgba(153,69,255,.10),
+rgba(91,124,255,.05) 40%,
+transparent 70%
+);
+
+filter:blur(20px);
+
+pointer-events:none;
+
+}
+
+
+.philosophy-wrap{
+
+position:relative;
+
+z-index:5;
+
+width:min(1300px,100%);
 
 margin:auto;
+
+}
+
+
+.philosophy-head{
+
+position:relative;
 
 text-align:center;
 
 }
 
 
-.section-head h2{
+.philosophy-head .section-label{
 
-margin-top:30px;
+justify-content:center;
+
+}
+
+
+.philosophy-head h2{
+
+margin-top:40px;
 
 font-family:var(--orbitron);
 
-font-size:clamp(40px,6vw,85px);
+font-size:
+
+clamp(65px,11vw,170px);
 
 font-weight:900;
 
-line-height:1.1;
+line-height:.8;
 
 }
 
 
-.section-head p{
+.philosophy-divider{
 
-max-width:700px;
+width:1px;
 
-margin:35px auto 0;
+height:110px;
 
-font-size:clamp(17px,1.6vw,21px);
+margin:65px auto;
 
-line-height:1.8;
+background:
 
-color:var(--muted);
+linear-gradient(
+transparent,
+var(--green),
+var(--blue),
+var(--purple),
+transparent
+);
 
 }
 
 
-.philosophy-grid{
+.philosophy-head h3{
 
-width:min(1350px,100%);
+font-family:var(--orbitron);
 
-margin:100px auto 0;
+font-size:
+
+clamp(60px,10vw,150px);
+
+font-weight:900;
+
+line-height:.85;
+
+}
+
+
+.philosophy-orbit{
+
+left:50%;
+
+top:12%;
+
+margin-left:-210px;
+
+opacity:.7;
+
+}
+
+
+.philosophy-cards{
 
 display:grid;
 
-grid-template-columns:repeat(3,1fr);
+grid-template-columns:
 
-gap:25px;
+repeat(3,1fr);
+
+gap:24px;
+
+margin-top:140px;
 
 }
 
@@ -2104,263 +3599,304 @@ gap:25px;
 
 position:relative;
 
-min-height:480px;
+min-height:360px;
 
-padding:45px;
+padding:45px 38px;
 
 overflow:hidden;
 
-border-radius:25px;
+border:
 
-border:1px solid var(--border);
+1px solid rgba(255,255,255,.08);
+
+border-radius:22px;
 
 background:
 
 linear-gradient(
 145deg,
-rgba(15,20,45,.8),
-rgba(7,9,22,.85)
+rgba(16,23,46,.88),
+rgba(8,11,24,.68)
 );
 
+backdrop-filter:blur(15px);
+
+-webkit-backdrop-filter:blur(15px);
+
 transition:
-transform .45s ease,
-border-color .45s ease,
-box-shadow .45s ease;
+
+transform .4s ease,
+
+border-color .4s ease,
+
+box-shadow .4s ease;
 
 }
 
 
 .philosophy-card:hover{
 
-transform:translateY(-12px);
+transform:translateY(-10px);
 
-}
+border-color:
 
-
-.card-glow{
-
-position:absolute;
-
-top:-100px;
-
-right:-100px;
-
-width:300px;
-
-height:300px;
-
-border-radius:50%;
-
-filter:blur(80px);
-
-opacity:.16;
-
-}
-
-
-.fear-card .card-glow{
-
-background:var(--green);
-
-}
-
-
-.panic-card .card-glow{
-
-background:var(--purple);
-
-}
-
-
-.regret-card .card-glow{
-
-background:var(--blue);
-
-}
-
-
-.fear-card:hover{
-
-border-color:rgba(20,241,149,.45);
+rgba(91,124,255,.32);
 
 box-shadow:
-0 30px 80px rgba(20,241,149,.08);
+
+0 30px 80px rgba(0,0,0,.35),
+
+0 0 45px rgba(91,124,255,.08);
 
 }
 
 
-.panic-card:hover{
-
-border-color:rgba(153,69,255,.5);
-
-box-shadow:
-0 30px 80px rgba(153,69,255,.1);
-
-}
-
-
-.regret-card:hover{
-
-border-color:rgba(91,124,255,.5);
-
-box-shadow:
-0 30px 80px rgba(91,124,255,.1);
-
-}
-
-
-.card-number{
+.card-index{
 
 font-family:var(--orbitron);
 
-font-size:11px;
+font-size:10px;
 
 font-weight:800;
 
 letter-spacing:4px;
-
-color:#59627A;
-
-}
-
-
-.philosophy-card h3{
-
-position:relative;
-
-z-index:3;
-
-margin-top:100px;
-
-font-family:var(--orbitron);
-
-font-size:clamp(30px,3vw,48px);
-
-font-weight:900;
-
-}
-
-
-.fear-card h3{
 
 color:var(--green);
 
 }
 
 
-.panic-card h3{
+.philosophy-card h4{
 
-color:#B476FF;
+margin-top:70px;
 
-}
+font-family:var(--orbitron);
 
+font-size:
 
-.regret-card h3{
+clamp(25px,3vw,42px);
 
-color:#7393FF;
+font-weight:900;
 
 }
 
 
 .philosophy-card p{
 
-position:relative;
-
-z-index:3;
-
-margin-top:25px;
-
-max-width:330px;
+margin-top:28px;
 
 font-size:17px;
 
-line-height:1.8;
+line-height:1.9;
 
-color:#A9B1C5;
+color:#929CB2;
 
 }
 
 
-.card-word{
+.card-signal{
 
 position:absolute;
 
-right:-15px;
+left:38px;
 
-bottom:-15px;
+bottom:35px;
+
+width:55px;
+
+height:2px;
+
+background:
+
+linear-gradient(
+90deg,
+var(--green),
+var(--purple)
+);
+
+box-shadow:
+
+0 0 12px rgba(20,241,149,.35);
+
+}
+
+
+.relax-code{
+
+width:min(850px,100%);
+
+margin:
+
+150px auto 0;
+
+padding:60px;
+
+border:
+
+1px solid rgba(255,255,255,.08);
+
+border-radius:25px;
+
+background:
+
+rgba(8,11,24,.70);
+
+backdrop-filter:blur(20px);
+
+-webkit-backdrop-filter:blur(20px);
+
+}
+
+
+.relax-code-line{
+
+display:flex;
+
+align-items:center;
+
+justify-content:space-between;
+
+gap:30px;
+
+padding:25px 0;
+
+}
+
+
+.relax-code-line span{
 
 font-family:var(--orbitron);
 
-font-size:clamp(55px,7vw,105px);
+font-size:10px;
+
+font-weight:800;
+
+letter-spacing:5px;
+
+color:#667089;
+
+}
+
+
+.relax-code-line strong{
+
+font-family:var(--orbitron);
+
+font-size:
+
+clamp(27px,5vw,65px);
 
 font-weight:900;
 
-color:rgba(255,255,255,.025);
+}
+
+
+.relax-code-line.active{
+
+padding:
+
+35px 30px;
+
+border-radius:15px;
+
+background:
+
+rgba(91,124,255,.07);
+
+}
+
+
+.relax-code-arrow{
+
+text-align:center;
+
+font-size:28px;
+
+color:#4D5770;
 
 }
 
 
 
 /* =========================
-PART 2 MOBILE
+PART 3 MOBILE
 ========================= */
 
-@media(max-width:950px){
-
-.philosophy-grid{
-
-grid-template-columns:1fr;
-
-}
-
-
-.philosophy-card{
-
-min-height:390px;
-
-}
-
-
-.philosophy-card h3{
-
-margin-top:65px;
-
-}
-
-}
-
-
-@media(max-width:600px){
+@media(max-width:800px){
 
 .story-section{
 
 padding:
-120px 22px
-130px;
+
+125px 22px
+
+140px;
 
 }
 
 
-.story-space{
+.story-grid,
+.story-grid.reverse{
 
-height:60px;
+grid-template-columns:1fr;
 
-}
+gap:45px;
 
-
-.story-final{
-
-margin-top:120px;
-
-padding:
-70px 15px;
+margin-top:85px;
 
 }
 
 
-.story-final p{
+.story-grid.reverse .story-number,
+.story-grid.reverse .story-content{
 
-line-height:1.8;
+grid-column:auto;
+
+grid-row:auto;
+
+}
+
+
+.story-number{
+
+justify-content:flex-start;
+
+}
+
+
+.story-number span{
+
+font-size:75px;
+
+}
+
+
+.story-content{
+
+font-size:18px;
+
+}
+
+
+.story-content p + p{
+
+margin-top:28px;
+
+}
+
+
+.story-line{
+
+margin:40px 0;
+
+}
+
+
+.story-orbit{
+
+right:-130px;
+
+top:5%;
 
 }
 
@@ -2368,22 +3904,94 @@ line-height:1.8;
 .philosophy-section{
 
 padding:
-110px 22px
-130px;
+
+125px 22px
+
+150px;
 
 }
 
 
-.philosophy-grid{
+.philosophy-divider{
 
-margin-top:65px;
+height:75px;
+
+margin:45px auto;
+
+}
+
+
+.philosophy-orbit{
+
+margin-left:-125px;
+
+top:10%;
+
+}
+
+
+.philosophy-cards{
+
+grid-template-columns:1fr;
+
+margin-top:90px;
 
 }
 
 
 .philosophy-card{
 
-padding:32px;
+min-height:310px;
+
+padding:35px 28px;
+
+}
+
+
+.philosophy-card h4{
+
+margin-top:50px;
+
+}
+
+
+.card-signal{
+
+left:28px;
+
+}
+
+
+.relax-code{
+
+margin-top:90px;
+
+padding:30px 22px;
+
+}
+
+
+.relax-code-line{
+
+gap:15px;
+
+}
+
+
+.relax-code-line span{
+
+font-size:7px;
+
+letter-spacing:3px;
+
+}
+
+
+.relax-code-line.active{
+
+padding:
+
+28px 18px;
 
 }
 
@@ -2392,55 +4000,95 @@ padding:32px;
 </style>
 
 <!-- =========================
-LIVE RELAX MARKET
+LIVE MARKET
 ========================= -->
 
-<section class="market-section" id="market">
+<section
+class="market-section"
+id="market"
+>
 
 <div class="market-wrap">
 
-<div class="market-header reveal">
-
-<div>
+<div class="market-head reveal">
 
 <div class="section-label">
 LIVE MARKET
 </div>
 
-<h2>
-$RELAX
+<h2 class="section-title">
+
+$RELAX<br>
+
+<span class="gradient-text">
+ON SOLANA.
+</span>
+
 </h2>
 
+<p class="section-copy">
+
+The market moves every second.
+
+RELAX watches the signal without chasing the noise.
+
+</p>
+
 </div>
 
-<div class="solana-badge">
+
+<div class="market-terminal reveal">
+
+<div class="terminal-top">
+
+<div>
+
+<span class="terminal-label">
+RELAX / SOL
+</span>
+
+<strong>
+LIVE MARKET SIGNAL
+</strong>
+
+</div>
+
+<div class="terminal-live">
+
 <span></span>
-SOLANA
-</div>
+
+LIVE
 
 </div>
 
+</div>
 
-<div class="market-price-zone reveal">
 
-<div class="market-caption">
+<div class="price-zone">
+
+<span>
 CURRENT PRICE
-</div>
+</span>
 
-<div class="market-price" id="livePrice">
+<strong id="livePrice">
 CONNECTING...
-</div>
+</strong>
 
-<div class="market-change" id="priceChange">
+<div
+class="price-change"
+id="priceChange"
+>
+
 FETCHING MARKET DATA
-</div>
 
 </div>
 
+</div>
 
-<div class="market-grid">
 
-<div class="market-stat reveal">
+<div class="market-stats">
+
+<div class="market-stat">
 
 <span>
 MARKET CAP
@@ -2453,7 +4101,7 @@ MARKET CAP
 </div>
 
 
-<div class="market-stat reveal">
+<div class="market-stat">
 
 <span>
 LIQUIDITY
@@ -2466,7 +4114,7 @@ LIQUIDITY
 </div>
 
 
-<div class="market-stat reveal">
+<div class="market-stat">
 
 <span>
 24H VOLUME
@@ -2479,13 +4127,13 @@ LIQUIDITY
 </div>
 
 
-<div class="market-stat reveal">
+<div class="market-stat">
 
 <span>
 NETWORK
 </span>
 
-<strong class="solana-gradient">
+<strong>
 SOLANA
 </strong>
 
@@ -2494,17 +4142,13 @@ SOLANA
 </div>
 
 
-<div class="market-footer reveal">
-
-<div class="market-live">
-
-<span class="status-dot"></span>
+<div class="terminal-bottom">
 
 <span id="marketStatus">
-CONNECTING TO MARKET
-</span>
 
-</div>
+CONNECTING TO MARKET
+
+</span>
 
 
 <a
@@ -2521,155 +4165,226 @@ OPEN LIVE CHART ↗
 
 </div>
 
+</div>
+
 </section>
 
 
 
 <!-- =========================
-THE RELAX CODE
+TOKEN INFORMATION
 ========================= -->
 
-<section class="code-section" id="code">
+<section
+class="token-section"
+id="token"
+>
 
-<div class="code-head reveal">
+<div
+class="orbit-zone token-orbit"
+aria-hidden="true"
+>
 
-<div class="section-label">
-THE RELAX CODE
+<div class="orbit-ring"></div>
+
+<div class="orbit-ring second"></div>
+
+<span class="orbit-traveler"></span>
+
+<span class="orbit-traveler second"></span>
+
 </div>
 
-<h2>
+
+<div class="token-wrap">
+
+<div class="token-head reveal">
+
+<div class="section-label">
+
+THE RELAX CODE
+
+</div>
+
+<h2 class="section-title">
+
 NO HIDDEN CONTROL.<br>
+
 <span class="gradient-text">
 VERIFY THE CHAIN.
 </span>
+
 </h2>
 
-<p>
+<p class="section-copy">
+
 RELAX does not ask for blind trust.
+
 The contract is public.
+
 The chain is public.
+
 Verify everything.
+
 </p>
 
 </div>
 
 
-<div class="code-grid">
+<div class="token-grid">
 
 
-<article class="code-card reveal">
+<article class="token-card reveal">
 
-<div class="code-icon">
+<span class="token-index">
 01
-</div>
+</span>
 
 <h3>
 FIXED SUPPLY
 </h3>
 
 <p>
+
 No additional minting.
+
 No creator-controlled supply expansion.
+
 </p>
+
+<div class="token-card-glow"></div>
 
 </article>
 
 
-<article class="code-card reveal">
+<article class="token-card reveal">
 
-<div class="code-icon">
+<span class="token-index">
 02
-</div>
+</span>
 
 <h3>
 NO PRIVATE CREATOR ALLOCATION
 </h3>
 
 <p>
+
 No reserved creator bag.
+
 No free token allocation hidden behind the launch.
+
 </p>
+
+<div class="token-card-glow"></div>
 
 </article>
 
 
-<article class="code-card reveal">
+<article class="token-card reveal">
 
-<div class="code-icon">
+<span class="token-index">
 03
-</div>
+</span>
 
 <h3>
 PUBLIC CONTRACT
 </h3>
 
 <p>
-The RELAX contract is visible,
-public and available for anyone to inspect.
+
+The RELAX contract is visible, public and available for anyone to inspect.
+
 </p>
+
+<div class="token-card-glow"></div>
 
 </article>
 
 
-<article class="code-card reveal">
+<article class="token-card reveal">
 
-<div class="code-icon">
+<span class="token-index">
 04
-</div>
+</span>
 
 <h3>
 ON-CHAIN VERIFIABLE
 </h3>
 
 <p>
+
 Do not trust a slogan.
+
 Check the contract.
+
 Check the chain.
+
 </p>
+
+<div class="token-card-glow"></div>
 
 </article>
 
 
 </div>
 
+</div>
+
+</section>
 
 
-<div class="creator-section reveal">
 
-<div class="creator-line"></div>
+<!-- =========================
+CREATOR
+========================= -->
+
+<section class="creator-section">
+
+<div class="creator-wrap">
 
 
-<div class="creator-content">
-
-<div class="creator-copy">
+<div class="creator-copy reveal">
 
 <div class="section-label">
+
 THE CREATOR ENTERED TOO
+
 </div>
 
 <h2>
+
 NOT GIFTED.<br>
+
 <span class="gradient-text">
 BOUGHT.
 </span>
+
 </h2>
 
 <p>
+
 The creator did not receive a free bag.
+
 </p>
 
 <p>
-He entered the market with his own funds,
-under the same market rules as everyone else.
+
+He entered the market with his own funds, under the same market rules as everyone else.
+
 </p>
 
 <p>
+
 No reserved position.
+
 No special entry.
+
 No hidden creator allocation.
+
 </p>
 
-<div class="creator-statement">
+
+<div class="creator-result">
 
 <span>
 THE RESULT
@@ -2688,65 +4403,61 @@ ACQUIRED THROUGH THE MARKET
 </div>
 
 
-<div class="creator-visual">
+<div class="creator-visual reveal">
 
-<div class="creator-orbit orbit-one"></div>
-
-<div class="creator-orbit orbit-two"></div>
-
-<div class="creator-orbit orbit-three"></div>
-
-<div class="creator-core">
+<div class="creator-coin-glow"></div>
 
 <img
 src="logo.png"
 alt="RELAX Coin"
+class="creator-coin relax-logo"
 >
 
-</div>
+<div class="creator-signals">
 
-<div class="creator-tag tag-one">
+<span>
 SAME MARKET
-</div>
+</span>
 
-<div class="creator-tag tag-two">
+<span>
 OWN FUNDS
-</div>
+</span>
 
-<div class="creator-tag tag-three">
+<span>
 NO FREE BAG
-</div>
+</span>
 
 </div>
 
 </div>
 
+
 </div>
 
 
+<div class="contract-panel reveal">
 
-<div class="contract-box reveal">
-
-<div class="contract-info">
+<div>
 
 <span>
 OFFICIAL RELAX CONTRACT
 </span>
 
-<code id="contractAddress">
+<code>
+
 6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump
+
 </code>
 
 </div>
 
 
 <button
-class="copy-button"
-id="copyContract"
 type="button"
+id="copyContractSecond"
 >
 
-<span id="copyText">
+<span id="copyTextSecond">
 COPY CONTRACT
 </span>
 
@@ -2761,284 +4472,65 @@ COPY CONTRACT
 <style>
 
 /* =========================
-LIVE MARKET
+MARKET
 ========================= */
 
 .market-section{
 
 padding:
-160px max(6vw,30px)
-180px;
+180px max(7vw,40px);
 
 background:
-
-radial-gradient(
-circle at 50% 50%,
-rgba(20,241,149,.055),
-transparent 35%
-),
-
-#050713;
+linear-gradient(
+180deg,
+rgba(5,7,19,.92),
+rgba(8,11,24,.88)
+);
 
 }
 
 
 .market-wrap{
 
-width:min(1200px,100%);
+width:min(1300px,100%);
 
 margin:auto;
 
-padding:55px;
+}
 
-border-radius:30px;
 
-border:1px solid var(--border);
+.market-head{
+
+max-width:900px;
+
+}
+
+
+.market-terminal{
+
+margin-top:90px;
+
+overflow:hidden;
+
+border:
+1px solid rgba(255,255,255,.10);
+
+border-radius:25px;
 
 background:
-
-linear-gradient(
-135deg,
-rgba(12,17,38,.88),
-rgba(6,8,20,.94)
-);
+rgba(8,12,27,.78);
 
 box-shadow:
+0 40px 120px rgba(0,0,0,.38);
 
-0 40px 120px rgba(0,0,0,.45),
+backdrop-filter:blur(22px);
 
-0 0 80px rgba(153,69,255,.07);
-
-backdrop-filter:blur(20px);
-
-}
-
-
-.market-header{
-
-display:flex;
-
-align-items:flex-start;
-
-justify-content:space-between;
-
-gap:30px;
+-webkit-backdrop-filter:blur(22px);
 
 }
 
 
-.market-header h2{
-
-margin-top:22px;
-
-font-family:var(--orbitron);
-
-font-size:clamp(55px,9vw,120px);
-
-font-weight:900;
-
-line-height:.9;
-
-}
-
-
-.solana-badge{
-
-display:flex;
-
-align-items:center;
-
-gap:10px;
-
-padding:13px 19px;
-
-border-radius:50px;
-
-font-family:var(--orbitron);
-
-font-size:10px;
-
-font-weight:900;
-
-letter-spacing:3px;
-
-color:#050713;
-
-background:linear-gradient(
-90deg,
-var(--green),
-var(--purple)
-);
-
-}
-
-
-.solana-badge span{
-
-width:8px;
-
-height:8px;
-
-border-radius:50%;
-
-background:#050713;
-
-}
-
-
-.market-price-zone{
-
-margin-top:80px;
-
-}
-
-
-.market-caption{
-
-font-family:var(--orbitron);
-
-font-size:9px;
-
-font-weight:700;
-
-letter-spacing:5px;
-
-color:#68718A;
-
-}
-
-
-.market-price{
-
-margin-top:18px;
-
-font-family:var(--orbitron);
-
-font-size:clamp(42px,7vw,92px);
-
-font-weight:900;
-
-word-break:break-word;
-
-transition:.35s;
-
-}
-
-
-.market-change{
-
-margin-top:22px;
-
-font-family:var(--orbitron);
-
-font-size:14px;
-
-font-weight:800;
-
-letter-spacing:3px;
-
-color:#778199;
-
-}
-
-
-.market-change.positive{
-
-color:var(--green);
-
-}
-
-
-.market-change.negative{
-
-color:var(--danger);
-
-}
-
-
-.market-grid{
-
-display:grid;
-
-grid-template-columns:repeat(4,1fr);
-
-gap:16px;
-
-margin-top:75px;
-
-}
-
-
-.market-stat{
-
-padding:27px;
-
-border-radius:17px;
-
-border:1px solid rgba(125,145,210,.14);
-
-background:rgba(4,7,18,.62);
-
-transition:.35s;
-
-}
-
-
-.market-stat:hover{
-
-transform:translateY(-6px);
-
-border-color:rgba(91,124,255,.4);
-
-}
-
-
-.market-stat span{
-
-font-family:var(--orbitron);
-
-font-size:9px;
-
-font-weight:700;
-
-letter-spacing:3px;
-
-color:#69728B;
-
-}
-
-
-.market-stat strong{
-
-display:block;
-
-margin-top:18px;
-
-font-family:var(--orbitron);
-
-font-size:clamp(18px,2vw,28px);
-
-}
-
-
-.solana-gradient{
-
-background:linear-gradient(
-90deg,
-var(--green),
-var(--purple)
-);
-
--webkit-background-clip:text;
-
-background-clip:text;
-
-color:transparent;
-
-}
-
-
-.market-footer{
+.terminal-top{
 
 display:flex;
 
@@ -3048,185 +4540,361 @@ justify-content:space-between;
 
 gap:25px;
 
-margin-top:40px;
+padding:30px 35px;
 
-padding-top:28px;
-
-border-top:1px solid rgba(255,255,255,.07);
-
-font-family:var(--orbitron);
-
-font-size:9px;
-
-font-weight:700;
-
-letter-spacing:2px;
-
-color:#65708A;
+border-bottom:
+1px solid rgba(255,255,255,.07);
 
 }
 
 
-.market-live{
+.terminal-label{
+
+display:block;
+
+font-family:var(--orbitron);
+
+font-size:8px;
+
+font-weight:800;
+
+letter-spacing:4px;
+
+color:var(--green);
+
+}
+
+
+.terminal-top strong{
+
+display:block;
+
+margin-top:10px;
+
+font-family:var(--orbitron);
+
+font-size:13px;
+
+letter-spacing:2px;
+
+}
+
+
+.terminal-live{
 
 display:flex;
 
 align-items:center;
 
-gap:12px;
+gap:10px;
+
+font-family:var(--orbitron);
+
+font-size:8px;
+
+font-weight:800;
+
+letter-spacing:3px;
+
+color:var(--green);
 
 }
 
 
-.market-footer a{
+.terminal-live span{
+
+width:8px;
+
+height:8px;
+
+border-radius:50%;
+
+background:var(--green);
+
+box-shadow:
+0 0 15px var(--green);
+
+animation:
+statusPulse 2s infinite;
+
+}
+
+
+.price-zone{
+
+padding:65px 35px;
+
+}
+
+
+.price-zone > span{
+
+font-family:var(--orbitron);
+
+font-size:8px;
+
+font-weight:800;
+
+letter-spacing:5px;
+
+color:#6F7991;
+
+}
+
+
+.price-zone strong{
+
+display:block;
+
+margin-top:20px;
+
+font-family:var(--orbitron);
+
+font-size:
+clamp(38px,7vw,100px);
+
+font-weight:900;
+
+line-height:1;
+
+}
+
+
+.price-change{
+
+margin-top:25px;
+
+font-family:var(--orbitron);
+
+font-size:10px;
+
+font-weight:800;
+
+letter-spacing:3px;
+
+color:#7F899F;
+
+}
+
+
+.price-change.positive{
+
+color:var(--green);
+
+}
+
+
+.price-change.negative{
+
+color:var(--danger);
+
+}
+
+
+.market-stats{
+
+display:grid;
+
+grid-template-columns:
+repeat(4,1fr);
+
+border-top:
+1px solid rgba(255,255,255,.07);
+
+border-bottom:
+1px solid rgba(255,255,255,.07);
+
+}
+
+
+.market-stat{
+
+padding:35px;
+
+border-right:
+1px solid rgba(255,255,255,.07);
+
+}
+
+
+.market-stat:last-child{
+
+border-right:0;
+
+}
+
+
+.market-stat span{
+
+display:block;
+
+font-family:var(--orbitron);
+
+font-size:7px;
+
+font-weight:800;
+
+letter-spacing:3px;
+
+color:#69738B;
+
+}
+
+
+.market-stat strong{
+
+display:block;
+
+margin-top:17px;
+
+font-family:var(--orbitron);
+
+font-size:
+clamp(16px,2vw,25px);
+
+}
+
+
+.terminal-bottom{
+
+display:flex;
+
+align-items:center;
+
+justify-content:space-between;
+
+gap:25px;
+
+padding:27px 35px;
+
+}
+
+
+.terminal-bottom span,
+
+.terminal-bottom a{
+
+font-family:var(--orbitron);
+
+font-size:8px;
+
+font-weight:800;
+
+letter-spacing:3px;
+
+}
+
+
+.terminal-bottom span{
+
+color:#737D94;
+
+}
+
+
+.terminal-bottom a{
 
 color:var(--green);
 
 text-decoration:none;
-
-transition:.3s;
-
-}
-
-
-.market-footer a:hover{
-
-text-shadow:
-0 0 20px var(--green);
 
 }
 
 
 
 /* =========================
-RELAX CODE
+TOKEN
 ========================= */
 
-.code-section{
+.token-section{
 
 position:relative;
 
 padding:
-170px max(6vw,30px)
-190px;
+200px max(7vw,40px);
 
 overflow:hidden;
 
 background:
-
-radial-gradient(
-circle at 15% 20%,
-rgba(153,69,255,.08),
-transparent 30%
-),
-
-radial-gradient(
-circle at 90% 70%,
-rgba(20,241,149,.055),
-transparent 30%
-),
-
-#050713;
+rgba(4,6,16,.88);
 
 }
 
 
-.code-head{
+.token-wrap{
 
-width:min(1100px,100%);
+position:relative;
+
+z-index:5;
+
+width:min(1300px,100%);
 
 margin:auto;
 
-text-align:center;
+}
+
+
+.token-head{
+
+max-width:1100px;
 
 }
 
 
-.code-head h2{
-
-margin-top:30px;
-
-font-family:var(--orbitron);
-
-font-size:clamp(40px,6vw,82px);
-
-font-weight:900;
-
-line-height:1.1;
-
-}
-
-
-.code-head p{
-
-max-width:700px;
-
-margin:35px auto 0;
-
-font-size:19px;
-
-line-height:1.9;
-
-color:var(--muted);
-
-}
-
-
-.code-grid{
-
-width:min(1350px,100%);
-
-margin:100px auto 0;
+.token-grid{
 
 display:grid;
 
-grid-template-columns:repeat(4,1fr);
+grid-template-columns:
+repeat(2,1fr);
 
-gap:18px;
+gap:25px;
+
+margin-top:110px;
 
 }
 
 
-.code-card{
+.token-card{
+
+position:relative;
 
 min-height:330px;
 
-padding:35px;
+padding:45px;
+
+overflow:hidden;
+
+border:
+1px solid rgba(255,255,255,.08);
 
 border-radius:22px;
 
-border:1px solid var(--border);
-
 background:
+rgba(13,18,37,.72);
 
-linear-gradient(
-145deg,
-rgba(13,18,40,.8),
-rgba(6,8,20,.82)
-);
-
-transition:.4s;
+transition:
+transform .4s ease,
+border-color .4s ease;
 
 }
 
 
-.code-card:hover{
+.token-card:hover{
 
-transform:translateY(-9px);
+transform:translateY(-8px);
 
-border-color:rgba(20,241,149,.35);
-
-box-shadow:
-0 25px 70px rgba(20,241,149,.06);
+border-color:
+rgba(20,241,149,.30);
 
 }
 
 
-.code-icon{
+.token-index{
 
 font-family:var(--orbitron);
 
-font-size:11px;
+font-size:9px;
 
 font-weight:900;
 
@@ -3237,28 +4905,66 @@ color:var(--green);
 }
 
 
-.code-card h3{
+.token-card h3{
 
-margin-top:75px;
+max-width:500px;
+
+margin-top:70px;
 
 font-family:var(--orbitron);
 
-font-size:clamp(20px,2vw,28px);
+font-size:
+clamp(22px,3vw,39px);
 
-line-height:1.35;
+line-height:1.15;
 
 }
 
 
-.code-card p{
+.token-card p{
 
-margin-top:23px;
+max-width:520px;
 
-font-size:16px;
+margin-top:27px;
+
+font-size:17px;
 
 line-height:1.8;
 
-color:#9EA7BD;
+color:#939DB4;
+
+}
+
+
+.token-card-glow{
+
+position:absolute;
+
+right:-80px;
+
+bottom:-100px;
+
+width:260px;
+
+height:260px;
+
+border-radius:50%;
+
+background:
+radial-gradient(
+circle,
+rgba(91,124,255,.14),
+transparent 65%
+);
+
+}
+
+
+.token-orbit{
+
+right:-100px;
+
+top:8%;
 
 }
 
@@ -3270,106 +4976,99 @@ CREATOR
 
 .creator-section{
 
-width:min(1350px,100%);
+padding:
+190px max(7vw,40px);
 
-margin:170px auto 0;
-
-}
-
-
-.creator-line{
-
-height:1px;
-
-background:linear-gradient(
-90deg,
-transparent,
-var(--purple),
-var(--green),
-transparent
+background:
+linear-gradient(
+135deg,
+rgba(8,11,24,.94),
+rgba(5,7,19,.90)
 );
 
 }
 
 
-.creator-content{
+.creator-wrap{
+
+width:min(1300px,100%);
+
+margin:auto;
 
 display:grid;
 
-grid-template-columns:1fr 1fr;
-
-gap:100px;
+grid-template-columns:
+1.1fr .9fr;
 
 align-items:center;
 
-padding-top:120px;
+gap:100px;
 
 }
 
 
 .creator-copy h2{
 
-margin-top:30px;
+margin-top:35px;
 
 font-family:var(--orbitron);
 
-font-size:clamp(45px,6vw,90px);
+font-size:
+clamp(55px,8vw,120px);
 
 font-weight:900;
 
-line-height:1;
+line-height:.88;
 
 }
 
 
 .creator-copy p{
 
-max-width:600px;
+max-width:650px;
 
-margin-top:25px;
+margin-top:30px;
 
-font-size:18px;
+font-size:19px;
 
-line-height:1.8;
+line-height:1.85;
 
-color:#A8B0C5;
-
-}
-
-
-.creator-statement{
-
-margin-top:50px;
-
-padding:30px;
-
-border-left:2px solid var(--green);
-
-background:rgba(10,15,32,.6);
+color:#9AA4BA;
 
 }
 
 
-.creator-statement span,
+.creator-result{
 
-.creator-statement small{
+margin-top:60px;
+
+padding-left:25px;
+
+border-left:
+2px solid var(--green);
+
+}
+
+
+.creator-result span,
+.creator-result small{
 
 display:block;
 
 font-family:var(--orbitron);
 
-font-size:9px;
+font-size:8px;
 
 font-weight:800;
 
 letter-spacing:4px;
 
-color:#68728B;
+color:#717B93;
 
 }
 
 
-.creator-statement strong{
+.creator-result strong{
 
 display:block;
 
@@ -3377,9 +5076,8 @@ margin:15px 0;
 
 font-family:var(--orbitron);
 
-font-size:clamp(25px,4vw,50px);
-
-color:var(--green);
+font-size:
+clamp(26px,4vw,55px);
 
 }
 
@@ -3388,11 +5086,7 @@ color:var(--green);
 
 position:relative;
 
-width:min(520px,90vw);
-
-aspect-ratio:1;
-
-margin:auto;
+min-height:600px;
 
 display:flex;
 
@@ -3403,180 +5097,125 @@ justify-content:center;
 }
 
 
-.creator-core{
+.creator-coin{
 
 position:relative;
 
-z-index:5;
+z-index:3;
 
-width:150px;
+width:min(390px,80%);
 
-height:150px;
+aspect-ratio:1;
 
 border-radius:50%;
-
-box-shadow:
-
-0 0 50px rgba(91,124,255,.4),
-
-0 0 100px rgba(153,69,255,.2);
-
-animation:creatorFloat 5s ease-in-out infinite;
-
-}
-
-
-.creator-core img{
-
-width:100%;
-
-height:100%;
 
 object-fit:cover;
 
-border-radius:50%;
+filter:
+drop-shadow(
+0 0 45px rgba(91,124,255,.35)
+);
 
 }
 
 
-@keyframes creatorFloat{
-
-50%{
-
-transform:
-translateY(-12px)
-rotate(4deg);
-
-}
-
-}
-
-
-.creator-orbit{
+.creator-coin-glow{
 
 position:absolute;
 
+width:420px;
+
+height:420px;
+
 border-radius:50%;
 
-border:1px solid rgba(130,150,220,.16);
+background:
+radial-gradient(
+circle,
+rgba(20,241,149,.15),
+rgba(91,124,255,.10) 40%,
+rgba(153,69,255,.06) 60%,
+transparent 72%
+);
+
+filter:blur(25px);
 
 }
 
 
-.orbit-one{
-
-width:260px;
-
-height:260px;
-
-animation:orbitSpin 14s linear infinite;
-
-}
-
-
-.orbit-two{
-
-width:380px;
-
-height:380px;
-
-border-color:rgba(153,69,255,.17);
-
-animation:orbitSpin 20s linear infinite reverse;
-
-}
-
-
-.orbit-three{
-
-width:500px;
-
-height:500px;
-
-border-color:rgba(20,241,149,.1);
-
-animation:orbitSpin 28s linear infinite;
-
-}
-
-
-@keyframes orbitSpin{
-
-to{
-
-transform:rotate(360deg);
-
-}
-
-}
-
-
-.creator-tag{
+.creator-signals{
 
 position:absolute;
 
-z-index:6;
+inset:0;
 
-padding:10px 14px;
+z-index:4;
 
-border:1px solid var(--border);
+pointer-events:none;
 
-border-radius:30px;
+}
 
-background:rgba(5,7,19,.8);
 
-backdrop-filter:blur(15px);
+.creator-signals span{
+
+position:absolute;
+
+padding:12px 16px;
+
+border:
+1px solid rgba(255,255,255,.10);
+
+border-radius:9px;
+
+background:
+rgba(5,7,19,.75);
 
 font-family:var(--orbitron);
 
-font-size:8px;
+font-size:7px;
 
 font-weight:800;
 
-letter-spacing:2px;
+letter-spacing:3px;
 
-color:#AEB6CA;
-
-}
-
-
-.tag-one{
-
-top:18%;
-
-right:3%;
+color:#A8B1C5;
 
 }
 
 
-.tag-two{
+.creator-signals span:nth-child(1){
 
-bottom:20%;
+top:15%;
 
 left:0;
 
 }
 
 
-.tag-three{
+.creator-signals span:nth-child(2){
 
-top:15%;
+top:50%;
+
+right:0;
+
+}
+
+
+.creator-signals span:nth-child(3){
+
+bottom:15%;
 
 left:8%;
 
 }
 
 
+.contract-panel{
 
-/* =========================
-CONTRACT
-========================= */
+width:min(1300px,100%);
 
-.contract-box{
-
-width:min(1350px,100%);
-
-margin:150px auto 0;
+margin:
+100px auto 0;
 
 padding:35px;
 
@@ -3588,40 +5227,33 @@ justify-content:space-between;
 
 gap:30px;
 
-border:1px solid var(--border);
+border:
+1px solid rgba(255,255,255,.10);
 
-border-radius:22px;
+border-radius:20px;
 
-background:rgba(9,13,29,.75);
-
-}
-
-
-.contract-info{
-
-min-width:0;
+background:
+rgba(10,14,30,.75);
 
 }
 
 
-.contract-info span{
-
-display:block;
+.contract-panel span{
 
 font-family:var(--orbitron);
 
-font-size:9px;
+font-size:8px;
 
 font-weight:800;
 
 letter-spacing:4px;
 
-color:#68718A;
+color:#727C94;
 
 }
 
 
-.contract-info code{
+.contract-panel code{
 
 display:block;
 
@@ -3629,107 +5261,114 @@ margin-top:16px;
 
 font-family:var(--orbitron);
 
-font-size:clamp(11px,1.5vw,18px);
+font-size:
+clamp(8px,1.1vw,13px);
 
-color:#C9D0E2;
+color:#D1D6E1;
 
 word-break:break-all;
 
 }
 
 
-.copy-button{
+.contract-panel button{
 
 flex-shrink:0;
 
-padding:17px 24px;
+min-height:52px;
 
-border:0;
+padding:0 25px;
 
-border-radius:12px;
+border-radius:11px;
 
-cursor:pointer;
+background:
+linear-gradient(
+90deg,
+var(--green),
+var(--blue),
+var(--purple)
+);
+
+color:#050713;
 
 font-family:var(--orbitron);
 
-font-size:9px;
+font-size:8px;
 
 font-weight:900;
 
 letter-spacing:2px;
 
-color:#050713;
-
-background:linear-gradient(
-120deg,
-var(--green),
-var(--purple)
-);
-
-transition:.35s;
-
-}
-
-
-.copy-button:hover{
-
-transform:translateY(-5px);
-
-box-shadow:
-0 0 35px rgba(20,241,149,.18);
-
-}
-
-
-.copy-button.copied{
-
-transform:scale(.95);
+cursor:pointer;
 
 }
 
 
 
 /* =========================
-PART 3 MOBILE
+PART 4 MOBILE
 ========================= */
-
-@media(max-width:1050px){
-
-.code-grid{
-
-grid-template-columns:1fr 1fr;
-
-}
-
-
-.creator-content{
-
-grid-template-columns:1fr;
-
-gap:70px;
-
-}
-
-}
-
 
 @media(max-width:800px){
 
-.market-wrap{
+.market-section,
+.token-section,
+.creator-section{
 
-padding:35px 25px;
-
-}
-
-
-.market-grid{
-
-grid-template-columns:1fr 1fr;
+padding:
+125px 22px;
 
 }
 
 
-.market-footer{
+.market-terminal{
+
+margin-top:65px;
+
+}
+
+
+.terminal-top,
+.price-zone,
+.terminal-bottom{
+
+padding:
+25px 22px;
+
+}
+
+
+.market-stats{
+
+grid-template-columns:
+repeat(2,1fr);
+
+}
+
+
+.market-stat{
+
+padding:25px 22px;
+
+}
+
+
+.market-stat:nth-child(2){
+
+border-right:0;
+
+}
+
+
+.market-stat:nth-child(-n+2){
+
+border-bottom:
+1px solid rgba(255,255,255,.07);
+
+}
+
+
+.terminal-bottom{
 
 align-items:flex-start;
 
@@ -3738,102 +5377,91 @@ flex-direction:column;
 }
 
 
-.creator-visual{
-
-transform:scale(.85);
-
-}
-
-}
-
-
-@media(max-width:600px){
-
-.market-section,
-
-.code-section{
-
-padding:
-110px 22px
-130px;
-
-}
-
-
-.market-grid{
+.token-grid{
 
 grid-template-columns:1fr;
 
-margin-top:55px;
+margin-top:70px;
 
 }
 
 
-.market-price-zone{
+.token-card{
 
-margin-top:55px;
+min-height:290px;
 
-}
-
-
-.solana-badge{
-
-font-size:8px;
-
-padding:11px 14px;
+padding:35px 28px;
 
 }
 
 
-.code-grid{
-
-grid-template-columns:1fr;
-
-margin-top:65px;
-
-}
-
-
-.code-card{
-
-min-height:280px;
-
-}
-
-
-.code-card h3{
+.token-card h3{
 
 margin-top:50px;
 
 }
 
 
-.creator-section{
+.token-orbit{
 
-margin-top:110px;
+right:-130px;
 
 }
 
 
-.creator-content{
+.creator-wrap{
 
-padding-top:80px;
+grid-template-columns:1fr;
+
+gap:50px;
+
+}
+
+
+.creator-copy p{
+
+font-size:17px;
 
 }
 
 
 .creator-visual{
 
-width:100%;
-
-transform:scale(.72);
+min-height:430px;
 
 }
 
 
-.contract-box{
+.creator-coin{
 
-margin-top:100px;
+width:min(280px,75%);
+
+}
+
+
+.creator-coin-glow{
+
+width:300px;
+
+height:300px;
+
+}
+
+
+.creator-signals span{
+
+font-size:6px;
+
+letter-spacing:2px;
+
+}
+
+
+.contract-panel{
+
+margin-top:60px;
+
+padding:28px 22px;
 
 align-items:stretch;
 
@@ -3842,7 +5470,7 @@ flex-direction:column;
 }
 
 
-.copy-button{
+.contract-panel button{
 
 width:100%;
 
@@ -3853,153 +5481,312 @@ width:100%;
 </style>
 
 <!-- =========================
-THE RELAX CORE
+RELAX CORE
 ========================= -->
 
-<section class="core-section" id="core">
+<section
+class="core-section"
+id="core"
+>
 
-<div class="core-head reveal">
+<div class="core-wrap">
 
-<div class="section-label">
-THE RELAX CORE
+
+<div class="core-visual reveal">
+
+<div
+class="orbit-zone core-orbit"
+aria-hidden="true"
+>
+
+<div class="orbit-ring"></div>
+
+<div class="orbit-ring second"></div>
+
+<span class="orbit-traveler"></span>
+
+<span class="orbit-traveler second"></span>
+
 </div>
 
-<h2>
-SIMPLE BY DESIGN.<br>
-<span class="gradient-text">
-CALM BY NATURE.
-</span>
-</h2>
 
-<p>
-No complicated story hidden behind the contract.
-RELAX lives on Solana and walks in public.
-</p>
-
-</div>
+<div class="core-glow"></div>
 
 
-<div class="core-world reveal">
+<img
+src="logo.png"
+alt="RELAX Core"
+class="core-coin relax-logo"
+>
+
 
 <div class="core-ring core-ring-one"></div>
 
 <div class="core-ring core-ring-two"></div>
 
-<div class="core-ring core-ring-three"></div>
-
-<div class="core-coin">
-
-<img
-src="logo.png"
-alt="RELAX Coin"
->
 
 </div>
 
 
-<div class="core-point point-supply">
-
-<span>
-SUPPLY
-</span>
-
-<strong>
-1B
-</strong>
-
-<small>
-FIXED
-</small>
-
-</div>
-
-
-<div class="core-point point-network">
-
-<span>
-NETWORK
-</span>
-
-<strong class="gradient-text">
-SOLANA
-</strong>
-
-<small>
-ON-CHAIN
-</small>
-
-</div>
-
-
-<div class="core-point point-fear">
-
-<span>
-FEAR
-</span>
-
-<strong>
-0
-</strong>
-
-<small>
-RELAX
-</small>
-
-</div>
-
-
-<div class="core-point point-source">
-
-<span>
-SOURCE
-</span>
-
-<strong>
-OPEN
-</strong>
-
-<small>
-PUBLIC
-</small>
-
-</div>
-
-</div>
-
-
-<div class="opensource-box reveal">
-
-<div class="opensource-copy">
+<div class="core-copy reveal">
 
 <div class="section-label">
-OPEN SOURCE
+
+THE RELAX CORE
+
 </div>
 
-<h3>
-DON'T JUST WATCH.<br>
+
+<h2>
+
+CALM IS<br>
+
 <span class="gradient-text">
-LOOK INSIDE.
+THE SIGNAL.
 </span>
-</h3>
+
+</h2>
+
 
 <p>
-The RELAX website lives in public.
-The source can be viewed directly on GitHub.
+
+Markets generate endless noise.
+
+Green candles create urgency.
+
+Red candles create fear.
+
+</p>
+
+
+<p>
+
+RELAX is a simple reminder that not every move requires a reaction.
+
+</p>
+
+
+<p>
+
+Watch.
+
+Measure.
+
+Think.
+
+Then decide.
+
+</p>
+
+
+<strong>
+
+THE MARKET MOVES.<br>
+RELAX REMAINS.
+
+</strong>
+
+
+</div>
+
+
+</div>
+
+</section>
+
+
+
+<!-- =========================
+OPEN SOURCE
+========================= -->
+
+<section
+class="source-section"
+id="source"
+>
+
+<div class="source-wrap">
+
+
+<div class="source-head reveal">
+
+<div class="section-label">
+
+OPEN SOURCE
+
+</div>
+
+
+<h2 class="section-title">
+
+DON'T TRUST.<br>
+
+<span class="gradient-text">
+VERIFY.
+</span>
+
+</h2>
+
+
+<p class="section-copy">
+
+The RELAX website source is public.
+
+Inspect the code.
+
+Follow the project.
+
+Watch it evolve.
+
 </p>
 
 </div>
+
+
+<div class="source-terminal reveal">
+
+
+<div class="source-terminal-top">
+
+<div class="terminal-dots">
+
+<span></span>
+
+<span></span>
+
+<span></span>
+
+</div>
+
+
+<span>
+
+RELAX / SOURCE
+
+</span>
+
+</div>
+
+
+<div class="source-code">
+
+<div>
+
+<span class="code-number">
+01
+</span>
+
+<code>
+
+const project = "RELAX";
+
+</code>
+
+</div>
+
+
+<div>
+
+<span class="code-number">
+02
+</span>
+
+<code>
+
+const network = "SOLANA";
+
+</code>
+
+</div>
+
+
+<div>
+
+<span class="code-number">
+03
+</span>
+
+<code>
+
+const fear = 0;
+
+</code>
+
+</div>
+
+
+<div>
+
+<span class="code-number">
+04
+</span>
+
+<code>
+
+const panic = 0;
+
+</code>
+
+</div>
+
+
+<div>
+
+<span class="code-number">
+05
+</span>
+
+<code>
+
+const regrets = 0;
+
+</code>
+
+</div>
+
+
+<div class="source-highlight">
+
+<span class="code-number">
+06
+</span>
+
+<code>
+
+return "JUST RELAX BRO.";
+
+</code>
+
+</div>
+
+
+</div>
+
+
+<div class="source-terminal-bottom">
+
+<span>
+
+PUBLIC REPOSITORY
+
+</span>
 
 
 <a
 href="https://github.com/0relaxbro/RELAX"
 target="_blank"
 rel="noopener noreferrer"
-class="github-button"
 >
 
-VIEW SOURCE ON GITHUB ↗
+VIEW ON GITHUB ↗
 
 </a>
+
+</div>
+
+
+</div>
+
 
 </div>
 
@@ -4011,28 +5798,64 @@ VIEW SOURCE ON GITHUB ↗
 ROADMAP
 ========================= -->
 
-<section class="roadmap-section" id="roadmap">
+<section
+class="roadmap-section"
+id="roadmap"
+>
+
+<div
+class="orbit-zone roadmap-orbit"
+aria-hidden="true"
+>
+
+<div class="orbit-ring"></div>
+
+<div class="orbit-ring second"></div>
+
+<span class="orbit-traveler"></span>
+
+<span class="orbit-traveler second"></span>
+
+</div>
+
+
+<div class="roadmap-wrap">
+
 
 <div class="roadmap-head reveal">
 
 <div class="section-label">
-ROADMAP
+
+RELAX ROADMAP
+
 </div>
 
-<h2>
-KEEP<br>
+
+<h2 class="section-title">
+
+NO RUSH.<br>
+
 <span class="gradient-text">
-WALKING.
+KEEP BUILDING.
 </span>
+
 </h2>
 
-<p>
-No fake dates.
-No impossible promises.
-No roadmap written to manufacture hype.
+
+<p class="section-copy">
+
+RELAX does not need to promise the universe overnight.
+
+Build carefully.
+
+Grow naturally.
+
+Keep moving.
+
 </p>
 
 </div>
+
 
 
 <div class="roadmap-line">
@@ -4040,95 +5863,182 @@ No roadmap written to manufacture hype.
 
 <article class="roadmap-item reveal">
 
-<div class="roadmap-marker">
-01
+<div class="roadmap-node">
+
+<span></span>
+
 </div>
 
-<div class="roadmap-content">
 
-<span>
-PHASE ONE
-</span>
+<div class="roadmap-phase">
+
+PHASE 01
+
+</div>
+
 
 <h3>
-THE SIGNAL
+
+RELAX IS BORN
+
 </h3>
 
+
 <p>
-RELAX enters the noise.
-The identity is born.
-The message begins to move.
+
+Launch on Solana.
+
+Establish the RELAX identity.
+
+Build the first home for the community.
+
 </p>
+
 
 <div class="roadmap-status active">
+
 LIVE
-</div>
 
 </div>
 
 </article>
 
 
+
 <article class="roadmap-item reveal">
 
-<div class="roadmap-marker">
-02
+<div class="roadmap-node">
+
+<span></span>
+
 </div>
 
-<div class="roadmap-content">
 
-<span>
-PHASE TWO
-</span>
+<div class="roadmap-phase">
+
+PHASE 02
+
+</div>
+
 
 <h3>
-THE MOVEMENT
+
+SPREAD THE SIGNAL
+
 </h3>
 
+
 <p>
-The community grows organically.
-The story expands.
-More people discover the RELAX code.
+
+Expand the RELAX story.
+
+Grow organically across X.
+
+Strengthen community identity.
+
 </p>
+
 
 <div class="roadmap-status">
-KEEP WALKING
-</div>
+
+BUILDING
 
 </div>
 
 </article>
+
 
 
 <article class="roadmap-item reveal">
 
-<div class="roadmap-marker">
-03
+<div class="roadmap-node">
+
+<span></span>
+
 </div>
 
-<div class="roadmap-content">
 
-<span>
-PHASE THREE
-</span>
+<div class="roadmap-phase">
+
+PHASE 03
+
+</div>
+
 
 <h3>
-THE UNKNOWN
+
+RELAX CULTURE
+
 </h3>
 
-<p>
-Markets change.
-Narratives change.
-The future is never guaranteed.
-</p>
 
 <p>
-RELAX adapts without pretending to predict it.
+
+Community-driven content.
+
+Memes.
+
+Visual stories.
+
+A recognizable calm signal inside market chaos.
+
 </p>
 
-<div class="roadmap-status unknown">
-???
+
+<div class="roadmap-status">
+
+NEXT
+
 </div>
+
+</article>
+
+
+
+<article class="roadmap-item reveal">
+
+<div class="roadmap-node">
+
+<span></span>
+
+</div>
+
+
+<div class="roadmap-phase">
+
+PHASE 04
+
+</div>
+
+
+<h3>
+
+THE UNKNOWN
+
+</h3>
+
+
+<p>
+
+No fake promises.
+
+No imaginary partnerships.
+
+No forced roadmap theatre.
+
+</p>
+
+
+<p>
+
+If RELAX grows, the next chapter will be built in public.
+
+</p>
+
+
+<div class="roadmap-status">
+
+RELAX
 
 </div>
 
@@ -4137,20 +6047,6 @@ RELAX adapts without pretending to predict it.
 
 </div>
 
-
-<div class="roadmap-final reveal">
-
-<span>
-THE PLAN IS SIMPLE
-</span>
-
-<h3>
-DON'T PANIC.<br>
-DON'T FAKE THE FUTURE.<br>
-<span class="gradient-text">
-KEEP WALKING.
-</span>
-</h3>
 
 </div>
 
@@ -4161,82 +6057,49 @@ KEEP WALKING.
 <style>
 
 /* =========================
-RELAX CORE
+CORE
 ========================= */
 
 .core-section{
 
-position:relative;
-
 padding:
-170px max(6vw,30px)
-190px;
+200px max(7vw,40px);
 
 overflow:hidden;
 
 background:
-
-radial-gradient(
-circle at 50% 45%,
-rgba(91,124,255,.09),
-transparent 30%
-),
-
-#050713;
+linear-gradient(
+135deg,
+rgba(4,6,16,.96),
+rgba(9,12,28,.90)
+);
 
 }
 
 
-.core-head{
+.core-wrap{
 
-width:min(1000px,100%);
+width:min(1300px,100%);
 
 margin:auto;
 
-text-align:center;
+display:grid;
+
+grid-template-columns:
+.9fr 1.1fr;
+
+align-items:center;
+
+gap:110px;
 
 }
 
 
-.core-head h2{
-
-margin-top:30px;
-
-font-family:var(--orbitron);
-
-font-size:clamp(40px,6vw,82px);
-
-font-weight:900;
-
-line-height:1.1;
-
-}
-
-
-.core-head p{
-
-max-width:700px;
-
-margin:35px auto 0;
-
-font-size:19px;
-
-line-height:1.9;
-
-color:var(--muted);
-
-}
-
-
-.core-world{
+.core-visual{
 
 position:relative;
 
-width:min(850px,90vw);
-
-aspect-ratio:1;
-
-margin:100px auto 0;
+min-height:650px;
 
 display:flex;
 
@@ -4251,59 +6114,44 @@ justify-content:center;
 
 position:relative;
 
-z-index:10;
+z-index:5;
 
-width:clamp(150px,20vw,250px);
+width:min(360px,70%);
 
-height:clamp(150px,20vw,250px);
+aspect-ratio:1;
 
 border-radius:50%;
-
-animation:coreFloat 6s ease-in-out infinite;
-
-box-shadow:
-
-0 0 60px rgba(91,124,255,.45),
-
-0 0 130px rgba(153,69,255,.22),
-
-0 0 200px rgba(20,241,149,.08);
-
-}
-
-
-.core-coin img{
-
-width:100%;
-
-height:100%;
 
 object-fit:cover;
 
+filter:
+drop-shadow(
+0 0 45px rgba(91,124,255,.35)
+);
+
+}
+
+
+.core-glow{
+
+position:absolute;
+
+width:500px;
+
+height:500px;
+
 border-radius:50%;
 
-}
+background:
+radial-gradient(
+circle,
+rgba(20,241,149,.15),
+rgba(91,124,255,.10) 38%,
+rgba(153,69,255,.07) 58%,
+transparent 72%
+);
 
-
-@keyframes coreFloat{
-
-0%,
-100%{
-
-transform:
-translateY(0)
-rotate(-2deg);
-
-}
-
-
-50%{
-
-transform:
-translateY(-18px)
-rotate(3deg);
-
-}
+filter:blur(30px);
 
 }
 
@@ -4314,91 +6162,205 @@ position:absolute;
 
 border-radius:50%;
 
-border:1px solid rgba(130,150,220,.13);
+border:
+1px solid rgba(255,255,255,.08);
 
 }
 
 
 .core-ring-one{
 
-width:40%;
+width:470px;
 
-height:40%;
-
-box-shadow:
-inset 0 0 35px rgba(91,124,255,.04);
-
-animation:coreSpin 16s linear infinite;
+height:470px;
 
 }
 
 
 .core-ring-two{
 
-width:65%;
+width:580px;
 
-height:65%;
+height:580px;
 
-border-color:rgba(153,69,255,.14);
-
-animation:coreSpin 24s linear infinite reverse;
-
-}
-
-
-.core-ring-three{
-
-width:90%;
-
-height:90%;
-
-border-color:rgba(20,241,149,.09);
-
-animation:coreSpin 35s linear infinite;
+border-color:
+rgba(91,124,255,.10);
 
 }
 
 
-@keyframes coreSpin{
+.core-orbit{
 
-to{
+z-index:4;
 
-transform:rotate(360deg);
+width:520px;
 
-}
-
-}
-
-
-.core-point{
-
-position:absolute;
-
-z-index:15;
-
-min-width:150px;
-
-padding:18px 22px;
-
-border:1px solid var(--border);
-
-border-radius:15px;
-
-background:rgba(5,7,19,.72);
-
-backdrop-filter:blur(18px);
-
-box-shadow:
-0 20px 50px rgba(0,0,0,.3);
+height:520px;
 
 }
 
 
-.core-point span,
+.core-copy h2{
 
-.core-point small{
+margin-top:35px;
+
+font-family:var(--orbitron);
+
+font-size:
+clamp(55px,8vw,120px);
+
+font-weight:900;
+
+line-height:.88;
+
+}
+
+
+.core-copy p{
+
+max-width:650px;
+
+margin-top:30px;
+
+font-size:19px;
+
+line-height:1.85;
+
+color:#9AA4BA;
+
+}
+
+
+.core-copy strong{
 
 display:block;
+
+margin-top:60px;
+
+font-family:var(--orbitron);
+
+font-size:
+clamp(20px,3vw,40px);
+
+line-height:1.5;
+
+}
+
+
+
+/* =========================
+SOURCE
+========================= */
+
+.source-section{
+
+padding:
+190px max(7vw,40px);
+
+background:
+rgba(5,7,19,.90);
+
+}
+
+
+.source-wrap{
+
+width:min(1300px,100%);
+
+margin:auto;
+
+}
+
+
+.source-head{
+
+max-width:1000px;
+
+}
+
+
+.source-terminal{
+
+margin-top:90px;
+
+overflow:hidden;
+
+border:
+1px solid rgba(255,255,255,.10);
+
+border-radius:22px;
+
+background:
+rgba(7,10,23,.82);
+
+box-shadow:
+0 40px 100px rgba(0,0,0,.35);
+
+}
+
+
+.source-terminal-top{
+
+min-height:65px;
+
+display:flex;
+
+align-items:center;
+
+justify-content:space-between;
+
+padding:0 28px;
+
+border-bottom:
+1px solid rgba(255,255,255,.07);
+
+}
+
+
+.terminal-dots{
+
+display:flex;
+
+gap:8px;
+
+}
+
+
+.terminal-dots span{
+
+width:9px;
+
+height:9px;
+
+border-radius:50%;
+
+background:#30384D;
+
+}
+
+
+.terminal-dots span:nth-child(1){
+
+background:var(--danger);
+
+}
+
+
+.terminal-dots span:nth-child(2){
+
+background:#FFCA5C;
+
+}
+
+
+.terminal-dots span:nth-child(3){
+
+background:var(--green);
+
+}
+
+
+.source-terminal-top > span{
 
 font-family:var(--orbitron);
 
@@ -4408,72 +6370,77 @@ font-weight:800;
 
 letter-spacing:3px;
 
-color:#667089;
+color:#707A92;
 
 }
 
 
-.core-point strong{
+.source-code{
 
-display:block;
+padding:
+50px 35px;
 
-margin:10px 0;
+}
+
+
+.source-code > div{
+
+display:flex;
+
+align-items:center;
+
+gap:30px;
+
+min-height:65px;
+
+padding:0 20px;
+
+border-radius:10px;
+
+}
+
+
+.code-number{
+
+width:30px;
+
+flex-shrink:0;
 
 font-family:var(--orbitron);
 
-font-size:28px;
+font-size:8px;
+
+color:#485168;
 
 }
 
 
-.point-supply{
+.source-code code{
 
-top:17%;
+font-size:
+clamp(13px,1.7vw,21px);
 
-left:4%;
-
-}
-
-
-.point-network{
-
-top:20%;
-
-right:0;
+color:#9CA7BD;
 
 }
 
 
-.point-fear{
+.source-highlight{
 
-bottom:17%;
-
-left:7%;
-
-}
-
-
-.point-source{
-
-right:5%;
-
-bottom:14%;
+background:
+rgba(20,241,149,.06);
 
 }
 
 
+.source-highlight code{
 
-/* =========================
-OPEN SOURCE
-========================= */
+color:var(--green);
 
-.opensource-box{
+}
 
-width:min(1250px,100%);
 
-margin:100px auto 0;
-
-padding:60px;
+.source-terminal-bottom{
 
 display:flex;
 
@@ -4481,86 +6448,42 @@ align-items:center;
 
 justify-content:space-between;
 
-gap:50px;
+gap:20px;
 
-border:1px solid var(--border);
+padding:25px 35px;
 
-border-radius:25px;
-
-background:
-
-linear-gradient(
-120deg,
-rgba(12,17,39,.82),
-rgba(7,9,21,.9)
-);
+border-top:
+1px solid rgba(255,255,255,.07);
 
 }
 
 
-.opensource-copy h3{
-
-margin-top:25px;
+.source-terminal-bottom span,
+.source-terminal-bottom a{
 
 font-family:var(--orbitron);
 
-font-size:clamp(30px,4vw,60px);
+font-size:8px;
 
-line-height:1.1;
+font-weight:800;
 
-}
-
-
-.opensource-copy p{
-
-max-width:600px;
-
-margin-top:25px;
-
-font-size:17px;
-
-line-height:1.8;
-
-color:#9EA7BD;
+letter-spacing:3px;
 
 }
 
 
-.github-button{
+.source-terminal-bottom span{
 
-flex-shrink:0;
+color:#626C84;
 
-padding:18px 25px;
+}
 
-border:1px solid rgba(153,69,255,.45);
 
-border-radius:12px;
+.source-terminal-bottom a{
 
-font-family:var(--orbitron);
-
-font-size:9px;
-
-font-weight:900;
-
-letter-spacing:2px;
+color:var(--green);
 
 text-decoration:none;
-
-background:rgba(153,69,255,.08);
-
-transition:.35s;
-
-}
-
-
-.github-button:hover{
-
-transform:translateY(-5px);
-
-border-color:var(--green);
-
-box-shadow:
-0 0 35px rgba(20,241,149,.12);
 
 }
 
@@ -4575,65 +6498,36 @@ ROADMAP
 position:relative;
 
 padding:
-180px max(6vw,30px)
-200px;
+200px max(7vw,40px);
 
 overflow:hidden;
 
 background:
-
-radial-gradient(
-circle at 85% 20%,
-rgba(153,69,255,.08),
-transparent 30%
-),
-
-radial-gradient(
-circle at 10% 80%,
-rgba(20,241,149,.05),
-transparent 30%
-),
-
-#050713;
+linear-gradient(
+180deg,
+rgba(8,11,24,.92),
+rgba(4,6,16,.96)
+);
 
 }
 
 
-.roadmap-head{
+.roadmap-wrap{
 
-width:min(1200px,100%);
+position:relative;
+
+z-index:5;
+
+width:min(1300px,100%);
 
 margin:auto;
 
 }
 
 
-.roadmap-head h2{
+.roadmap-head{
 
-margin-top:35px;
-
-font-family:var(--orbitron);
-
-font-size:clamp(65px,10vw,150px);
-
-font-weight:900;
-
-line-height:.88;
-
-}
-
-
-.roadmap-head p{
-
-max-width:650px;
-
-margin-top:45px;
-
-font-size:19px;
-
-line-height:1.9;
-
-color:var(--muted);
+max-width:1000px;
 
 }
 
@@ -4642,9 +6536,7 @@ color:var(--muted);
 
 position:relative;
 
-width:min(1200px,100%);
-
-margin:130px auto 0;
+margin-top:130px;
 
 }
 
@@ -4659,14 +6551,17 @@ top:0;
 
 bottom:0;
 
-left:39px;
+left:25px;
 
 width:1px;
 
-background:linear-gradient(
+background:
+linear-gradient(
+180deg,
 var(--green),
+var(--blue),
 var(--purple),
-rgba(91,124,255,.1)
+rgba(255,255,255,.05)
 );
 
 }
@@ -4676,26 +6571,34 @@ rgba(91,124,255,.1)
 
 position:relative;
 
-display:grid;
+max-width:850px;
 
-grid-template-columns:80px 1fr;
+margin-left:100px;
 
-gap:50px;
-
-padding-bottom:110px;
+padding:
+0 0 120px 60px;
 
 }
 
 
-.roadmap-marker{
+.roadmap-item:last-child{
 
-position:relative;
+padding-bottom:0;
 
-z-index:4;
+}
 
-width:80px;
 
-height:80px;
+.roadmap-node{
+
+position:absolute;
+
+left:-87px;
+
+top:0;
+
+width:26px;
+
+height:26px;
 
 display:flex;
 
@@ -4703,89 +6606,36 @@ align-items:center;
 
 justify-content:center;
 
+border:
+1px solid rgba(20,241,149,.55);
+
 border-radius:50%;
 
-border:1px solid rgba(20,241,149,.35);
-
-background:#070A17;
-
-font-family:var(--orbitron);
-
-font-size:12px;
-
-font-weight:900;
-
-color:var(--green);
+background:#050713;
 
 box-shadow:
-0 0 30px rgba(20,241,149,.08);
+0 0 25px rgba(20,241,149,.16);
 
 }
 
 
-.roadmap-content{
+.roadmap-node span{
 
-max-width:750px;
+width:8px;
 
-padding-top:10px;
+height:8px;
 
-}
+border-radius:50%;
 
+background:var(--green);
 
-.roadmap-content > span{
-
-font-family:var(--orbitron);
-
-font-size:9px;
-
-font-weight:800;
-
-letter-spacing:5px;
-
-color:#667089;
+box-shadow:
+0 0 12px var(--green);
 
 }
 
 
-.roadmap-content h3{
-
-margin-top:20px;
-
-font-family:var(--orbitron);
-
-font-size:clamp(35px,5vw,70px);
-
-font-weight:900;
-
-}
-
-
-.roadmap-content p{
-
-max-width:650px;
-
-margin-top:25px;
-
-font-size:18px;
-
-line-height:1.8;
-
-color:#A3ACC1;
-
-}
-
-
-.roadmap-status{
-
-display:inline-block;
-
-margin-top:30px;
-
-padding:10px 15px;
-
-border:1px solid rgba(153,69,255,.3);
-
-border-radius:30px;
+.roadmap-phase{
 
 font-family:var(--orbitron);
 
@@ -4793,259 +6643,262 @@ font-size:8px;
 
 font-weight:900;
 
+letter-spacing:5px;
+
+color:var(--green);
+
+}
+
+
+.roadmap-item h3{
+
+margin-top:25px;
+
+font-family:var(--orbitron);
+
+font-size:
+clamp(30px,5vw,65px);
+
+font-weight:900;
+
+}
+
+
+.roadmap-item p{
+
+max-width:700px;
+
+margin-top:25px;
+
+font-size:18px;
+
+line-height:1.8;
+
+color:#949EB4;
+
+}
+
+
+.roadmap-status{
+
+display:inline-flex;
+
+margin-top:35px;
+
+padding:10px 16px;
+
+border:
+1px solid rgba(255,255,255,.10);
+
+border-radius:7px;
+
+font-family:var(--orbitron);
+
+font-size:7px;
+
+font-weight:900;
+
 letter-spacing:3px;
 
-color:#B983FF;
+color:#7C869D;
 
 }
 
 
 .roadmap-status.active{
 
-border-color:rgba(20,241,149,.35);
+border-color:
+rgba(20,241,149,.35);
 
 color:var(--green);
 
-box-shadow:
-0 0 25px rgba(20,241,149,.07);
+background:
+rgba(20,241,149,.05);
 
 }
 
 
-.roadmap-status.unknown{
+.roadmap-orbit{
 
-color:#7180A5;
+right:-100px;
 
-border-color:rgba(113,128,165,.25);
-
-}
-
-
-.roadmap-final{
-
-width:min(1200px,100%);
-
-margin:60px auto 0;
-
-padding:90px 40px;
-
-text-align:center;
-
-border-top:1px solid rgba(255,255,255,.07);
-
-border-bottom:1px solid rgba(255,255,255,.07);
-
-}
-
-
-.roadmap-final span{
-
-font-family:var(--orbitron);
-
-font-size:9px;
-
-font-weight:800;
-
-letter-spacing:5px;
-
-color:#69728A;
-
-}
-
-
-.roadmap-final h3{
-
-margin-top:35px;
-
-font-family:var(--orbitron);
-
-font-size:clamp(35px,6vw,80px);
-
-font-weight:900;
-
-line-height:1.25;
+top:10%;
 
 }
 
 
 
 /* =========================
-PART 4 MOBILE
+PART 5 MOBILE
 ========================= */
 
 @media(max-width:800px){
 
-.opensource-box{
-
-padding:40px 30px;
-
-align-items:flex-start;
-
-flex-direction:column;
-
-}
-
-
-.github-button{
-
-width:100%;
-
-text-align:center;
-
-}
-
-
-.core-point{
-
-min-width:115px;
-
-padding:14px;
-
-}
-
-
-.core-point strong{
-
-font-size:20px;
-
-}
-
-
-.point-supply{
-
-left:0;
-
-}
-
-
-.point-network{
-
-right:0;
-
-}
-
-
-.point-fear{
-
-left:0;
-
-}
-
-
-.point-source{
-
-right:0;
-
-}
-
-
-.roadmap-item{
-
-gap:25px;
-
-}
-
-}
-
-
-@media(max-width:600px){
-
 .core-section,
-
+.source-section,
 .roadmap-section{
 
 padding:
-110px 22px
-130px;
+125px 22px;
 
 }
 
 
-.core-world{
+.core-wrap{
 
-margin-top:60px;
+grid-template-columns:1fr;
 
-width:110%;
-
-left:-5%;
+gap:45px;
 
 }
 
 
-.core-point{
+.core-visual{
 
-min-width:95px;
-
-padding:11px;
+min-height:420px;
 
 }
 
 
-.core-point span,
+.core-coin{
 
-.core-point small{
-
-font-size:6px;
-
-letter-spacing:2px;
+width:min(250px,68%);
 
 }
 
 
-.core-point strong{
+.core-glow{
+
+width:330px;
+
+height:330px;
+
+}
+
+
+.core-ring-one{
+
+width:300px;
+
+height:300px;
+
+}
+
+
+.core-ring-two{
+
+width:380px;
+
+height:380px;
+
+}
+
+
+.core-orbit{
+
+width:300px;
+
+height:300px;
+
+}
+
+
+.core-copy p{
 
 font-size:17px;
 
 }
 
 
-.opensource-box{
+.source-terminal{
 
-margin-top:60px;
+margin-top:65px;
+
+}
+
+
+.source-code{
+
+padding:
+30px 12px;
+
+}
+
+
+.source-code > div{
+
+gap:12px;
+
+padding:0 10px;
+
+}
+
+
+.source-code code{
+
+font-size:11px;
+
+}
+
+
+.source-terminal-bottom{
+
+align-items:flex-start;
+
+flex-direction:column;
+
+padding:25px 22px;
 
 }
 
 
 .roadmap-line{
 
-margin-top:80px;
+margin-top:90px;
 
 }
 
 
 .roadmap-line::before{
 
-left:25px;
+left:12px;
 
 }
 
 
 .roadmap-item{
 
-grid-template-columns:52px 1fr;
-
-gap:20px;
-
-padding-bottom:80px;
-
-}
-
-
-.roadmap-marker{
-
-width:52px;
-
-height:52px;
-
-font-size:9px;
-
-}
-
-
-.roadmap-final{
+margin-left:48px;
 
 padding:
-70px 10px;
+0 0 90px 28px;
+
+}
+
+
+.roadmap-node{
+
+left:-48px;
+
+width:24px;
+
+height:24px;
+
+}
+
+
+.roadmap-item p{
+
+font-size:16px;
+
+}
+
+
+.roadmap-orbit{
+
+right:-140px;
+
+top:5%;
 
 }
 
@@ -5057,28 +6910,46 @@ padding:
 FAQ
 ========================= -->
 
-<section class="faq-section" id="faq">
+<section
+class="faq-section"
+id="faq"
+>
+
+<div class="faq-wrap">
+
 
 <div class="faq-head reveal">
 
 <div class="section-label">
-FAQ
+
+RELAX FAQ
+
 </div>
 
-<h2>
+
+<h2 class="section-title">
+
 QUESTIONS.<br>
+
 <span class="gradient-text">
 CALM ANSWERS.
 </span>
+
 </h2>
 
-<p>
-Verify the contract.
-Understand the market.
-Make your own decisions.
+
+<p class="section-copy">
+
+No complicated language.
+
+No unnecessary noise.
+
+Just the basics.
+
 </p>
 
 </div>
+
 
 
 <div class="faq-list">
@@ -5086,21 +6957,28 @@ Make your own decisions.
 
 <div class="faq-item reveal">
 
-<button class="faq-question" type="button">
+<button
+class="faq-question"
+type="button"
+>
 
 <span>
 WHAT IS RELAX?
 </span>
 
-<strong>+</strong>
+<strong>
++
+</strong>
 
 </button>
+
 
 <div class="faq-answer">
 
 <p>
-RELAX is a Solana-based community token built around one simple philosophy:
-markets are chaotic, but your decisions do not have to be.
+
+RELAX is a Solana-based meme token built around a simple idea: markets are chaotic, but your reaction does not have to be.
+
 </p>
 
 </div>
@@ -5108,23 +6986,31 @@ markets are chaotic, but your decisions do not have to be.
 </div>
 
 
+
 <div class="faq-item reveal">
 
-<button class="faq-question" type="button">
+<button
+class="faq-question"
+type="button"
+>
 
 <span>
-CAN MORE RELAX BE MINTED?
+WHY “JUST RELAX BRO”?
 </span>
 
-<strong>+</strong>
+<strong>
++
+</strong>
 
 </button>
+
 
 <div class="faq-answer">
 
 <p>
-RELAX is presented with a fixed supply.
-The contract and on-chain data are public and should always be independently verified.
+
+Because markets constantly create fear, urgency and regret. RELAX is the calm signal inside that noise.
+
 </p>
 
 </div>
@@ -5132,23 +7018,31 @@ The contract and on-chain data are public and should always be independently ver
 </div>
 
 
+
 <div class="faq-item reveal">
 
-<button class="faq-question" type="button">
+<button
+class="faq-question"
+type="button"
+>
 
 <span>
-DID THE CREATOR RECEIVE FREE TOKENS?
+IS THERE A PRIVATE CREATOR ALLOCATION?
 </span>
 
-<strong>+</strong>
+<strong>
++
+</strong>
 
 </button>
+
 
 <div class="faq-answer">
 
 <p>
-No private creator allocation is presented.
-The creator entered the market using personal funds and acquired tokens through the market.
+
+No reserved creator bag is presented as part of the RELAX launch. The creator entered the market using personal funds and acquired tokens through the market.
+
 </p>
 
 </div>
@@ -5156,23 +7050,63 @@ The creator entered the market using personal funds and acquired tokens through 
 </div>
 
 
+
 <div class="faq-item reveal">
 
-<button class="faq-question" type="button">
+<button
+class="faq-question"
+type="button"
+>
+
+<span>
+CAN THE SUPPLY BE INCREASED?
+</span>
+
+<strong>
++
+</strong>
+
+</button>
+
+
+<div class="faq-answer">
+
+<p>
+
+RELAX is presented as a fixed-supply token with no additional creator-controlled minting. Always verify current on-chain contract data yourself.
+
+</p>
+
+</div>
+
+</div>
+
+
+
+<div class="faq-item reveal">
+
+<button
+class="faq-question"
+type="button"
+>
 
 <span>
 WHERE CAN I VERIFY RELAX?
 </span>
 
-<strong>+</strong>
+<strong>
++
+</strong>
 
 </button>
+
 
 <div class="faq-answer">
 
 <p>
-The official contract is displayed on this website.
-Always compare the contract address before interacting with any token or market.
+
+Use the official contract address and inspect public Solana market and on-chain data. The contract is displayed directly on this website.
+
 </p>
 
 </div>
@@ -5180,28 +7114,37 @@ Always compare the contract address before interacting with any token or market.
 </div>
 
 
+
 <div class="faq-item reveal">
 
-<button class="faq-question" type="button">
+<button
+class="faq-question"
+type="button"
+>
 
 <span>
 IS RELAX FINANCIAL ADVICE?
 </span>
 
-<strong>+</strong>
+<strong>
++
+</strong>
 
 </button>
+
 
 <div class="faq-answer">
 
 <p>
-No.
-RELAX is not financial advice.
-Crypto assets are volatile and involve risk.
-Do your own research and make your own decisions.
+
+No. RELAX is a meme token and community project. Nothing on this website should be considered financial advice.
+
 </p>
 
 </div>
+
+</div>
+
 
 </div>
 
@@ -5213,65 +7156,73 @@ Do your own research and make your own decisions.
 
 
 <!-- =========================
-FINAL CINEMATIC CTA
+FINAL CTA
 ========================= -->
 
-<section class="final-section">
-
-<div class="final-video-fallback"></div>
-
-
-<video
-class="final-video"
-autoplay
-muted
-loop
-playsinline
-preload="metadata"
-poster="Market.png"
+<section
+class="final-section"
+id="community"
 >
 
-<source
-src="RELAX-BG.mp4"
-type="video/mp4"
+
+<div class="final-video-shade"></div>
+
+
+<div
+class="orbit-zone final-orbit"
+aria-hidden="true"
 >
 
-</video>
+<div class="orbit-ring"></div>
 
+<div class="orbit-ring second"></div>
 
-<div class="final-overlay"></div>
+<span class="orbit-traveler"></span>
+
+<span class="orbit-traveler second"></span>
+
+</div>
 
 
 <div class="final-content reveal">
 
-<div class="section-label">
-THE SIGNAL REMAINS
+
+<img
+src="logo.png"
+alt="RELAX"
+class="final-logo relax-logo"
+>
+
+
+<div class="section-label final-label">
+
+THE MARKET IS STILL MOVING
+
 </div>
 
+
 <h2>
-THE WORLD<br>
-<span class="panic-word">
-PANICS.
-</span>
+
+YOU DON'T HAVE<br>
+
+TO CHASE IT.
+
 </h2>
 
-<div class="final-divider"></div>
-
-<h3>
-RELAX BRO<br>
-<span class="gradient-text">
-DOESN'T.
-</span>
-</h3>
 
 <p>
-The market will move.
-The noise will return.
-The crowd will run.
+
+Fear creates bad decisions.
+
+Panic creates worse ones.
+
 </p>
 
-<strong>
+
+<strong class="gradient-text">
+
 JUST RELAX BRO.
+
 </strong>
 
 
@@ -5285,19 +7236,7 @@ rel="noopener noreferrer"
 class="hero-button primary"
 >
 
-BUY RELAX
-
-</a>
-
-
-<a
-href="https://dexscreener.com/solana/5ztferjiljz3u4kzkwmguyujxcwkpagzfqwwyja7yzx3"
-target="_blank"
-rel="noopener noreferrer"
-class="hero-button"
->
-
-WATCH THE CHART
+BUY $RELAX
 
 </a>
 
@@ -5306,27 +7245,16 @@ WATCH THE CHART
 href="https://x.com/0relaxbro"
 target="_blank"
 rel="noopener noreferrer"
-class="hero-button"
+class="hero-button secondary"
 >
 
-FOLLOW THE SIGNAL
-
-</a>
-
-
-<a
-href="https://github.com/0relaxbro/RELAX"
-target="_blank"
-rel="noopener noreferrer"
-class="hero-button"
->
-
-VIEW THE SOURCE
+JOIN X COMMUNITY
 
 </a>
 
 
 </div>
+
 
 </div>
 
@@ -5338,59 +7266,131 @@ VIEW THE SOURCE
 FOOTER 2.0
 ========================= -->
 
-<footer class="footer">
+<footer class="site-footer">
 
 <div class="footer-wrap">
 
 
-<div class="footer-top">
+<div class="footer-main">
+
 
 <div class="footer-brand">
 
-<div class="footer-logo-line">
+<a
+href="#top"
+class="footer-logo-link"
+>
 
 <img
 src="logo.png"
 alt="RELAX Logo"
+class="footer-logo relax-logo"
 >
 
-<strong>
-RELAX
-</strong>
-
-</div>
-
-<p>
-0 FEAR. 0 PANIC. 0 REGRETS.
-</p>
-
-</div>
-
-
-<div class="footer-clock">
-
 <span>
-LOCAL SIGNAL
+
+RELAX
+
 </span>
 
-<strong id="liveClock">
-00:00:00
+</a>
+
+
+<p>
+
+0 Fear. 0 Panic. 0 Regrets.
+
+</p>
+
+
+<strong>
+
+JUST RELAX BRO.
+
 </strong>
 
 </div>
 
-</div>
 
 
 <div class="footer-links">
 
+
+<div>
+
+<span>
+MARKET
+</span>
+
+
 <a
-href="https://0relaxbro.xyz"
+href="https://pump.fun/coin/6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump"
+target="_blank"
+rel="noopener noreferrer"
 >
 
-WEBSITE
+Pump.fun
 
 </a>
+
+
+<a
+href="https://dexscreener.com/solana/5ztferjiljz3u4kzkwmguyujxcwkpagzfqwwyja7yzx3"
+target="_blank"
+rel="noopener noreferrer"
+>
+
+DexScreener
+
+</a>
+
+</div>
+
+
+
+<div>
+
+<span>
+RELAX
+</span>
+
+
+<a href="#story">
+
+Story
+
+</a>
+
+
+<a href="#philosophy">
+
+The Code
+
+</a>
+
+
+<a href="#roadmap">
+
+Roadmap
+
+</a>
+
+
+<a href="#faq">
+
+FAQ
+
+</a>
+
+</div>
+
+
+
+<div>
+
+<span>
+SOCIAL
+</span>
 
 
 <a
@@ -5405,62 +7405,85 @@ X
 
 
 <a
-href="https://pump.fun/coin/6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump"
-target="_blank"
-rel="noopener noreferrer"
->
-
-PUMP.FUN
-
-</a>
-
-
-<a
-href="https://dexscreener.com/solana/5ztferjiljz3u4kzkwmguyujxcwkpagzfqwwyja7yzx3"
-target="_blank"
-rel="noopener noreferrer"
->
-
-DEXSCREENER
-
-</a>
-
-
-<a
 href="https://github.com/0relaxbro/RELAX"
 target="_blank"
 rel="noopener noreferrer"
 >
 
-GITHUB
+GitHub
 
 </a>
 
 </div>
 
 
-<div class="footer-contract">
+</div>
 
-<span>
-OFFICIAL CONTRACT
-</span>
-
-<code>
-6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump
-</code>
 
 </div>
 
 
+
+<div class="footer-contract">
+
+<span>
+
+OFFICIAL CONTRACT
+
+</span>
+
+
+<code>
+
+6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump
+
+</code>
+
+
+<button
+type="button"
+id="footerCopyContract"
+>
+
+COPY
+
+</button>
+
+</div>
+
+
+
 <div class="footer-bottom">
 
-<p>
-© 2026 RELAX — JUST RELAX BRO.
-</p>
 
 <p>
-NOT FINANCIAL ADVICE. ALWAYS VERIFY THE CONTRACT.
+
+© <span id="currentYear"></span> RELAX.
+
+All rights reserved.
+
 </p>
+
+
+<p>
+
+RELAX is a meme token.
+
+Not financial advice.
+
+Always verify the contract.
+
+</p>
+
+
+<div class="footer-status">
+
+<span></span>
+
+SOLANA NETWORK
+
+</div>
+
 
 </div>
 
@@ -5479,78 +7502,45 @@ FAQ
 
 .faq-section{
 
-position:relative;
-
 padding:
-170px max(6vw,30px)
-190px;
+190px max(7vw,40px);
 
 background:
-
-radial-gradient(
-circle at 75% 20%,
-rgba(91,124,255,.08),
-transparent 30%
-),
-
-#050713;
+rgba(5,7,19,.94);
 
 }
 
 
-.faq-head{
+.faq-wrap{
 
-width:min(1100px,100%);
+width:min(1300px,100%);
 
 margin:auto;
 
 }
 
 
-.faq-head h2{
+.faq-head{
 
-margin-top:30px;
-
-font-family:var(--orbitron);
-
-font-size:clamp(45px,7vw,100px);
-
-font-weight:900;
-
-line-height:1;
-
-}
-
-
-.faq-head p{
-
-max-width:600px;
-
-margin-top:35px;
-
-font-size:19px;
-
-line-height:1.8;
-
-color:var(--muted);
+max-width:950px;
 
 }
 
 
 .faq-list{
 
-width:min(1100px,100%);
+margin-top:100px;
 
-margin:100px auto 0;
-
-border-top:1px solid rgba(255,255,255,.08);
+border-top:
+1px solid rgba(255,255,255,.09);
 
 }
 
 
 .faq-item{
 
-border-bottom:1px solid rgba(255,255,255,.08);
+border-bottom:
+1px solid rgba(255,255,255,.09);
 
 }
 
@@ -5559,7 +7549,7 @@ border-bottom:1px solid rgba(255,255,255,.08);
 
 width:100%;
 
-padding:35px 10px;
+min-height:110px;
 
 display:flex;
 
@@ -5569,15 +7559,15 @@ justify-content:space-between;
 
 gap:30px;
 
-border:0;
+padding:20px 10px;
 
-background:none;
+background:transparent;
 
 color:white;
 
-cursor:pointer;
-
 text-align:left;
+
+cursor:pointer;
 
 }
 
@@ -5586,26 +7576,56 @@ text-align:left;
 
 font-family:var(--orbitron);
 
-font-size:clamp(14px,2vw,22px);
+font-size:
+clamp(15px,2vw,24px);
 
 font-weight:800;
 
-letter-spacing:2px;
+line-height:1.5;
 
 }
 
 
 .faq-question strong{
 
-font-family:var(--orbitron);
+flex-shrink:0;
 
-font-size:30px;
+width:45px;
 
-font-weight:400;
+height:45px;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+border:
+1px solid rgba(255,255,255,.10);
+
+border-radius:50%;
+
+font-size:25px;
+
+font-weight:300;
+
+transition:
+transform .35s ease,
+color .35s ease,
+border-color .35s ease;
+
+}
+
+
+.faq-item.active
+.faq-question strong{
+
+transform:rotate(45deg);
 
 color:var(--green);
 
-transition:.4s;
+border-color:
+rgba(20,241,149,.40);
 
 }
 
@@ -5616,47 +7636,38 @@ max-height:0;
 
 overflow:hidden;
 
-transition:max-height .5s ease;
+transition:
+max-height .45s ease;
 
 }
 
 
 .faq-answer p{
 
-max-width:800px;
+max-width:850px;
 
 padding:
-0 10px
-35px;
+0 10px 45px;
 
-font-size:17px;
+font-size:18px;
 
 line-height:1.9;
 
-color:#9FA8BD;
-
-}
-
-
-.faq-item.active .faq-question strong{
-
-transform:rotate(45deg);
-
-color:var(--purple);
+color:#969FB5;
 
 }
 
 
 
 /* =========================
-FINAL CINEMATIC
+FINAL CTA
 ========================= */
 
 .final-section{
 
 position:relative;
 
-min-height:100vh;
+min-height:900px;
 
 display:flex;
 
@@ -5664,79 +7675,55 @@ align-items:center;
 
 justify-content:center;
 
+padding:
+160px max(7vw,40px);
+
 overflow:hidden;
 
-isolation:isolate;
-
-padding:
-150px max(6vw,30px);
-
-}
-
-
-.final-video,
-
-.final-video-fallback{
-
-position:absolute;
-
-inset:-3%;
-
-width:106%;
-
-height:106%;
+background:
+linear-gradient(
+180deg,
+rgba(4,6,16,.95),
+rgba(4,6,16,.86)
+);
 
 }
 
 
-.final-video{
+.final-section::before{
 
-z-index:-6;
-
-object-fit:cover;
-
-filter:
-brightness(.62)
-saturate(1.1);
-
-}
-
-
-.final-video-fallback{
-
-z-index:-7;
-
-background-image:url("Market.png");
-
-background-size:cover;
-
-background-position:center;
-
-}
-
-
-.final-overlay{
+content:"";
 
 position:absolute;
 
 inset:0;
 
-z-index:-5;
+background:
+
+radial-gradient(
+circle at center,
+rgba(91,124,255,.13),
+transparent 55%
+);
+
+pointer-events:none;
+
+}
+
+
+.final-video-shade{
+
+position:absolute;
+
+inset:0;
 
 background:
 
 linear-gradient(
 90deg,
-rgba(5,7,19,.84),
-rgba(5,7,19,.28),
-rgba(5,7,19,.7)
-),
-
-linear-gradient(
-0deg,
-#050713,
-transparent 35%,
-rgba(5,7,19,.55)
+rgba(4,6,16,.90),
+rgba(4,6,16,.45),
+rgba(4,6,16,.90)
 );
 
 }
@@ -5746,85 +7733,71 @@ rgba(5,7,19,.55)
 
 position:relative;
 
-z-index:10;
+z-index:5;
 
-width:min(1200px,100%);
+width:min(1100px,100%);
+
+margin:auto;
 
 text-align:center;
 
 }
 
 
-.final-content h2{
+.final-logo{
 
-margin-top:35px;
+width:
+clamp(110px,13vw,180px);
 
-font-family:var(--orbitron);
+aspect-ratio:1;
 
-font-size:clamp(60px,11vw,170px);
+border-radius:50%;
 
-font-weight:900;
+object-fit:cover;
 
-line-height:.82;
-
-}
-
-
-.panic-word{
-
-color:var(--danger);
-
-text-shadow:
-0 0 50px rgba(255,95,135,.25);
-
-}
-
-
-.final-divider{
-
-width:1px;
-
-height:100px;
-
-margin:55px auto;
-
-background:linear-gradient(
-transparent,
-var(--green),
-var(--purple),
-transparent
+filter:
+drop-shadow(
+0 0 40px rgba(91,124,255,.38)
 );
 
 }
 
 
-.final-content h3{
+.final-label{
+
+justify-content:center;
+
+margin-top:45px;
+
+}
+
+
+.final-content h2{
+
+margin-top:40px;
 
 font-family:var(--orbitron);
 
-font-size:clamp(45px,8vw,120px);
+font-size:
+clamp(55px,9vw,135px);
 
 font-weight:900;
 
-line-height:.95;
+line-height:.86;
 
 }
 
 
 .final-content p{
 
-max-width:600px;
+margin-top:45px;
 
-margin:50px auto 0;
+font-size:
+clamp(18px,2vw,26px);
 
-font-size:20px;
+line-height:1.7;
 
-line-height:1.9;
-
-color:#BEC5D5;
-
-text-shadow:
-0 4px 20px #000;
+color:#9BA5BA;
 
 }
 
@@ -5837,9 +7810,10 @@ margin-top:35px;
 
 font-family:var(--orbitron);
 
-font-size:clamp(20px,3vw,40px);
+font-size:
+clamp(28px,5vw,70px);
 
-letter-spacing:4px;
+font-weight:900;
 
 }
 
@@ -5848,13 +7822,33 @@ letter-spacing:4px;
 
 display:flex;
 
+align-items:center;
+
 justify-content:center;
 
 flex-wrap:wrap;
 
-gap:14px;
+gap:18px;
 
-margin-top:55px;
+margin-top:60px;
+
+}
+
+
+.final-orbit{
+
+left:50%;
+
+top:50%;
+
+width:650px;
+
+height:650px;
+
+transform:
+translate(-50%,-50%);
+
+opacity:.55;
 
 }
 
@@ -5864,31 +7858,30 @@ margin-top:55px;
 FOOTER
 ========================= */
 
-.footer{
-
-position:relative;
+.site-footer{
 
 padding:
-90px max(6vw,30px)
-45px;
+90px max(7vw,40px)
+40px;
 
-background:#03040B;
+background:#03050D;
 
-border-top:1px solid rgba(255,255,255,.06);
+border-top:
+1px solid rgba(255,255,255,.07);
 
 }
 
 
 .footer-wrap{
 
-width:min(1300px,100%);
+width:min(1400px,100%);
 
 margin:auto;
 
 }
 
 
-.footer-top{
+.footer-main{
 
 display:flex;
 
@@ -5896,86 +7889,71 @@ align-items:flex-start;
 
 justify-content:space-between;
 
-gap:50px;
+gap:80px;
 
 }
 
 
-.footer-logo-line{
+.footer-brand{
 
-display:flex;
+max-width:420px;
+
+}
+
+
+.footer-logo-link{
+
+display:inline-flex;
 
 align-items:center;
 
-gap:18px;
+gap:15px;
+
+text-decoration:none;
+
+color:white;
 
 }
 
 
-.footer-logo-line img{
+.footer-logo{
 
-width:60px;
+width:58px;
 
-height:60px;
-
-object-fit:cover;
+height:58px;
 
 border-radius:50%;
 
+object-fit:cover;
+
 }
 
 
-.footer-logo-line strong{
+.footer-logo-link span{
 
 font-family:var(--orbitron);
 
-font-size:40px;
+font-size:25px;
 
-letter-spacing:5px;
+font-weight:900;
+
+letter-spacing:3px;
 
 }
 
 
 .footer-brand p{
 
-margin-top:20px;
+margin-top:30px;
 
-font-family:var(--orbitron);
+font-size:17px;
 
-font-size:9px;
-
-letter-spacing:3px;
-
-color:#69728A;
+color:#778198;
 
 }
 
 
-.footer-clock{
-
-text-align:right;
-
-}
-
-
-.footer-clock span{
-
-display:block;
-
-font-family:var(--orbitron);
-
-font-size:8px;
-
-font-weight:800;
-
-letter-spacing:4px;
-
-color:#616A82;
-
-}
-
-
-.footer-clock strong{
+.footer-brand strong{
 
 display:block;
 
@@ -5983,96 +7961,155 @@ margin-top:15px;
 
 font-family:var(--orbitron);
 
-font-size:30px;
+font-size:13px;
 
-color:var(--green);
+letter-spacing:2px;
 
 }
 
 
 .footer-links{
 
-display:flex;
+display:grid;
 
-flex-wrap:wrap;
+grid-template-columns:
+repeat(3,1fr);
 
-gap:35px;
-
-margin-top:70px;
-
-padding:
-35px 0;
-
-border-top:1px solid rgba(255,255,255,.07);
-
-border-bottom:1px solid rgba(255,255,255,.07);
+gap:
+50px 90px;
 
 }
 
 
-.footer-links a{
+.footer-links > div{
+
+display:flex;
+
+flex-direction:column;
+
+align-items:flex-start;
+
+gap:18px;
+
+}
+
+
+.footer-links span{
+
+margin-bottom:10px;
 
 font-family:var(--orbitron);
 
-font-size:9px;
+font-size:8px;
 
-font-weight:800;
+font-weight:900;
 
-letter-spacing:3px;
-
-color:#8C95AB;
-
-text-decoration:none;
-
-transition:.3s;
-
-}
-
-
-.footer-links a:hover{
+letter-spacing:4px;
 
 color:var(--green);
 
 }
 
 
+.footer-links a{
+
+color:#8D97AD;
+
+font-size:15px;
+
+text-decoration:none;
+
+transition:
+color .3s ease;
+
+}
+
+
+.footer-links a:hover{
+
+color:white;
+
+}
+
+
 .footer-contract{
 
-margin-top:50px;
+margin-top:80px;
+
+padding:
+28px 30px;
+
+display:grid;
+
+grid-template-columns:
+180px 1fr auto;
+
+align-items:center;
+
+gap:25px;
+
+border-top:
+1px solid rgba(255,255,255,.07);
+
+border-bottom:
+1px solid rgba(255,255,255,.07);
 
 }
 
 
 .footer-contract span{
 
-display:block;
-
 font-family:var(--orbitron);
 
 font-size:8px;
 
-font-weight:800;
+font-weight:900;
 
-letter-spacing:4px;
+letter-spacing:3px;
 
-color:#5E687F;
+color:#687289;
 
 }
 
 
 .footer-contract code{
 
-display:block;
+font-family:var(--orbitron);
 
-margin-top:15px;
+font-size:
+clamp(7px,1vw,11px);
+
+color:#A6AFC1;
+
+word-break:break-all;
+
+}
+
+
+.footer-contract button{
+
+padding:
+12px 20px;
+
+border:
+1px solid rgba(20,241,149,.30);
+
+border-radius:8px;
+
+background:
+rgba(20,241,149,.05);
+
+color:var(--green);
 
 font-family:var(--orbitron);
 
-font-size:clamp(10px,1.4vw,16px);
+font-size:7px;
 
-color:#9DA6BA;
+font-weight:900;
 
-word-break:break-all;
+letter-spacing:2px;
+
+cursor:pointer;
 
 }
 
@@ -6087,64 +8124,116 @@ justify-content:space-between;
 
 gap:30px;
 
-margin-top:65px;
-
-padding-top:30px;
-
-border-top:1px solid rgba(255,255,255,.05);
+padding-top:35px;
 
 }
 
 
 .footer-bottom p{
 
+font-size:12px;
+
+line-height:1.7;
+
+color:#555F75;
+
+}
+
+
+.footer-status{
+
+display:flex;
+
+align-items:center;
+
+gap:10px;
+
 font-family:var(--orbitron);
 
 font-size:7px;
 
-font-weight:700;
+font-weight:900;
 
 letter-spacing:2px;
 
-color:#4F586D;
+color:#687289;
 
-line-height:1.8;
+}
+
+
+.footer-status span{
+
+width:7px;
+
+height:7px;
+
+border-radius:50%;
+
+background:var(--green);
+
+box-shadow:
+0 0 12px var(--green);
+
+animation:
+statusPulse 2s infinite;
 
 }
 
 
 
 /* =========================
-PART 5 MOBILE
+PART 6 MOBILE
 ========================= */
 
-@media(max-width:700px){
+@media(max-width:800px){
 
 .faq-section{
 
 padding:
-110px 22px
-130px;
+125px 22px;
 
 }
 
 
 .faq-list{
 
-margin-top:65px;
+margin-top:70px;
 
 }
 
 
 .faq-question{
 
+min-height:95px;
+
 padding:
-28px 5px;
+20px 0;
+
+}
+
+
+.faq-question strong{
+
+width:38px;
+
+height:38px;
+
+}
+
+
+.faq-answer p{
+
+padding:
+0 0 35px;
+
+font-size:16px;
 
 }
 
 
 .final-section{
+
+min-height:780px;
 
 padding:
 120px 22px;
@@ -6152,42 +8241,62 @@ padding:
 }
 
 
-.final-divider{
+.final-orbit{
 
-height:70px;
+width:380px;
 
-margin:
-40px auto;
+height:380px;
 
 }
 
 
-.footer{
+.site-footer{
 
 padding:
-70px 22px
-35px;
+70px 22px 35px;
 
 }
 
 
-.footer-top{
+.footer-main{
 
 flex-direction:column;
 
-}
-
-
-.footer-clock{
-
-text-align:left;
+gap:65px;
 
 }
 
 
 .footer-links{
 
-gap:25px;
+width:100%;
+
+grid-template-columns:
+repeat(2,1fr);
+
+gap:
+50px 35px;
+
+}
+
+
+.footer-contract{
+
+margin-top:60px;
+
+padding:
+25px 0;
+
+grid-template-columns:1fr;
+
+}
+
+
+.footer-contract button{
+
+width:100%;
+
+min-height:45px;
 
 }
 
@@ -6205,34 +8314,28 @@ flex-direction:column;
 </style>
 
 <!-- =========================
-RELAX V3 ENGINE
+JAVASCRIPT ENGINE
 ========================= -->
 
 <script>
 
-/* =========================
-RELAX CONFIG
-========================= */
+const RELAX_CA =
+"6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump";
 
-const RELAX = {
-
-contract:
-"6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump",
-
-dexPair:
-"5ztferjiljz3u4kzkwmguyujxcwkpagzfqwwyja7yzx3"
-
-};
+const RELAX_PAIR =
+"5ztferjiljz3u4kzkwmguyujxcwkpagzfqwwyja7yzx3";
 
 
 /* =========================
-LOADING SCREEN
+LOADER
 ========================= */
 
 window.addEventListener("load",()=>{
 
 const loader =
 document.querySelector(".loader");
+
+document.body.classList.remove("loading");
 
 setTimeout(()=>{
 
@@ -6242,85 +8345,158 @@ loader.classList.add("loader-hidden");
 
 }
 
-document.body.classList.add("loaded");
-
 },900);
 
 });
 
 
 /* =========================
-MOBILE NAVIGATION
+FORCE LOGO FLOAT
+NO ROTATION
 ========================= */
 
-const menuToggle =
-document.querySelector(".menu-toggle");
+const relaxLogos =
+document.querySelectorAll(".relax-logo");
 
-const navLinks =
-document.querySelector(".nav-links");
+relaxLogos.forEach((logo,index)=>{
 
-
-if(menuToggle && navLinks){
-
-menuToggle.addEventListener("click",()=>{
-
-menuToggle.classList.toggle("active");
-
-navLinks.classList.toggle("active");
+logo.style.animation =
+`relaxFloat ${5 + (index % 3)}s ease-in-out infinite`;
 
 });
 
 
-navLinks
-.querySelectorAll("a")
-.forEach(link=>{
+/* =========================
+STAR FIELD
+========================= */
 
-link.addEventListener("click",()=>{
+const starField =
+document.querySelector(".star-field");
 
-menuToggle.classList.remove("active");
+if(starField){
 
-navLinks.classList.remove("active");
+const starCount =
+window.innerWidth < 800 ? 80 : 180;
 
-});
+for(let i = 0; i < starCount; i++){
 
-});
+const star =
+document.createElement("span");
+
+star.className = "star";
+
+const size =
+Math.random() * 2.2 + .5;
+
+star.style.width =
+`${size}px`;
+
+star.style.height =
+`${size}px`;
+
+star.style.left =
+`${Math.random() * 100}%`;
+
+star.style.top =
+`${Math.random() * 100}%`;
+
+star.style.opacity =
+Math.random() * .7 + .15;
+
+star.style.animationDuration =
+`${Math.random() * 4 + 3}s`;
+
+star.style.animationDelay =
+`${Math.random() * 5}s`;
+
+starField.appendChild(star);
+
+}
 
 }
 
 
 /* =========================
-SMOOTH INTERNAL LINKS
+SHOOTING STARS
 ========================= */
 
-document
-.querySelectorAll('a[href^="#"]')
-.forEach(anchor=>{
+const shootingLayer =
+document.querySelector(".shooting-stars");
 
-anchor.addEventListener("click",event=>{
+function createShootingStar(){
 
-const targetId =
-anchor.getAttribute("href");
+if(!shootingLayer) return;
 
-if(targetId === "#") return;
+const shootingStar =
+document.createElement("span");
 
-const target =
-document.querySelector(targetId);
+shootingStar.className =
+"shooting-star";
 
-if(!target) return;
+shootingStar.style.left =
+`${Math.random() * 75}%`;
 
-event.preventDefault();
+shootingStar.style.top =
+`${Math.random() * 45}%`;
 
-target.scrollIntoView({
+shootingStar.style.animationDuration =
+`${Math.random() * 1.2 + 1.2}s`;
 
-behavior:"smooth",
+shootingLayer.appendChild(shootingStar);
 
-block:"start"
+setTimeout(()=>{
 
-});
+shootingStar.remove();
 
-});
+},3000);
 
-});
+}
+
+if(shootingLayer){
+
+setInterval(()=>{
+
+if(Math.random() > .35){
+
+createShootingStar();
+
+}
+
+},2600);
+
+}
+
+
+/* =========================
+MOUSE GLOW
+========================= */
+
+const mouseGlow =
+document.querySelector(".mouse-glow");
+
+if(
+mouseGlow &&
+window.matchMedia("(pointer:fine)").matches
+){
+
+window.addEventListener(
+"pointermove",
+event=>{
+
+mouseGlow.style.transform =
+`translate3d(
+${event.clientX}px,
+${event.clientY}px,
+0
+) translate(-50%,-50%)`;
+
+},
+{
+passive:true
+}
+);
+
+}
 
 
 /* =========================
@@ -6330,15 +8506,16 @@ SCROLL REVEAL
 const revealElements =
 document.querySelectorAll(".reveal");
 
-
 const revealObserver =
-new IntersectionObserver(entries=>{
+new IntersectionObserver(
+
+entries=>{
 
 entries.forEach(entry=>{
 
 if(entry.isIntersecting){
 
-entry.target.classList.add("active");
+entry.target.classList.add("visible");
 
 revealObserver.unobserve(
 entry.target
@@ -6348,15 +8525,18 @@ entry.target
 
 });
 
-},{
+},
+
+{
 
 threshold:.12,
 
 rootMargin:
-"0px 0px -40px 0px"
+"0px 0px -60px 0px"
 
-});
+}
 
+);
 
 revealElements.forEach(element=>{
 
@@ -6366,29 +8546,104 @@ revealObserver.observe(element);
 
 
 /* =========================
+NAVBAR SCROLL
+========================= */
+
+const navbar =
+document.querySelector(".navbar");
+
+window.addEventListener(
+"scroll",
+()=>{
+
+if(!navbar) return;
+
+navbar.classList.toggle(
+"scrolled",
+window.scrollY > 40
+);
+
+},
+{
+passive:true
+}
+);
+
+
+/* =========================
+MOBILE MENU
+========================= */
+
+const menuToggle =
+document.querySelector(".menu-toggle");
+
+const navLinks =
+document.querySelector(".nav-links");
+
+if(menuToggle && navLinks){
+
+menuToggle.addEventListener(
+"click",
+()=>{
+
+menuToggle.classList.toggle("active");
+
+navLinks.classList.toggle("active");
+
+document.body.classList.toggle(
+"menu-open"
+);
+
+}
+);
+
+navLinks
+.querySelectorAll("a")
+.forEach(link=>{
+
+link.addEventListener(
+"click",
+()=>{
+
+menuToggle.classList.remove("active");
+
+navLinks.classList.remove("active");
+
+document.body.classList.remove(
+"menu-open"
+);
+
+}
+);
+
+});
+
+}
+
+
+/* =========================
 FAQ ACCORDION
 ========================= */
 
 const faqItems =
 document.querySelectorAll(".faq-item");
 
-
 faqItems.forEach(item=>{
 
-const question =
+const button =
 item.querySelector(".faq-question");
 
 const answer =
 item.querySelector(".faq-answer");
 
-if(!question || !answer) return;
+if(!button || !answer) return;
 
+button.addEventListener(
+"click",
+()=>{
 
-question.addEventListener("click",()=>{
-
-const alreadyOpen =
+const active =
 item.classList.contains("active");
-
 
 faqItems.forEach(otherItem=>{
 
@@ -6405,8 +8660,7 @@ otherAnswer.style.maxHeight = null;
 
 });
 
-
-if(!alreadyOpen){
+if(!active){
 
 item.classList.add("active");
 
@@ -6415,7 +8669,8 @@ answer.scrollHeight + "px";
 
 }
 
-});
+}
+);
 
 });
 
@@ -6424,138 +8679,146 @@ answer.scrollHeight + "px";
 COPY CONTRACT
 ========================= */
 
-const copyButton =
-document.getElementById("copyContract");
-
-const copyText =
-document.getElementById("copyText");
-
-
-if(copyButton){
-
-copyButton.addEventListener("click",async()=>{
+async function copyRelaxContract(
+button,
+textElement
+){
 
 try{
 
 await navigator.clipboard.writeText(
-RELAX.contract
+RELAX_CA
 );
 
-copyButton.classList.add("copied");
+if(textElement){
 
-if(copyText){
-
-copyText.textContent =
+textElement.textContent =
 "COPIED ✓";
+
+}else if(button){
+
+button.textContent =
+"COPIED ✓";
+
+}
+
+if(button){
+
+button.classList.add("copied");
 
 }
 
 setTimeout(()=>{
 
-copyButton.classList.remove("copied");
+if(textElement){
 
-if(copyText){
-
-copyText.textContent =
+textElement.textContent =
 "COPY CONTRACT";
+
+}else if(button){
+
+button.textContent =
+"COPY";
+
+}
+
+if(button){
+
+button.classList.remove("copied");
 
 }
 
 },1800);
 
-}
+}catch(error){
 
-catch(error){
-
-const textarea =
-document.createElement("textarea");
-
-textarea.value =
-RELAX.contract;
-
-textarea.style.position =
-"fixed";
-
-textarea.style.opacity =
-"0";
-
-document.body.appendChild(
-textarea
+console.warn(
+"Contract copy failed",
+error
 );
 
-textarea.select();
-
-document.execCommand("copy");
-
-textarea.remove();
-
-
-if(copyText){
-
-copyText.textContent =
-"COPIED ✓";
-
-setTimeout(()=>{
-
-copyText.textContent =
-"COPY CONTRACT";
-
-},1800);
-
 }
 
 }
 
-});
+
+const primaryCopy =
+document.querySelector("#copyContract");
+
+const primaryCopyText =
+document.querySelector("#copyText");
+
+if(primaryCopy){
+
+primaryCopy.addEventListener(
+"click",
+()=>{
+
+copyRelaxContract(
+primaryCopy,
+primaryCopyText
+);
+
+}
+);
+
+}
+
+
+const secondCopy =
+document.querySelector(
+"#copyContractSecond"
+);
+
+const secondCopyText =
+document.querySelector(
+"#copyTextSecond"
+);
+
+if(secondCopy){
+
+secondCopy.addEventListener(
+"click",
+()=>{
+
+copyRelaxContract(
+secondCopy,
+secondCopyText
+);
+
+}
+);
+
+}
+
+
+const footerCopy =
+document.querySelector(
+"#footerCopyContract"
+);
+
+if(footerCopy){
+
+footerCopy.addEventListener(
+"click",
+()=>{
+
+copyRelaxContract(
+footerCopy,
+null
+);
+
+}
+);
 
 }
 
 
 /* =========================
-LIVE CLOCK
+MARKET FORMAT
 ========================= */
 
-const liveClock =
-document.getElementById("liveClock");
-
-
-function updateClock(){
-
-if(!liveClock) return;
-
-const now =
-new Date();
-
-liveClock.textContent =
-now.toLocaleTimeString(
-"en-GB",
-{
-
-hour:"2-digit",
-
-minute:"2-digit",
-
-second:"2-digit"
-
-}
-);
-
-}
-
-
-updateClock();
-
-setInterval(
-updateClock,
-1000
-);
-
-
-/* =========================
-NUMBER FORMATTER
-========================= */
-
-function formatMarketNumber(value){
+function formatMoney(value){
 
 const number =
 Number(value);
@@ -6566,7 +8829,6 @@ return "—";
 
 }
 
-
 if(number >= 1000000000){
 
 return "$" +
@@ -6575,7 +8837,6 @@ return "$" +
 "B";
 
 }
-
 
 if(number >= 1000000){
 
@@ -6586,7 +8847,6 @@ return "$" +
 
 }
 
-
 if(number >= 1000){
 
 return "$" +
@@ -6596,113 +8856,92 @@ return "$" +
 
 }
 
-
 return "$" +
 number.toFixed(2);
 
 }
 
 
-function formatRelaxPrice(value){
+function formatPrice(value){
 
-const price =
+const number =
 Number(value);
 
-if(!Number.isFinite(price)){
+if(!Number.isFinite(number)){
 
 return "—";
 
 }
 
-
-if(price >= 1){
+if(number >= 1){
 
 return "$" +
-price.toFixed(4);
+number.toFixed(4);
 
 }
 
-
-if(price >= .01){
+if(number >= .01){
 
 return "$" +
-price.toFixed(6);
+number.toFixed(6);
 
 }
 
-
 return "$" +
-price.toFixed(10);
+number.toFixed(10)
+.replace(/0+$/,"");
 
 }
 
 
 /* =========================
-DEXSCREENER LIVE MARKET
+LIVE DEXSCREENER DATA
 ========================= */
 
+async function loadRelaxMarket(){
+
 const livePrice =
-document.getElementById("livePrice");
+document.querySelector("#livePrice");
 
 const priceChange =
-document.getElementById("priceChange");
+document.querySelector("#priceChange");
 
 const marketCap =
-document.getElementById("marketCap");
+document.querySelector("#marketCap");
 
 const liquidity =
-document.getElementById("liquidity");
+document.querySelector("#liquidity");
 
 const volume24h =
-document.getElementById("volume24h");
+document.querySelector("#volume24h");
 
 const marketStatus =
-document.getElementById("marketStatus");
-
-
-async function fetchRelaxMarket(){
+document.querySelector("#marketStatus");
 
 try{
 
-if(marketStatus){
-
-marketStatus.textContent =
-"SYNCING MARKET DATA";
-
-}
-
-
 const response =
 await fetch(
-
-"https://api.dexscreener.com/latest/dex/pairs/solana/" +
-RELAX.dexPair,
-
+`https://api.dexscreener.com/latest/dex/pairs/solana/${RELAX_PAIR}`,
 {
-
 cache:"no-store"
-
 }
-
 );
-
 
 if(!response.ok){
 
 throw new Error(
-"Market response failed"
+"Market API unavailable"
 );
 
 }
-
 
 const data =
 await response.json();
 
 const pair =
 data.pair ||
-data.pairs?.[0];
-
+(data.pairs && data.pairs[0]);
 
 if(!pair){
 
@@ -6716,9 +8955,7 @@ throw new Error(
 if(livePrice){
 
 livePrice.textContent =
-formatRelaxPrice(
-pair.priceUsd
-);
+formatPrice(pair.priceUsd);
 
 }
 
@@ -6728,49 +8965,28 @@ Number(
 pair.priceChange?.h24
 );
 
-
 if(priceChange){
+
+if(Number.isFinite(change)){
+
+priceChange.textContent =
+`${change >= 0 ? "+" : ""}${change.toFixed(2)}% / 24H`;
 
 priceChange.classList.remove(
 "positive",
 "negative"
 );
 
-
-if(Number.isFinite(change)){
-
-const prefix =
-change > 0 ? "+" : "";
-
-priceChange.textContent =
-prefix +
-change.toFixed(2) +
-"% / 24H";
-
-
-if(change > 0){
-
 priceChange.classList.add(
-"positive"
+change >= 0
+? "positive"
+: "negative"
 );
 
-}
-
-
-if(change < 0){
-
-priceChange.classList.add(
-"negative"
-);
-
-}
-
-}
-
-else{
+}else{
 
 priceChange.textContent =
-"24H DATA UNAVAILABLE";
+"24H CHANGE UNAVAILABLE";
 
 }
 
@@ -6780,11 +8996,9 @@ priceChange.textContent =
 if(marketCap){
 
 marketCap.textContent =
-formatMarketNumber(
-
+formatMoney(
 pair.marketCap ||
 pair.fdv
-
 );
 
 }
@@ -6793,7 +9007,7 @@ pair.fdv
 if(liquidity){
 
 liquidity.textContent =
-formatMarketNumber(
+formatMoney(
 pair.liquidity?.usd
 );
 
@@ -6803,7 +9017,7 @@ pair.liquidity?.usd
 if(volume24h){
 
 volume24h.textContent =
-formatMarketNumber(
+formatMoney(
 pair.volume?.h24
 );
 
@@ -6813,32 +9027,29 @@ pair.volume?.h24
 if(marketStatus){
 
 marketStatus.textContent =
-"LIVE MARKET CONNECTED";
+"MARKET DATA CONNECTED";
 
 }
 
-}
 
-catch(error){
+}catch(error){
 
-console.error(
-"RELAX market error:",
+console.warn(
+"RELAX market data error",
 error
 );
-
 
 if(livePrice){
 
 livePrice.textContent =
-"MARKET DATA OFFLINE";
+"VIEW LIVE CHART";
 
 }
-
 
 if(priceChange){
 
 priceChange.textContent =
-"RETRYING CONNECTION";
+"MARKET FEED TEMPORARILY UNAVAILABLE";
 
 priceChange.classList.remove(
 "positive",
@@ -6847,11 +9058,10 @@ priceChange.classList.remove(
 
 }
 
-
 if(marketStatus){
 
 marketStatus.textContent =
-"MARKET CONNECTION RETRYING";
+"DEX FEED OFFLINE";
 
 }
 
@@ -6860,372 +9070,129 @@ marketStatus.textContent =
 }
 
 
-fetchRelaxMarket();
-
+loadRelaxMarket();
 
 setInterval(
-fetchRelaxMarket,
+loadRelaxMarket,
 30000
 );
 
 
 /* =========================
-ANIMATED STAR FIELD
+LIVE CLOCK
 ========================= */
 
-const starField =
-document.querySelector(".stars");
+function updateRelaxClock(){
 
-
-if(starField){
-
-const starCount =
-window.innerWidth < 700
-? 45
-: 100;
-
-
-for(
-let i = 0;
-i < starCount;
-i++
-){
-
-const star =
-document.createElement("span");
-
-star.className =
-"generated-star";
-
-const size =
-Math.random() * 2.2 + .5;
-
-star.style.width =
-size + "px";
-
-star.style.height =
-size + "px";
-
-star.style.left =
-Math.random() * 100 + "%";
-
-star.style.top =
-Math.random() * 100 + "%";
-
-star.style.opacity =
-Math.random() * .7 + .15;
-
-star.style.animationDuration =
-Math.random() * 5 + 3 + "s";
-
-star.style.animationDelay =
-Math.random() * 5 + "s";
-
-starField.appendChild(star);
-
-}
-
-}
-
-
-/* =========================
-SHOOTING STARS
-========================= */
-
-const shootingField =
+const clock =
 document.querySelector(
-".shooting-stars"
+"#liveClock"
 );
 
+if(!clock) return;
 
-function createShootingStar(){
+const now =
+new Date();
 
-if(!shootingField) return;
-
-const star =
-document.createElement("span");
-
-star.className =
-"shooting-star";
-
-star.style.top =
-Math.random() * 60 + "%";
-
-star.style.left =
-Math.random() * 70 + "%";
-
-star.style.animationDuration =
-Math.random() * 1.5 +
-1.2 +
-"s";
-
-shootingField.appendChild(
-star
-);
-
-
-setTimeout(()=>{
-
-star.remove();
-
-},3000);
-
-}
-
-
-if(shootingField){
-
-setInterval(()=>{
-
-if(Math.random() > .45){
-
-createShootingStar();
-
-}
-
-},2800);
-
-}
-
-
-/* =========================
-FLOATING DUST
-========================= */
-
-const dustField =
-document.querySelector(".dust");
-
-
-if(dustField){
-
-const dustCount =
-window.innerWidth < 700
-? 18
-: 45;
-
-
-for(
-let i = 0;
-i < dustCount;
-i++
-){
-
-const dust =
-document.createElement("span");
-
-dust.className =
-"dust-particle";
-
-const size =
-Math.random() * 3 + 1;
-
-dust.style.width =
-size + "px";
-
-dust.style.height =
-size + "px";
-
-dust.style.left =
-Math.random() * 100 + "%";
-
-dust.style.top =
-Math.random() * 100 + "%";
-
-dust.style.animationDuration =
-Math.random() * 15 +
-10 +
-"s";
-
-dust.style.animationDelay =
-Math.random() * -20 +
-"s";
-
-dustField.appendChild(dust);
-
-}
-
-}
-
-
-/* =========================
-MOUSE GLOW
-========================= */
-
-const mouseGlow =
-document.querySelector(".mouse-glow");
-
-
-if(
-mouseGlow &&
-window.matchMedia(
-"(pointer:fine)"
-).matches
-){
-
-window.addEventListener(
-"pointermove",
-event=>{
-
-mouseGlow.style.transform =
-
-"translate3d(" +
-
-(event.clientX - 250) +
-
-"px," +
-
-(event.clientY - 250) +
-
-"px,0)";
-
-},
-
+clock.textContent =
+now.toLocaleTimeString(
+"en-US",
 {
 
-passive:true
+hour:"2-digit",
+
+minute:"2-digit",
+
+second:"2-digit",
+
+hour12:false
+
+}
+);
 
 }
 
+
+updateRelaxClock();
+
+setInterval(
+updateRelaxClock,
+1000
 );
+
+
+/* =========================
+CURRENT YEAR
+========================= */
+
+const currentYear =
+document.querySelector(
+"#currentYear"
+);
+
+if(currentYear){
+
+currentYear.textContent =
+new Date().getFullYear();
 
 }
 
 
 /* =========================
-CUSTOM CURSOR
+SMOOTH ANCHOR SCROLL
 ========================= */
-
-const cursor =
-document.querySelector(".cursor");
-
-const cursorDot =
-document.querySelector(".cursor-dot");
-
-
-if(
-cursor &&
-cursorDot &&
-window.matchMedia(
-"(pointer:fine)"
-).matches
-){
-
-window.addEventListener(
-"mousemove",
-event=>{
-
-cursor.style.left =
-event.clientX + "px";
-
-cursor.style.top =
-event.clientY + "px";
-
-cursorDot.style.left =
-event.clientX + "px";
-
-cursorDot.style.top =
-event.clientY + "px";
-
-},
-
-{
-
-passive:true
-
-}
-
-);
-
 
 document
 .querySelectorAll(
-"a,button,.card,.code-card,.market-stat"
+'a[href^="#"]'
 )
-.forEach(element=>{
+.forEach(anchor=>{
 
-element.addEventListener(
-"mouseenter",
-()=>{
+anchor.addEventListener(
+"click",
+event=>{
 
-cursor.classList.add(
-"cursor-active"
-);
+const href =
+anchor.getAttribute("href");
 
-}
-);
+if(!href || href === "#") return;
 
+const target =
+document.querySelector(href);
 
-element.addEventListener(
-"mouseleave",
-()=>{
+if(!target) return;
 
-cursor.classList.remove(
-"cursor-active"
-);
+event.preventDefault();
+
+target.scrollIntoView({
+
+behavior:"smooth",
+
+block:"start"
+
+});
 
 }
 );
 
 });
 
-}
-
-
-/* =========================
-NAVBAR SCROLL STATE
-========================= */
-
-const navbar =
-document.querySelector(".navbar");
-
-
-function updateNavbar(){
-
-if(!navbar) return;
-
-
-if(window.scrollY > 40){
-
-navbar.classList.add(
-"scrolled"
-);
-
-}
-
-else{
-
-navbar.classList.remove(
-"scrolled"
-);
-
-}
-
-}
-
-
-updateNavbar();
-
-
-window.addEventListener(
-"scroll",
-updateNavbar,
-{
-
-passive:true
-
-}
-);
-
 
 /* =========================
 VIDEO SAFETY
+MUTED AUTOPLAY
 ========================= */
 
-document
-.querySelectorAll("video")
-.forEach(video=>{
+const backgroundVideos =
+document.querySelectorAll(
+"video"
+);
+
+backgroundVideos.forEach(video=>{
 
 video.muted = true;
+
+video.defaultMuted = true;
 
 video.volume = 0;
 
@@ -7239,32 +9206,15 @@ video.setAttribute(
 ""
 );
 
-
 const playPromise =
 video.play();
 
-
 if(
-playPromise !== undefined
+playPromise &&
+typeof playPromise.catch === "function"
 ){
 
-playPromise.catch(()=>{
-
-video.addEventListener(
-"canplay",
-()=>{
-
-video.play().catch(()=>{});
-
-},
-{
-
-once:true
-
-}
-);
-
-});
+playPromise.catch(()=>{});
 
 }
 
@@ -7272,20 +9222,54 @@ once:true
 
 
 /* =========================
-RELAX ONLINE
+PARALLAX WAR BACKGROUND
+========================= */
+
+const heroVideo =
+document.querySelector(
+".hero-video"
+);
+
+if(
+heroVideo &&
+window.matchMedia(
+"(min-width:801px)"
+).matches
+){
+
+window.addEventListener(
+"scroll",
+()=>{
+
+const scroll =
+Math.min(
+window.scrollY,
+window.innerHeight
+);
+
+heroVideo.style.transform =
+`translate3d(
+0,
+${scroll * .08}px,
+0
+) scale(1.06)`;
+
+},
+{
+passive:true
+}
+);
+
+}
+
+
+/* =========================
+RELAX READY
 ========================= */
 
 console.log(
-"%c RELAX ",
-"background:#14F195;color:#050713;font-size:20px;font-weight:bold;padding:10px;"
-);
-
-console.log(
-"0 FEAR. 0 PANIC. 0 REGRETS."
-);
-
-console.log(
-"JUST RELAX BRO."
+"%c JUST RELAX BRO. ",
+"background:#050713;color:#14F195;padding:10px 18px;font-weight:bold;"
 );
 
 </script>
@@ -7295,259 +9279,26 @@ console.log(
 <style>
 
 /* =========================
-GENERATED STARS
+JS SUPPORT
 ========================= */
 
-.generated-star{
+body.loading{
 
-position:absolute;
-
-display:block;
-
-border-radius:50%;
-
-background:white;
-
-box-shadow:
-0 0 7px rgba(255,255,255,.7);
-
-animation:
-starPulse 4s ease-in-out infinite;
+overflow:hidden;
 
 }
 
-
-@keyframes starPulse{
-
-0%,
-100%{
-
-transform:scale(.6);
-
-opacity:.15;
-
-}
-
-
-50%{
-
-transform:scale(1.5);
-
-opacity:.9;
-
-}
-
-}
-
-
-
-/* =========================
-SHOOTING STARS
-========================= */
-
-.shooting-star{
-
-position:absolute;
-
-width:140px;
-
-height:1px;
-
-background:linear-gradient(
-90deg,
-transparent,
-rgba(255,255,255,.9)
-);
-
-transform:rotate(-35deg);
-
-filter:
-drop-shadow(
-0 0 6px rgba(91,124,255,.8)
-);
-
-animation:
-shootStar 1.8s linear forwards;
-
-}
-
-
-@keyframes shootStar{
-
-0%{
-
-transform:
-translate3d(0,0,0)
-rotate(-35deg);
-
-opacity:0;
-
-}
-
-
-10%{
-
-opacity:1;
-
-}
-
-
-100%{
-
-transform:
-translate3d(
-500px,
-500px,
-0
-)
-rotate(-35deg);
-
-opacity:0;
-
-}
-
-}
-
-
-
-/* =========================
-DUST
-========================= */
-
-.dust-particle{
-
-position:absolute;
-
-display:block;
-
-border-radius:50%;
-
-background:rgba(
-180,
-195,
-255,
-.35
-);
-
-filter:blur(.5px);
-
-animation:
-dustFloat 18s linear infinite;
-
-}
-
-
-@keyframes dustFloat{
-
-0%{
-
-transform:
-translate3d(
-0,
-100px,
-0
-);
-
-opacity:0;
-
-}
-
-
-20%{
-
-opacity:.6;
-
-}
-
-
-80%{
-
-opacity:.3;
-
-}
-
-
-100%{
-
-transform:
-translate3d(
-80px,
--500px,
-0
-);
-
-opacity:0;
-
-}
-
-}
-
-
-
-/* =========================
-CURSOR ACTIVE
-========================= */
-
-.cursor.cursor-active{
-
-width:55px;
-
-height:55px;
-
-border-color:
-var(--green);
-
-box-shadow:
-0 0 25px
-rgba(20,241,149,.18);
-
-}
-
-
-.cursor-dot{
-
-transition:
-width .2s,
-height .2s;
-
-}
-
-
-
-/* =========================
-NAVBAR SCROLLED
-========================= */
-
-.navbar.scrolled{
-
-background:
-rgba(5,7,19,.82);
-
-border-color:
-rgba(130,150,220,.2);
-
-box-shadow:
-0 15px 50px
-rgba(0,0,0,.28);
-
-}
-
-
-
-/* =========================
-LOADER EXIT
-========================= */
 
 .loader{
 
 transition:
-opacity .8s ease,
-visibility .8s ease;
+opacity .7s ease,
+visibility .7s ease;
 
 }
 
 
-.loader.loader-hidden{
+.loader-hidden{
 
 opacity:0;
 
@@ -7558,49 +9309,341 @@ pointer-events:none;
 }
 
 
+.relax-logo{
 
-/* =========================
-VIDEO PERFORMANCE
-========================= */
+animation:
+relaxFloat 6s ease-in-out infinite !important;
 
-video{
-
-transform:
-translateZ(0);
-
-backface-visibility:hidden;
+transform-origin:center center !important;
 
 }
 
 
+@keyframes relaxFloat{
+
+0%{
+
+transform:
+translate3d(0,0,0);
+
+}
+
+50%{
+
+transform:
+translate3d(0,-14px,0);
+
+}
+
+100%{
+
+transform:
+translate3d(0,0,0);
+
+}
+
+}
+
 
 /* =========================
-REDUCED MOTION
+STARS
 ========================= */
+
+.star-field{
+
+position:fixed;
+
+inset:0;
+
+z-index:1;
+
+overflow:hidden;
+
+pointer-events:none;
+
+}
+
+
+.star{
+
+position:absolute;
+
+display:block;
+
+border-radius:50%;
+
+background:white;
+
+box-shadow:
+0 0 6px rgba(255,255,255,.8);
+
+animation:
+starTwinkle 4s ease-in-out infinite;
+
+}
+
+
+@keyframes starTwinkle{
+
+0%,
+100%{
+
+transform:scale(.65);
+
+opacity:.2;
+
+}
+
+50%{
+
+transform:scale(1.35);
+
+opacity:1;
+
+}
+
+}
+
+
+/* =========================
+SHOOTING STARS
+========================= */
+
+.shooting-stars{
+
+position:fixed;
+
+inset:0;
+
+z-index:2;
+
+overflow:hidden;
+
+pointer-events:none;
+
+}
+
+
+.shooting-star{
+
+position:absolute;
+
+width:140px;
+
+height:1px;
+
+background:
+linear-gradient(
+90deg,
+rgba(255,255,255,0),
+rgba(255,255,255,.95)
+);
+
+filter:
+drop-shadow(
+0 0 6px rgba(91,124,255,.8)
+);
+
+transform:
+rotate(-35deg)
+translate3d(0,0,0);
+
+animation:
+shootingStarMove 1.8s linear forwards;
+
+}
+
+
+@keyframes shootingStarMove{
+
+0%{
+
+opacity:0;
+
+transform:
+rotate(-35deg)
+translate3d(0,0,0);
+
+}
+
+10%{
+
+opacity:1;
+
+}
+
+100%{
+
+opacity:0;
+
+transform:
+rotate(-35deg)
+translate3d(900px,0,0);
+
+}
+
+}
+
+
+/* =========================
+REVEAL
+========================= */
+
+.reveal{
+
+opacity:0;
+
+transform:
+translate3d(0,45px,0);
+
+transition:
+opacity .9s ease,
+transform .9s cubic-bezier(
+.2,.7,.2,1
+);
+
+}
+
+
+.reveal.visible{
+
+opacity:1;
+
+transform:
+translate3d(0,0,0);
+
+}
+
+
+/* =========================
+NAV SCROLL
+========================= */
+
+.navbar.scrolled{
+
+background:
+rgba(4,6,16,.86);
+
+border-color:
+rgba(255,255,255,.10);
+
+box-shadow:
+0 20px 60px rgba(0,0,0,.25);
+
+}
+
+
+/* =========================
+COPY SUCCESS
+========================= */
+
+.copied{
+
+box-shadow:
+0 0 30px rgba(20,241,149,.25);
+
+}
+
+
+/* =========================
+MOBILE PERFORMANCE
+========================= */
+
+@media(max-width:800px){
+
+.mouse-glow{
+
+display:none;
+
+}
+
+
+.star-field{
+
+opacity:.75;
+
+}
+
+
+.shooting-star{
+
+width:90px;
+
+}
+
+
+.reveal{
+
+transform:
+translate3d(0,28px,0);
+
+}
+
+
+.relax-logo{
+
+animation:
+relaxFloatMobile
+5s ease-in-out infinite !important;
+
+}
+
+
+@keyframes relaxFloatMobile{
+
+0%{
+
+transform:
+translate3d(0,0,0);
+
+}
+
+50%{
+
+transform:
+translate3d(0,-8px,0);
+
+}
+
+100%{
+
+transform:
+translate3d(0,0,0);
+
+}
+
+}
+
+}
+
 
 @media(
 prefers-reduced-motion:reduce
 ){
 
-html{
+*{
 
-scroll-behavior:auto;
+scroll-behavior:auto !important;
 
 }
 
 
-*,
-*::before,
-*::after{
+.relax-logo,
+.star,
+.shooting-star{
 
-animation-duration:
-.01ms !important;
+animation:none !important;
 
-animation-iteration-count:
-1 !important;
+}
 
-transition-duration:
-.01ms !important;
+
+.reveal{
+
+opacity:1;
+
+transform:none;
+
+transition:none;
 
 }
 
@@ -7611,209 +9654,3 @@ transition-duration:
 </body>
 
 </html>
-
-<!-- RELAX V3 SCROLL FIX -->
-
-<style>
-
-html{
-overflow-x:hidden !important;
-overflow-y:auto !important;
-height:auto !important;
-}
-
-body{
-overflow-x:hidden !important;
-overflow-y:auto !important;
-height:auto !important;
-min-height:100vh;
-touch-action:pan-y !important;
-}
-
-.stars,
-.shooting-stars,
-.dust,
-.mouse-glow,
-.cursor,
-.cursor-dot,
-.hero-overlay,
-.final-overlay{
-pointer-events:none !important;
-}
-
-body.loaded{
-overflow-y:auto !important;
-}
-
-@media(max-width:768px){
-
-html,
-body{
-overflow-y:auto !important;
--webkit-overflow-scrolling:touch;
-touch-action:pan-y !important;
-}
-
-.cursor,
-.cursor-dot,
-.mouse-glow{
-display:none !important;
-}
-
-}
-
-</style>
-
-<!-- =========================
-RELAX MARKET STAGE FIX
-========================= -->
-
-<script>
-
-(function(){
-
-const liquidityValue =
-document.getElementById("liquidity");
-
-if(!liquidityValue) return;
-
-const liquidityCard =
-liquidityValue.closest(".market-stat");
-
-if(!liquidityCard) return;
-
-const liquidityLabel =
-liquidityCard.querySelector("span");
-
-
-async function updateRelaxMarketStage(){
-
-try{
-
-const response = await fetch(
-
-"https://api.dexscreener.com/token-pairs/v1/solana/" +
-RELAX.contract,
-
-{
-cache:"no-store"
-}
-
-);
-
-if(!response.ok){
-
-throw new Error("Market stage unavailable");
-
-}
-
-const pairs = await response.json();
-
-const activePair = pairs.find(pair =>
-
-Number(pair?.liquidity?.usd) > 0
-
-);
-
-
-if(activePair){
-
-if(liquidityLabel){
-
-liquidityLabel.textContent =
-"LIQUIDITY";
-
-}
-
-liquidityValue.textContent =
-formatMarketNumber(
-activePair.liquidity.usd
-);
-
-liquidityValue.classList.remove(
-"bonding-stage"
-);
-
-}
-
-else{
-
-if(liquidityLabel){
-
-liquidityLabel.textContent =
-"MARKET STAGE";
-
-}
-
-liquidityValue.textContent =
-"BONDING CURVE";
-
-liquidityValue.classList.add(
-"bonding-stage"
-);
-
-}
-
-}
-
-catch(error){
-
-if(liquidityLabel){
-
-liquidityLabel.textContent =
-"MARKET STAGE";
-
-}
-
-liquidityValue.textContent =
-"BONDING CURVE";
-
-liquidityValue.classList.add(
-"bonding-stage"
-);
-
-}
-
-}
-
-
-updateRelaxMarketStage();
-
-setInterval(
-updateRelaxMarketStage,
-30000
-);
-
-})();
-
-</script>
-
-
-<style>
-
-.bonding-stage{
-
-font-size:
-clamp(16px,2vw,28px)
-!important;
-
-background:
-linear-gradient(
-90deg,
-#14F195,
-#5B7CFF,
-#9945FF
-);
-
--webkit-background-clip:text;
-
-background-clip:text;
-
-color:transparent !important;
-
-letter-spacing:1px;
-
-}
-
-</style>
-
