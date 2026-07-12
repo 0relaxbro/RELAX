@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RELAX LAB | RELAX Score — Experiment 001</title>
+<meta name="description" content="An experimental, work-in-progress look at analyzing on-chain wallet behavior for FOMO and panic signals. Sample data only, not a live product.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#050713">
+
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@600;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+
+:root{
+--bg:#050713;
+--text:#F5F7FF;
+--muted:#929BB5;
+--green:#14F195;
+--purple:#9945FF;
+--blue:#5B7CFF;
+--border:rgba(132,151,220,.18);
+--orbitron:'Orbitron',sans-serif;
+--inter:'Inter',sans-serif;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+background:var(--bg);
+color:var(--text);
+font-family:var(--inter);
+min-height:100vh;
+padding:40px 20px 100px;
+}
+
+.wrap{
+max-width:760px;
+margin:0 auto;
+}
+
+.back{
+display:inline-flex;
+align-items:center;
+gap:8px;
+color:var(--muted);
+text-decoration:none;
+font-size:13px;
+letter-spacing:.5px;
+margin-bottom:50px;
+}
+
+.back:hover{
+color:var(--text);
+}
+
+.lab-tag{
+display:inline-block;
+padding:7px 16px;
+border-radius:999px;
+border:1px solid rgba(153,69,255,.4);
+background:rgba(153,69,255,.08);
+font-family:var(--orbitron);
+font-size:10px;
+font-weight:800;
+letter-spacing:2px;
+color:var(--purple);
+margin-bottom:24px;
+}
+
+h1{
+font-family:var(--orbitron);
+font-size:clamp(32px,6vw,52px);
+font-weight:900;
+line-height:1.15;
+margin-bottom:20px;
+}
+
+h1 span{
+background:linear-gradient(90deg,var(--green),var(--blue),var(--purple));
+-webkit-background-clip:text;
+background-clip:text;
+color:transparent;
+}
+
+.intro{
+color:var(--muted);
+font-size:16px;
+line-height:1.9;
+max-width:600px;
+margin-bottom:20px;
+}
+
+.notice{
+display:flex;
+gap:14px;
+align-items:flex-start;
+padding:18px 20px;
+border-radius:14px;
+border:1px solid rgba(255,95,135,.35);
+background:rgba(255,95,135,.06);
+margin-bottom:50px;
+}
+
+.notice strong{
+display:block;
+font-family:var(--orbitron);
+font-size:11px;
+letter-spacing:1.5px;
+color:#FF5F87;
+margin-bottom:6px;
+}
+
+.notice p{
+font-size:13.5px;
+line-height:1.7;
+color:var(--muted);
+}
+
+.demo-panel{
+border:1px solid var(--border);
+border-radius:22px;
+background:rgba(9,13,29,.75);
+padding:40px;
+margin-bottom:40px;
+}
+
+.demo-wallet{
+display:flex;
+justify-content:space-between;
+align-items:center;
+flex-wrap:wrap;
+gap:14px;
+padding-bottom:26px;
+margin-bottom:30px;
+border-bottom:1px solid var(--border);
+}
+
+.demo-wallet span{
+display:block;
+font-family:var(--orbitron);
+font-size:9px;
+letter-spacing:2px;
+color:var(--muted);
+margin-bottom:8px;
+}
+
+.demo-wallet code{
+font-family:var(--orbitron);
+font-size:14px;
+color:#C9D0E2;
+}
+
+.sample-flag{
+padding:6px 12px;
+border-radius:8px;
+background:rgba(255,95,135,.12);
+border:1px solid rgba(255,95,135,.4);
+color:#FF5F87;
+font-family:var(--orbitron);
+font-size:9px;
+font-weight:800;
+letter-spacing:1.5px;
+}
+
+.score-grid{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:20px;
+margin-bottom:30px;
+}
+
+.score-item{
+text-align:center;
+padding:24px 12px;
+border-radius:16px;
+border:1px solid var(--border);
+background:rgba(255,255,255,.02);
+}
+
+.score-item span{
+display:block;
+font-family:var(--orbitron);
+font-size:9px;
+letter-spacing:2px;
+color:var(--muted);
+margin-bottom:14px;
+}
+
+.score-item strong{
+font-family:var(--orbitron);
+font-size:clamp(26px,5vw,38px);
+font-weight:900;
+}
+
+.score-item.fomo strong{color:var(--blue);}
+.score-item.panic strong{color:#FF5F87;}
+.score-item.calm strong{color:var(--green);}
+
+.score-item small{
+display:block;
+margin-top:8px;
+font-size:11px;
+color:var(--muted);
+}
+
+.verdict{
+padding:22px 24px;
+border-radius:14px;
+background:rgba(20,241,149,.05);
+border:1px solid rgba(20,241,149,.25);
+font-size:14.5px;
+line-height:1.8;
+color:#C9D0E2;
+}
+
+.verdict strong{
+color:var(--green);
+}
+
+.status-line{
+display:flex;
+align-items:center;
+gap:10px;
+font-family:var(--orbitron);
+font-size:10px;
+letter-spacing:1.5px;
+color:var(--muted);
+margin-top:30px;
+}
+
+.status-dot{
+width:7px;
+height:7px;
+border-radius:50%;
+background:var(--purple);
+box-shadow:0 0 10px rgba(153,69,255,.8);
+}
+
+.method{
+margin-top:60px;
+}
+
+.method h2{
+font-family:var(--orbitron);
+font-size:20px;
+margin-bottom:20px;
+}
+
+.method ul{
+list-style:none;
+display:flex;
+flex-direction:column;
+gap:14px;
+}
+
+.method li{
+display:flex;
+gap:12px;
+color:var(--muted);
+font-size:14.5px;
+line-height:1.7;
+}
+
+.method li::before{
+content:"→";
+color:var(--purple);
+flex-shrink:0;
+}
+
+.cta{
+margin-top:60px;
+text-align:center;
+padding:40px;
+border-radius:20px;
+border:1px dashed rgba(153,69,255,.35);
+}
+
+.cta p{
+color:var(--muted);
+margin-bottom:20px;
+font-size:14.5px;
+}
+
+.cta a{
+display:inline-block;
+padding:15px 30px;
+border-radius:11px;
+background:linear-gradient(90deg,var(--green),var(--blue),var(--purple));
+color:#050713;
+font-family:var(--orbitron);
+font-weight:800;
+font-size:12px;
+letter-spacing:1.5px;
+text-decoration:none;
+}
+
+@media(max-width:600px){
+
+.score-grid{
+grid-template-columns:1fr;
+}
+
+.demo-panel{
+padding:26px;
+}
+
+}
+
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<a href="index.html" class="back">← BACK TO RELAX</a>
+
+<span class="lab-tag">RELAX SCORE // EXPERIMENT 001</span>
+
+<h1>Can a wallet reveal<br><span>FOMO and panic?</span></h1>
+
+<p class="intro">
+We're testing whether public on-chain trading behavior can be read for
+signals associated with FOMO chasing, panic exits, and impulsive trades —
+without touching the RELAX token contract in any way. This page shows what
+the interface could look like. Nothing here is connected to a real wallet
+or real data yet.
+</p>
+
+<div class="notice">
+<div>
+<strong>SAMPLE DATA — NOT LIVE</strong>
+<p>
+This is a static design demo. No wallet connection, no on-chain lookup,
+no API call happens on this page. Every number below is hardcoded
+placeholder data to test the concept and the interface only.
+</p>
+</div>
+</div>
+
+<div class="demo-panel">
+
+<div class="demo-wallet">
+
+<div>
+<span>EXAMPLE WALLET</span>
+<code>7xKX...9pQ2</code>
+</div>
+
+<div class="sample-flag">SAMPLE DATA</div>
+
+</div>
+
+<div class="score-grid">
+
+<div class="score-item fomo">
+<span>FOMO SIGNAL</span>
+<strong>34</strong>
+<small>Occasional chasing</small>
+</div>
+
+<div class="score-item panic">
+<span>PANIC SIGNAL</span>
+<strong>18</strong>
+<small>Rarely panic sells</small>
+</div>
+
+<div class="score-item calm">
+<span>RELAX SCORE</span>
+<strong>81</strong>
+<small>Mostly composed</small>
+</div>
+
+</div>
+
+<div class="verdict">
+<strong>Sample read:</strong> this example wallet shows low panic-selling
+behavior and moderate FOMO entries during pumps. In a real version, this
+would be generated from actual transaction history — timing, size, and
+market conditions at the moment of each trade.
+</div>
+
+<div class="status-line">
+<span class="status-dot"></span>
+DEMO MODE. NO WALLET CONNECTED. NO DATA COLLECTED.
+</div>
+
+</div>
+
+<div class="method">
+
+<h2>How this would actually work</h2>
+
+<ul>
+
+<li>Read public transaction history for a connected wallet — nothing
+private, nothing the blockchain doesn't already show anyone.</li>
+
+<li>Cross-reference trade timing against market volatility to flag
+patterns that look like chasing pumps or selling into fear.</li>
+
+<li>Turn that into a simple, readable score instead of raw transaction
+noise — for fun and self-reflection, not financial advice.</li>
+
+<li>No connection to the RELAX token contract, its authority, or its
+supply. This is a separate analysis layer, not a token feature.</li>
+
+</ul>
+
+</div>
+
+<div class="cta">
+<p>Still early. Still testing. We build in public and ship when it's ready.</p>
+<a href="index.html">BACK TO RELAX</a>
+</div>
+
+</div>
+
+</body>
+</html>
