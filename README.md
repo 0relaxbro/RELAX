@@ -6,7 +6,7 @@
 
 **Not another memecoin. A mindset.**
 
-0 Fear. 0 Panic. 0 Regrets.
+0 Fear. 0 Panic. 0 Regrets. Just RELAX
 
 [Website](https://0relaxbro.xyz) · [X](https://x.com/0relaxbro) · [YouTube](https://www.youtube.com/@0relaxbro) · [Pump.fun](https://pump.fun/coin/6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump) · [DexScreener](https://dexscreener.com/solana/5ztferjiljz3u4kzkwmguyujxcwkpagzfqwwyja7yzx3)
 
