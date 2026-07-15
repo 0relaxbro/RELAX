@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RELAX LAB | RELAX Score — Experiment 001</title>
+<meta name="description" content="An experimental, work-in-progress look at analyzing on-chain wallet behavior for FOMO and panic signals. Free public data only. No wallet connection required.">
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://0relaxbro.xyz/score.html">
+<meta name="theme-color" content="#050713">
+
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@600;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+
+:root{
+--bg:#050713;
+--text:#F5F7FF;
+--muted:#929BB5;
+--green:#14F195;
+--purple:#9945FF;
+--blue:#5B7CFF;
+--danger:#FF5F87;
+--border:rgba(132,151,220,.18);
+--orbitron:'Orbitron',sans-serif;
+--inter:'Inter',sans-serif;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+background:var(--bg);
+color:var(--text);
+font-family:var(--inter);
+min-height:100vh;
+padding:40px 20px 100px;
+}
+
+.wrap{
+max-width:760px;
+margin:0 auto;
+}
+
+.back{
+display:inline-flex;
+align-items:center;
+gap:8px;
+color:var(--muted);
+text-decoration:none;
+font-size:13px;
+letter-spacing:.5px;
+margin-bottom:50px;
+}
+
+.back:hover{
+color:var(--text);
+}
+
+.lab-tag{
+display:inline-block;
+padding:7px 16px;
+border-radius:999px;
+border:1px solid rgba(153,69,255,.4);
+background:rgba(153,69,255,.08);
+font-family:var(--orbitron);
+font-size:10px;
+font-weight:800;
+letter-spacing:2px;
+color:var(--purple);
+margin-bottom:24px;
+}
+
+h1{
+font-family:var(--orbitron);
+font-size:clamp(32px,6vw,52px);
+font-weight:900;
+line-height:1.15;
+margin-bottom:20px;
+}
+
+h1 span{
+background:linear-gradient(90deg,var(--green),var(--blue),var(--purple));
+-webkit-background-clip:text;
+background-clip:text;
+color:transparent;
+}
+
+.intro{
+color:var(--muted);
+font-size:16px;
+line-height:1.9;
+max-width:600px;
+margin-bottom:20px;
+}
+
+.notice{
+display:flex;
+gap:14px;
+align-items:flex-start;
+padding:18px 20px;
+border-radius:14px;
+border:1px solid rgba(91,124,255,.3);
+background:rgba(91,124,255,.06);
+margin-bottom:50px;
+}
+
+.notice strong{
+display:block;
+font-family:var(--orbitron);
+font-size:11px;
+letter-spacing:1.5px;
+color:var(--blue);
+margin-bottom:6px;
+}
+
+.notice p{
+font-size:13.5px;
+line-height:1.7;
+color:var(--muted);
+}
+
+.demo-panel{
+border:1px solid var(--border);
+border-radius:22px;
+background:rgba(9,13,29,.75);
+padding:40px;
+margin-bottom:40px;
+}
+
+.panel-label{
+font-family:var(--orbitron);
+font-size:9px;
+letter-spacing:2px;
+color:var(--muted);
+margin-bottom:20px;
+}
+
+.live-input-row{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+margin-bottom:16px;
+}
+
+#walletInput{
+flex:1;
+min-width:220px;
+padding:15px 16px;
+border-radius:12px;
+border:1px solid var(--border);
+background:rgba(255,255,255,.03);
+color:var(--text);
+font-family:var(--inter);
+font-size:14px;
+outline:none;
+}
+
+#walletInput:focus{
+border-color:rgba(153,69,255,.5);
+}
+
+#analyzeBtn{
+padding:15px 26px;
+border-radius:12px;
+border:0;
+background:linear-gradient(90deg,var(--green),var(--blue),var(--purple));
+color:#050713;
+font-family:var(--orbitron);
+font-weight:800;
+font-size:12px;
+letter-spacing:1.5px;
+cursor:pointer;
+white-space:nowrap;
+}
+
+#analyzeBtn:disabled{
+opacity:.55;
+cursor:not-allowed;
+}
+
+#shareBtn{
+padding:13px 24px;
+border-radius:12px;
+border:1px solid rgba(20,241,149,.35);
+background:transparent;
+color:var(--green);
+font-family:var(--orbitron);
+font-weight:800;
+font-size:11px;
+letter-spacing:1.5px;
+cursor:pointer;
+width:100%;
+}
+
+#shareBtn:hover{
+background:rgba(20,241,149,.08);
+}
+
+#shareBtn:disabled{
+opacity:.55;
+cursor:not-allowed;
+}
+
+.live-hint{
+font-size:12px;
+color:#5C6480;
+margin-bottom:10px;
+}
+
+.live-status{
+font-family:var(--orbitron);
+font-size:11px;
+letter-spacing:1px;
+color:var(--muted);
+min-height:20px;
+margin:14px 0;
+}
+
+.live-status.error{
+color:var(--danger);
+}
+
+.score-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
+gap:16px;
+margin:26px 0 30px;
+}
+
+.score-item{
+text-align:center;
+padding:24px 12px;
+border-radius:16px;
+border:1px solid var(--border);
+background:rgba(255,255,255,.02);
+}
+
+.score-item span{
+display:block;
+font-family:var(--orbitron);
+font-size:9px;
+letter-spacing:2px;
+color:var(--muted);
+margin-bottom:14px;
+}
+
+.score-item strong{
+font-family:var(--orbitron);
+font-size:clamp(26px,5vw,38px);
+font-weight:900;
+}
+
+.score-item.fomo strong{color:var(--blue);}
+.score-item.panic strong{color:var(--danger);}
+.score-item.calm strong{color:var(--green);}
+
+.score-item.extra strong{color:var(--purple);font-size:clamp(20px,4vw,28px);}
+
+.score-item small{
+display:block;
+margin-top:8px;
+font-size:11px;
+color:var(--muted);
+}
+
+.verdict{
+padding:22px 24px;
+border-radius:14px;
+background:rgba(20,241,149,.05);
+border:1px solid rgba(20,241,149,.25);
+font-size:14.5px;
+line-height:1.8;
+color:#C9D0E2;
+}
+
+.verdict strong{
+color:var(--green);
+}
+
+.formula-note{
+margin-top:16px;
+padding:16px 18px;
+border-radius:12px;
+border:1px solid var(--border);
+background:rgba(255,255,255,.02);
+font-size:12.5px;
+line-height:1.8;
+color:var(--muted);
+}
+
+.formula-note strong{
+color:var(--text);
+}
+
+.method{
+margin-top:60px;
+}
+
+.method h2{
+font-family:var(--orbitron);
+font-size:20px;
+margin-bottom:20px;
+}
+
+.method ul{
+list-style:none;
+display:flex;
+flex-direction:column;
+gap:14px;
+}
+
+.method li{
+display:flex;
+gap:12px;
+color:var(--muted);
+font-size:14.5px;
+line-height:1.7;
+}
+
+.method li strong{
+color:var(--danger);
+}
+
+.method li::before{
+content:"→";
+color:var(--purple);
+flex-shrink:0;
+}
+
+.cta{
+margin-top:60px;
+text-align:center;
+padding:40px;
+border-radius:20px;
+border:1px dashed rgba(153,69,255,.35);
+}
+
+.cta p{
+color:var(--muted);
+margin-bottom:20px;
+font-size:14.5px;
+}
+
+.cta a{
+display:inline-block;
+padding:15px 30px;
+border-radius:11px;
+background:linear-gradient(90deg,var(--green),var(--blue),var(--purple));
+color:#050713;
+font-family:var(--orbitron);
+font-weight:800;
+font-size:12px;
+letter-spacing:1.5px;
+text-decoration:none;
+}
+
+@media(max-width:600px){
+
+.score-grid{
+grid-template-columns:1fr;
+}
+
+.demo-panel{
+padding:26px;
+}
+
+#analyzeBtn{
+width:100%;
+}
+
+}
+
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<a href="index.html" class="back">← BACK TO RELAX</a>
+
+<span class="lab-tag">RELAX SCORE // EXPERIMENT 001</span>
+
+<h1>Can a wallet reveal<br><span>FOMO and panic?</span></h1>
+
+<p class="intro">
+Paste any public Solana wallet address below. We read its last 30 days
+of on-chain activity — nothing private, nothing the blockchain doesn't
+already show anyone — and turn it into a rough, honest read on trading
+behavior.
+</p>
+
+<div class="notice">
+<div>
+<strong>FREE PUBLIC DATA ONLY</strong>
+<p>
+This reads live data from Solana's public RPC. No wallet connection, no
+signing, nothing stored. It's a lightweight behavioral heuristic based on
+the last 30 days of activity (capped at 60 transactions for very active
+wallets) — not financial analysis, not price-based, and not always
+available if the public node is busy.
+</p>
+</div>
+</div>
+
+<div class="demo-panel">
+
+<div class="panel-label">TRY IT — LIVE &amp; FREE</div>
+
+<div class="live-input-row">
+
+<input
+type="text"
+id="walletInput"
+placeholder="Paste a public Solana wallet address"
+autocomplete="off"
+spellcheck="false"
+>
+
+<button id="analyzeBtn" type="button">
+ANALYZE
+</button>
+
+</div>
+
+<div class="live-hint">
+Example format: 7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU
+</div>
+
+<div class="live-status" id="liveStatus"></div>
+
+<div id="liveResult" style="display:none;">
+
+<div class="score-grid" id="scoreGrid"></div>
+
+<div class="verdict" id="verdictBox"></div>
+
+<button id="shareBtn" type="button" style="display:none;margin-top:20px;">
+SHARE MY SCORE
+</button>
+
+<div class="formula-note">
+<strong>How the math works:</strong> RELAX Score = 100 − average(FOMO, Panic).
+It's not just "100 minus FOMO" — a wallet with high FOMO but low Panic still
+lands somewhere in the middle, because RELAX Score reflects both signals
+together, not just one of them.
+</div>
+
+</div>
+
+</div>
+
+<div class="method">
+
+<h2>How this actually works</h2>
+
+<ul>
+
+<li>We fetch a wallet's on-chain activity from the last 30 days directly
+from Solana's public RPC — the same free, open network any wallet app
+uses. Very active wallets are capped at the most recent 60 transactions
+to keep results quick and consistent.</li>
+
+<li>We look at swap frequency, how many different tokens were touched,
+and how tightly clustered the trades are in time.</li>
+
+<li><strong>Important:</strong> "Panic Signal" measures clustered,
+rapid-fire trading — not actual panic-selling, which would require
+matching trades against historical price data. We don't do that here.
+Think of it as "trading in bursts", not "sold at the bottom".</li>
+
+<li>That gets turned into a simple, readable score — for fun and
+self-reflection, not financial advice.</li>
+
+<li>We also estimate wallet age (how far back we can find activity) and
+average holding time (based on acquire → dispose pairs we spot within
+the same window). Both are estimates, not guarantees — a wallet with
+history beyond what we scan will show "60+ days" rather than an exact
+number.</li>
+
+<li>No connection to the RELAX token contract, its authority, or its
+supply. This is a separate analysis layer, not a token feature.</li>
+
+<li>The public RPC is shared by the whole world and rate-limited. If
+it's busy, the tool will say so instead of pretending to work.</li>
+
+</ul>
+
+</div>
+
+<div class="cta">
+<p>Still early. Still testing. We build in public and ship when it's ready.</p>
+<a href="index.html">BACK TO RELAX</a>
+</div>
+
+</div>
+
+<script>
+
+const RPC_URL = "https://rpc-proxy.0relaxbro.workers.dev";
+
+const KNOWN_SWAP_PROGRAMS = new Set([
+"JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV",
+"675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8",
+"6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P",
+"whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc"
+]);
+
+function isValidSolanaAddress(addr){
+return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(addr);
+}
+
+async function rpcCall(method,params){
+
+const res = await fetch(RPC_URL,{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({jsonrpc:"2.0",id:1,method,params})
+});
+
+if(res.status === 429){
+throw new Error("RATE_LIMIT");
+}
+
+if(!res.ok){
+throw new Error("RPC_FAILED");
+}
+
+const data = await res.json();
+
+if(data.error){
+throw new Error(data.error.message || "RPC_ERROR");
+}
+
+return data.result;
+
+}
+
+async function analyzeWallet(address,onProgress){
+
+const THIRTY_DAYS_SECONDS = 30 * 24 * 60 * 60;
+const nowSeconds = Math.floor(Date.now() / 1000);
+const cutoff = nowSeconds - THIRTY_DAYS_SECONDS;
+const MAX_DETAILED_LOOKUPS = 60;
+const SIGNATURE_PAGE_SIZE = 1000;
+
+let allSignatures = [];
+let before = undefined;
+let keepPaging = true;
+let pages = 0;
+
+while(keepPaging && pages < 3){
+
+const params = before
+? [address,{limit:SIGNATURE_PAGE_SIZE,before}]
+: [address,{limit:SIGNATURE_PAGE_SIZE}];
+
+const page = await rpcCall(
+"getSignaturesForAddress",
+params
+);
+
+pages++;
+
+if(!page || page.length === 0){
+break;
+}
+
+allSignatures = allSignatures.concat(page);
+
+const last = page[page.length - 1];
+
+if(!last.blockTime || last.blockTime < cutoff){
+keepPaging = false;
+}
+else{
+before = last.signature;
+}
+
+}
+
+if(allSignatures.length === 0){
+throw new Error("NO_ACTIVITY");
+}
+
+const withinWindow = allSignatures.filter(sig=>
+sig.blockTime && sig.blockTime >= cutoff
+);
+
+const pool =
+withinWindow.length > 0
+? withinWindow
+: allSignatures.slice(0,MAX_DETAILED_LOOKUPS);
+
+const totalInWindow = pool.length;
+
+const signatures =
+pool.slice(0,MAX_DETAILED_LOOKUPS);
+
+let swapCount = 0;
+let parsedCount = 0;
+const distinctTokens = new Set();
+const timestamps = [];
+const tokenEvents = {};
+
+for(let i = 0; i < signatures.length; i++){
+
+const sig = signatures[i];
+
+if(onProgress){
+
+onProgress(i + 1,signatures.length);
+
+}
+
+try{
+
+const tx = await rpcCall(
+"getTransaction",
+[
+sig.signature,
+{maxSupportedTransactionVersion:0,encoding:"jsonParsed"}
+]
+);
+
+if(!tx){
+continue;
+}
+
+parsedCount++;
+
+if(sig.blockTime){
+timestamps.push(sig.blockTime);
+}
+
+const accountKeys =
+tx.transaction?.message?.accountKeys || [];
+
+const programIds = accountKeys.map(k=>
+typeof k === "string" ? k : k.pubkey
+);
+
+if(programIds.some(id=>KNOWN_SWAP_PROGRAMS.has(id))){
+swapCount++;
+}
+
+const preBalances =
+tx.meta?.preTokenBalances || [];
+
+const postBalances =
+tx.meta?.postTokenBalances || [];
+
+const balances = [
+...preBalances,
+...postBalances
+];
+
+balances.forEach(b=>{
+if(b.mint){
+distinctTokens.add(b.mint);
+}
+});
+
+if(sig.blockTime){
+
+postBalances.forEach(post=>{
+
+if(post.owner !== address) return;
+
+const pre = preBalances.find(p=>
+
+p.mint === post.mint &&
+p.owner === address
+
+);
+
+const preAmount =
+Number(pre?.uiTokenAmount?.uiAmount || 0);
+
+const postAmount =
+Number(post?.uiTokenAmount?.uiAmount || 0);
+
+const delta = postAmount - preAmount;
+
+if(Math.abs(delta) < 0.0000001) return;
+
+if(!tokenEvents[post.mint]){
+
+tokenEvents[post.mint] = [];
+
+}
+
+tokenEvents[post.mint].push({
+
+time:sig.blockTime,
+
+type:delta > 0 ? "acquire" : "dispose"
+
+});
+
+});
+
+}
+
+}
+catch(innerError){
+
+}
+
+await new Promise(resolve=>setTimeout(resolve,200));
+
+}
+
+if(parsedCount === 0){
+throw new Error("PARSE_FAILED");
+}
+
+timestamps.sort((a,b)=>a - b);
+
+let burstCount = 0;
+
+for(let i = 1; i < timestamps.length; i++){
+
+if(timestamps[i] - timestamps[i - 1] < 300){
+burstCount++;
+}
+
+}
+
+const activityRatio = swapCount / parsedCount;
+
+const tokenDiversity =
+Math.min(distinctTokens.size,20) / 20;
+
+const burstRatio =
+timestamps.length > 1
+? burstCount / (timestamps.length - 1)
+: 0;
+
+const fomoScore = Math.round(
+Math.min(100,tokenDiversity * 55 + burstRatio * 45)
+);
+
+const panicScore = Math.round(
+Math.min(100,burstRatio * 60 + activityRatio * 40)
+);
+
+const relaxScore = Math.round(
+Math.max(0,100 - (fomoScore * .5 + panicScore * .5))
+);
+
+const holdingSamples = [];
+
+Object.keys(tokenEvents).forEach(mint=>{
+
+const events =
+tokenEvents[mint].sort((a,b)=>a.time - b.time);
+
+const firstAcquire =
+events.find(e=>e.type === "acquire");
+
+if(!firstAcquire) return;
+
+const laterDispose =
+events.find(e=>
+
+e.type === "dispose" &&
+e.time > firstAcquire.time
+
+);
+
+if(!laterDispose) return;
+
+const holdingSeconds =
+laterDispose.time - firstAcquire.time;
+
+if(holdingSeconds > 0){
+
+holdingSamples.push(holdingSeconds);
+
+}
+
+});
+
+const avgHoldingDays =
+holdingSamples.length > 0
+? holdingSamples.reduce((a,b)=>a + b,0) /
+holdingSamples.length /
+86400
+: null;
+
+const walletAge =
+await estimateWalletAge(address,signatures);
+
+return {
+fomoScore,
+panicScore,
+relaxScore,
+swapCount,
+parsedCount,
+distinctTokens:distinctTokens.size,
+totalInWindow,
+cappedAt30Days:withinWindow.length > 0,
+truncated:totalInWindow > MAX_DETAILED_LOOKUPS,
+avgHoldingDays,
+holdingSampleCount:holdingSamples.length,
+walletAgeDays:walletAge.days,
+walletAgeIsMinimum:walletAge.isMinimum
+};
+
+}
+
+
+async function estimateWalletAge(address,fallbackSignatures){
+
+const MAX_AGE_PAGES = 7;
+
+let before =
+fallbackSignatures.length > 0
+? fallbackSignatures[fallbackSignatures.length - 1].signature
+: undefined;
+
+let oldestBlockTime =
+fallbackSignatures.length > 0
+? fallbackSignatures[fallbackSignatures.length - 1].blockTime
+: null;
+
+let reachedEnd = false;
+
+for(let page = 0; page < MAX_AGE_PAGES; page++){
+
+try{
+
+const olderPage = await rpcCall(
+"getSignaturesForAddress",
+[address,{limit:1000,before}]
+);
+
+if(!olderPage || olderPage.length === 0){
+
+reachedEnd = true;
+
+break;
+
+}
+
+const last = olderPage[olderPage.length - 1];
+
+if(last.blockTime){
+
+oldestBlockTime = last.blockTime;
+
+}
+
+if(olderPage.length < 1000){
+
+reachedEnd = true;
+
+break;
+
+}
+
+before = last.signature;
+
+}
+catch(err){
+
+break;
+
+}
+
+}
+
+if(!oldestBlockTime){
+
+return {days:null,isMinimum:false};
+
+}
+
+const ageSeconds =
+Math.floor(Date.now() / 1000) - oldestBlockTime;
+
+const ageDays =
+Math.floor(ageSeconds / 86400);
+
+return {
+
+days:ageDays,
+
+isMinimum:!reachedEnd
+
+};
+
+}
+
+
+function verdictFor(result){
+
+if(result.relaxScore >= 70){
+
+return "This wallet shows fairly composed on-chain behavior — low " +
+"clustering, modest token-chasing. Sample size is small, so treat " +
+"this as a vibe check, not a verdict.";
+
+}
+
+if(result.relaxScore >= 40){
+
+return "A mix of steady activity and some clustered, fast trading. " +
+"Somewhere between calm and chasing — like most wallets, honestly.";
+
+}
+
+return "This wallet shows a lot of clustered activity across several " +
+"tokens recently — patterns that often line up with chasing pumps " +
+"or reacting fast to drops. Could be a busy trader, could be FOMO. " +
+"We can't know intent, only patterns.";
+
+}
+
+const walletInput =
+document.getElementById("walletInput");
+
+const analyzeBtn =
+document.getElementById("analyzeBtn");
+
+const liveStatus =
+document.getElementById("liveStatus");
+
+const liveResult =
+document.getElementById("liveResult");
+
+const scoreGrid =
+document.getElementById("scoreGrid");
+
+const verdictBox =
+document.getElementById("verdictBox");
+
+const shareBtn =
+document.getElementById("shareBtn");
+
+
+let lastResult = null;
+let lastAddress = null;
+
+function renderResult(result, address){
+
+lastResult = result;
+lastAddress = address;
+
+const ageText =
+result.walletAgeDays === null
+? "Unknown"
+: (result.walletAgeIsMinimum ? "60+ " : "") +
+result.walletAgeDays + "d";
+
+const holdingText =
+result.avgHoldingDays === null
+? "N/A"
+: result.avgHoldingDays < 1
+? Math.round(result.avgHoldingDays * 24) + "h"
+: result.avgHoldingDays.toFixed(1) + "d";
+
+scoreGrid.innerHTML =
+
+"<div class=\"score-item fomo\">" +
+"<span>FOMO SIGNAL</span>" +
+"<strong>" + result.fomoScore + "</strong>" +
+"<small>Token-chasing pattern</small>" +
+"</div>" +
+
+"<div class=\"score-item panic\">" +
+"<span>PANIC SIGNAL</span>" +
+"<strong>" + result.panicScore + "</strong>" +
+"<small>Clustered fast trades</small>" +
+"</div>" +
+
+"<div class=\"score-item calm\">" +
+"<span>RELAX SCORE</span>" +
+"<strong>" + result.relaxScore + "</strong>" +
+"<small>Overall composure</small>" +
+"</div>" +
+
+"<div class=\"score-item extra\">" +
+"<span>WALLET AGE</span>" +
+"<strong>" + ageText + "</strong>" +
+"<small>" +
+(result.walletAgeIsMinimum ? "At least this old" : "First activity found") +
+"</small>" +
+"</div>" +
+
+"<div class=\"score-item extra\">" +
+"<span>AVG HOLDING TIME</span>" +
+"<strong>" + holdingText + "</strong>" +
+"<small>" +
+(result.holdingSampleCount > 0
+? "Based on " + result.holdingSampleCount + " token(s)"
+: "Not enough data in this window") +
+"</small>" +
+"</div>";
+
+const windowNote =
+result.cappedAt30Days
+? "in the last 30 days"
+: "in its most recent history (less than 30 days of activity found)";
+
+const truncatedNote =
+result.truncated
+? " This wallet had more activity than we scan per check, so we " +
+"looked at the most recent " + result.parsedCount + " of them."
+: "";
+
+verdictBox.innerHTML =
+"<strong>Read:</strong> " +
+verdictFor(result) +
+" (based on " + result.parsedCount +
+" transactions " + windowNote + ", " +
+result.distinctTokens + " distinct tokens touched." +
+truncatedNote + ")";
+
+liveResult.style.display = "block";
+shareBtn.style.display = "block";
+
+}
+
+
+if(analyzeBtn){
+
+analyzeBtn.addEventListener("click",async()=>{
+
+const address = walletInput.value.trim();
+
+liveResult.style.display = "none";
+
+liveStatus.classList.remove("error");
+
+
+if(!address){
+
+liveStatus.textContent =
+"Paste a wallet address first.";
+
+liveStatus.classList.add("error");
+
+return;
+
+}
+
+
+if(!isValidSolanaAddress(address)){
+
+liveStatus.textContent =
+"That doesn't look like a valid Solana address.";
+
+liveStatus.classList.add("error");
+
+return;
+
+}
+
+
+analyzeBtn.disabled = true;
+
+liveStatus.textContent =
+"SCANNING LAST 30 DAYS...";
+
+
+try{
+
+const result = await analyzeWallet(
+address,
+(current,total)=>{
+
+liveStatus.textContent =
+"READING TRANSACTION " + current + " / " + total + "...";
+
+}
+);
+
+liveStatus.textContent =
+"ANALYSIS COMPLETE";
+
+renderResult(result, address);
+
+}
+catch(error){
+
+liveStatus.classList.add("error");
+
+
+if(error.message === "NO_ACTIVITY"){
+
+liveStatus.textContent =
+"No recent activity found for this wallet.";
+
+}
+else if(error.message === "RATE_LIMIT"){
+
+liveStatus.textContent =
+"The Lab is busy right now (public node limit). Try again in a minute.";
+
+}
+else{
+
+liveStatus.textContent =
+"Couldn't reach the public Solana node right now. Try again shortly.";
+
+}
+
+}
+finally{
+
+analyzeBtn.disabled = false;
+
+}
+
+});
+
+}
+
+
+if(walletInput){
+
+walletInput.addEventListener("keydown",e=>{
+
+if(e.key === "Enter"){
+
+analyzeBtn.click();
+
+}
+
+});
+
+}
+
+
+function shortenAddress(addr){
+
+if(!addr || addr.length < 10) return addr || "";
+
+return addr.slice(0,4) + "..." + addr.slice(-4);
+
+}
+
+
+async function drawShareCard(result, address){
+
+const W = 1200, H = 675;
+const canvas = document.createElement("canvas");
+canvas.width = W;
+canvas.height = H;
+const ctx = canvas.getContext("2d");
+
+if(document.fonts && document.fonts.ready){
+try{ await document.fonts.ready; }catch(e){}
+}
+
+const grad = ctx.createLinearGradient(0,0,W,H);
+grad.addColorStop(0,"#050713");
+grad.addColorStop(1,"#0A0F24");
+ctx.fillStyle = grad;
+ctx.fillRect(0,0,W,H);
+
+ctx.strokeStyle = "rgba(153,69,255,0.25)";
+ctx.lineWidth = 2;
+ctx.strokeRect(24,24,W-48,H-48);
+
+ctx.font = "900 34px Orbitron, sans-serif";
+ctx.fillStyle = "#F5F7FF";
+ctx.textAlign = "left";
+ctx.fillText("RELAX SCORE", 60, 100);
+
+ctx.font = "600 16px Inter, sans-serif";
+ctx.fillStyle = "#929BB5";
+ctx.fillText("0relaxbro.xyz  ·  @0relaxbro", 60, 130);
+
+ctx.font = "500 15px Inter, sans-serif";
+ctx.fillStyle = "#5C6480";
+ctx.textAlign = "right";
+ctx.fillText(shortenAddress(address), W-60, 100);
+
+function drawStat(x, label, value, color){
+ctx.textAlign = "center";
+ctx.font = "700 13px Orbitron, sans-serif";
+ctx.fillStyle = "#929BB5";
+ctx.fillText(label, x, 250);
+ctx.font = "900 96px Orbitron, sans-serif";
+ctx.fillStyle = color;
+ctx.fillText(String(value), x, 360);
+}
+
+drawStat(W*0.22, "FOMO SIGNAL", result.fomoScore, "#FF5F87");
+drawStat(W*0.50, "RELAX SCORE", result.relaxScore, "#14F195");
+drawStat(W*0.78, "PANIC SIGNAL", result.panicScore, "#5B7CFF");
+
+ctx.textAlign = "center";
+ctx.font = "500 18px Inter, sans-serif";
+ctx.fillStyle = "#C9D0E2";
+const verdict = verdictFor(result);
+wrapText(ctx, verdict, W/2, 460, 980, 26);
+
+ctx.font = "800 15px Orbitron, sans-serif";
+ctx.fillStyle = "#14F195";
+ctx.fillText("0 FEAR . 0 PANIC . 0 REGRETS . JUST RELAX", W/2, H-60);
+
+return canvas;
+
+}
+
+
+function wrapText(ctx, text, x, y, maxWidth, lineHeight){
+
+const words = text.split(" ");
+let line = "";
+let lines = [];
+
+for(let i=0;i<words.length;i++){
+
+const test = line + words[i] + " ";
+if(ctx.measureText(test).width > maxWidth && i > 0){
+lines.push(line);
+line = words[i] + " ";
+}else{
+line = test;
+}
+
+}
+lines.push(line);
+
+if(lines.length > 3){
+lines = lines.slice(0,3);
+lines[2] = lines[2].trim().slice(0, -3) + "...";
+}
+
+const startY = y - ((lines.length-1) * lineHeight)/2;
+
+lines.forEach((l,i)=>{
+ctx.fillText(l.trim(), x, startY + i*lineHeight);
+});
+
+}
+
+
+if(shareBtn){
+
+shareBtn.addEventListener("click", async ()=>{
+
+if(!lastResult) return;
+
+shareBtn.disabled = true;
+const originalText = shareBtn.textContent;
+shareBtn.textContent = "GENERATING...";
+
+try{
+
+const canvas = await drawShareCard(lastResult, lastAddress);
+
+const blob = await new Promise(resolve=>{
+canvas.toBlob(resolve, "image/png");
+});
+
+const shareText =
+"My RELAX Score: " + lastResult.relaxScore +
+". 0 Fear. 0 Panic. 0 Regrets. Just RELAX.\n\n" +
+"Check yours via @0relaxbro:";
+
+const shareUrl = "https://0relaxbro.xyz/score.html";
+
+const file = new File([blob], "relax-score.png", { type: "image/png" });
+
+if(navigator.canShare && navigator.canShare({ files: [file] })){
+
+await navigator.share({
+files: [file],
+title: "RELAX Score",
+text: shareText,
+url: shareUrl
+});
+
+}else{
+
+const a = document.createElement("a");
+a.href = URL.createObjectURL(blob);
+a.download = "relax-score.png";
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+
+const tweetText = encodeURIComponent(shareText + " " + shareUrl);
+window.open("https://twitter.com/intent/tweet?text=" + tweetText, "_blank");
+
+}
+
+}catch(e){
+
+if(e.name !== "AbortError"){
+console.error(e);
+}
+
+}finally{
+
+shareBtn.disabled = false;
+shareBtn.textContent = originalText;
+
+}
+
+});
+
+}
+
+</script>
+
+</body>
+</html>
