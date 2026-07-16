@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RELAX LAB | RELAX Swap — Experiment 002</title>
+<meta name="description" content="Swap tokens directly from your own wallet, powered by Jupiter's routing. RELAX never holds your funds. Hold $20+ of $RELAX and pay zero platform fee — genuinely zero, not just RELAX's cut.">
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://0relaxbro.xyz/swap.html">
+<meta name="theme-color" content="#050713">
+
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@600;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+
+:root{
+--bg:#050713;
+--text:#F5F7FF;
+--muted:#929BB5;
+--green:#14F195;
+--purple:#9945FF;
+--blue:#5B7CFF;
+--danger:#FF5F87;
+--border:rgba(132,151,220,.18);
+--orbitron:'Orbitron',sans-serif;
+--inter:'Inter',sans-serif;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+background:var(--bg);
+color:var(--text);
+font-family:var(--inter);
+min-height:100vh;
+padding:40px 20px 100px;
+}
+
+.wrap{
+max-width:560px;
+margin:0 auto;
+}
+
+.back{
+display:inline-flex;
+align-items:center;
+gap:8px;
+color:var(--muted);
+text-decoration:none;
+font-size:13px;
+letter-spacing:.5px;
+margin-bottom:50px;
+}
+
+.back:hover{ color:var(--text); }
+
+.lab-tag{
+display:inline-block;
+font-family:var(--orbitron);
+font-size:11px;
+font-weight:700;
+letter-spacing:1.5px;
+color:var(--green);
+background:rgba(20,241,149,.08);
+border:1px solid rgba(20,241,149,.25);
+padding:6px 12px;
+border-radius:20px;
+margin-bottom:20px;
+}
+
+h1{
+font-family:var(--orbitron);
+font-size:32px;
+font-weight:800;
+line-height:1.25;
+margin-bottom:14px;
+}
+
+h1 span{ color:var(--green); }
+
+.subtitle{
+color:var(--muted);
+font-size:15px;
+line-height:1.6;
+margin-bottom:36px;
+max-width:460px;
+}
+
+.holder-pill{
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:12px;
+background:rgba(153,69,255,.06);
+border:1px solid var(--border);
+border-radius:14px;
+padding:16px 18px;
+margin-bottom:20px;
+font-size:13px;
+}
+
+.holder-pill.is-holder{
+background:rgba(20,241,149,.06);
+border-color:rgba(20,241,149,.3);
+}
+
+.holder-pill-left{
+display:flex;
+align-items:center;
+gap:10px;
+color:var(--muted);
+}
+
+.holder-dot{
+width:8px;
+height:8px;
+border-radius:50%;
+background:var(--muted);
+flex-shrink:0;
+}
+
+.holder-pill.is-holder .holder-dot{ background:var(--green); }
+
+.holder-fee-badge{
+font-family:var(--orbitron);
+font-weight:800;
+font-size:13px;
+color:var(--muted);
+}
+
+.holder-pill.is-holder .holder-fee-badge{ color:var(--green); }
+
+.wallet-box{
+border:1px solid var(--border);
+border-radius:16px;
+padding:20px;
+margin-bottom:20px;
+text-align:center;
+}
+
+.connect-btn{
+font-family:var(--orbitron);
+font-weight:700;
+font-size:14px;
+letter-spacing:.5px;
+color:var(--bg);
+background:var(--green);
+border:none;
+border-radius:12px;
+padding:14px 24px;
+cursor:pointer;
+width:100%;
+transition:opacity .15s ease;
+}
+
+.connect-btn:hover{ opacity:.85; }
+
+.connect-btn:disabled{
+opacity:.5;
+cursor:not-allowed;
+}
+
+.wallet-connected-row{
+display:flex;
+align-items:center;
+justify-content:space-between;
+font-size:13px;
+color:var(--muted);
+}
+
+.wallet-connected-row .addr{
+color:var(--text);
+font-family:monospace;
+}
+
+.disconnect-link{
+color:var(--danger);
+text-decoration:none;
+font-size:12px;
+cursor:pointer;
+}
+
+.swap-card{
+border:1px solid var(--border);
+border-radius:16px;
+padding:20px;
+display:none;
+}
+
+.swap-field{
+background:rgba(132,151,220,.05);
+border:1px solid var(--border);
+border-radius:14px;
+padding:16px 18px;
+margin-bottom:4px;
+}
+
+.swap-field-label{
+font-size:12px;
+color:var(--muted);
+margin-bottom:8px;
+display:flex;
+justify-content:space-between;
+}
+
+.swap-field-row{
+display:flex;
+align-items:center;
+gap:12px;
+}
+
+.token-select{
+font-family:var(--orbitron);
+font-weight:700;
+font-size:14px;
+background:rgba(132,151,220,.1);
+border:1px solid var(--border);
+color:var(--text);
+border-radius:10px;
+padding:10px 12px;
+cursor:pointer;
+flex-shrink:0;
+}
+
+.amount-input{
+flex:1;
+background:none;
+border:none;
+color:var(--text);
+font-size:22px;
+font-weight:700;
+text-align:right;
+outline:none;
+min-width:0;
+}
+
+.amount-input::placeholder{ color:var(--muted); }
+
+.max-btn{
+font-family:var(--orbitron);
+font-weight:700;
+font-size:11px;
+letter-spacing:.5px;
+background:rgba(20,241,149,.1);
+border:1px solid rgba(20,241,149,.3);
+color:var(--green);
+border-radius:8px;
+padding:6px 10px;
+cursor:pointer;
+flex-shrink:0;
+transition:opacity .15s ease;
+}
+
+.max-btn:hover{ opacity:.75; }
+
+.swap-field-label #sellBalanceLabel{
+cursor:default;
+}
+
+.swap-arrow{
+display:flex;
+align-items:center;
+justify-content:center;
+margin:8px auto;
+width:34px;
+height:34px;
+border-radius:50%;
+background:rgba(132,151,220,.1);
+border:1px solid var(--border);
+cursor:pointer;
+color:var(--muted);
+font-size:16px;
+}
+
+.swap-arrow:hover{ color:var(--text); }
+
+.quote-details{
+margin-top:14px;
+padding-top:14px;
+border-top:1px solid var(--border);
+font-size:12.5px;
+color:var(--muted);
+}
+
+.quote-details-row{
+display:flex;
+justify-content:space-between;
+padding:4px 0;
+}
+
+.quote-details-row b{ color:var(--text); }
+
+.quote-details-row.fee-zero b{ color:var(--green); }
+
+.swap-btn{
+width:100%;
+margin-top:16px;
+font-family:var(--orbitron);
+font-weight:700;
+font-size:14px;
+letter-spacing:.5px;
+color:var(--bg);
+background:var(--green);
+border:none;
+border-radius:12px;
+padding:16px 24px;
+cursor:pointer;
+transition:opacity .15s ease;
+}
+
+.swap-btn:hover{ opacity:.85; }
+
+.swap-btn:disabled{
+opacity:.4;
+cursor:not-allowed;
+}
+
+.swap-status{
+text-align:center;
+padding:30px 0;
+color:var(--muted);
+font-size:13px;
+}
+
+.swap-success{
+text-align:center;
+padding:10px 0;
+}
+
+.swap-success .check{
+width:48px;
+height:48px;
+border-radius:50%;
+background:rgba(20,241,149,.15);
+border:2px solid var(--green);
+display:flex;
+align-items:center;
+justify-content:center;
+margin:0 auto 16px;
+font-size:22px;
+color:var(--green);
+}
+
+.swap-success a{
+color:var(--green);
+font-size:13px;
+text-decoration:none;
+}
+
+.notes{
+margin-top:28px;
+padding:16px 18px;
+border:1px solid var(--border);
+border-radius:14px;
+font-size:12.5px;
+line-height:1.7;
+color:var(--muted);
+}
+
+.notes b{ color:var(--text); }
+
+.error-box{
+display:none;
+background:rgba(255,95,135,.08);
+border:1px solid rgba(255,95,135,.3);
+border-radius:12px;
+padding:14px 16px;
+font-size:13px;
+color:var(--danger);
+margin-bottom:20px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<a href="index.html#roadmap" class="back">&larr; BACK TO RELAX</a>
+
+<span class="lab-tag">RELAX SWAP // EXPERIMENT 002</span>
+
+<h1>Swap tokens.<br><span>RELAX never touches your funds.</span></h1>
+
+<p class="subtitle">
+Every swap is signed by your own wallet and routed through Jupiter's
+liquidity, built directly on Jupiter's own quote/swap API &mdash; not a
+gated widget. RELAX never holds, custodies, or has access to your SOL,
+tokens, or NFTs — at any point, in any tool.
+</p>
+
+<div id="errorBox" class="error-box"></div>
+
+<div id="holderPill" class="holder-pill" style="display:none;">
+<div class="holder-pill-left">
+<span class="holder-dot"></span>
+<span id="holderStatusText">Checking $RELAX balance&hellip;</span>
+</div>
+<span id="holderFeeBadge" class="holder-fee-badge">&mdash;</span>
+</div>
+
+<div id="walletBox" class="wallet-box">
+<button id="connectBtn" class="connect-btn">CONNECT WALLET</button>
+</div>
+
+<div id="swapCard" class="swap-card">
+
+<div class="swap-field">
+<div class="swap-field-label">
+<span>Selling</span>
+<span id="sellBalanceLabel"></span>
+</div>
+<div class="swap-field-row">
+<select id="sellTokenSelect" class="token-select">
+<option value="SOL">SOL</option>
+<option value="USDC">USDC</option>
+<option value="RELAX">$RELAX</option>
+</select>
+<input id="sellAmountInput" class="amount-input" type="number" placeholder="0.0" min="0" step="any">
+<button id="maxBtn" type="button" class="max-btn">MAX</button>
+</div>
+</div>
+
+<div class="swap-arrow" id="flipTokensBtn">&#8645;</div>
+
+<div class="swap-field">
+<div class="swap-field-label"><span>Buying</span></div>
+<div class="swap-field-row">
+<select id="buyTokenSelect" class="token-select">
+<option value="USDC">USDC</option>
+<option value="SOL">SOL</option>
+<option value="RELAX">$RELAX</option>
+</select>
+<input id="buyAmountInput" class="amount-input" type="text" placeholder="0.0" disabled>
+</div>
+</div>
+
+<div id="quoteDetails" class="quote-details" style="display:none;">
+<div class="quote-details-row"><span>Rate</span><b id="quoteRate">&mdash;</b></div>
+<div class="quote-details-row"><span>Price Impact</span><b id="quoteImpact">&mdash;</b></div>
+<div class="quote-details-row" id="quoteFeeRow"><span>RELAX Fee</span><b id="quoteFee">&mdash;</b></div>
+<div class="quote-details-row"><span>Minimum Received</span><b id="quoteMinReceived">&mdash;</b></div>
+</div>
+
+<button id="swapBtn" class="swap-btn" disabled>ENTER AN AMOUNT</button>
+
+<div id="swapStatus" class="swap-status" style="display:none;"></div>
+
+<div id="swapSuccess" class="swap-success" style="display:none;">
+<div class="check">&#10003;</div>
+<div id="swapSuccessText" style="margin-bottom:10px;"></div>
+<a id="swapExplorerLink" href="#" target="_blank" rel="noopener">View on Solana Explorer &rarr;</a>
+</div>
+
+</div>
+
+<div class="notes">
+<b>How the fee works:</b> RELAX charges 0.5% on standard swaps. Wallets
+holding $20 or more in $RELAX at the time of the swap pay a genuine
+0% &mdash; not routed through a third-party widget's own base fee, this
+is a direct Jupiter API call with no platform fee parameter attached at
+all when you qualify. Checked live, every time, not a one-time snapshot.
+<br><br>
+<b>Always verify the token you're swapping</b> &mdash; especially on
+pump.fun-stage tokens. RELAX does not curate, endorse, or guarantee any
+token available through this swap interface.
+</div>
+
+</div>
+
+<script src="holder-verification.js"></script>
+
+<script>
+
+/* ============================================================
+   Jupiter raw Quote/Swap API — built directly (no Plugin/Ultra
+   widget), so RELAX has full, transparent control over fees.
+   Confirmed via Jupiter's own official docs example response
+   ("platformFee": {"amount": "0", "feeBps": 0}) that omitting
+   platformFeeBps entirely results in a genuine 0% Jupiter fee —
+   unlike Ultra, which was found during testing to always apply
+   its own small base fee (~0.02-0.05%) regardless of our config.
+
+   Using api.jup.ag (not lite-api.jup.ag) since we now have a real
+   API key from portal.jup.ag — this is the forward-looking, stable
+   host rather than the free/keyless tier that's slated for
+   eventual deprecation.
+   ============================================================ */
+const JUPITER_API_BASE = "https://api.jup.ag/swap/v1";
+const JUPITER_API_KEY = "jup_c7404265ce3413d0015b1aa1a13db5c043831f1bbbc60d7a7b837f300f2c1937";
+
+const RELAX_FEE_ACCOUNT_PLACEHOLDER = "REPLACE_WITH_A_RELAX_OWNED_TOKEN_ACCOUNT";
+/* ============================================================
+   OPEN ITEM: Swap API "no longer requires the use of the
+   Referral Program" — any valid token account RELAX owns for the
+   relevant mint can be passed as feeAccount. We can likely reuse
+   one of the token accounts already created tonight (SOL/USDC,
+   either the Swap+Trigger or Ultra referral token accounts), but
+   this needs confirming against the /swap endpoint's actual
+   requirements before going live — a wrong/invalid feeAccount
+   would break every non-holder swap, not just fail to collect fees.
+   ============================================================ */
+
+const STANDARD_FEE_BPS = 50; // 0.5%
+const HOLDER_FEE_BPS = 0;    // handled by omitting fee params entirely
+
+const TOKENS = {
+	SOL:   { mint: "So11111111111111111111111111111111111111112", decimals: 9, label: "SOL" },
+	USDC:  { mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", decimals: 6, label: "USDC" },
+	RELAX: { mint: "6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump", decimals: 6, label: "$RELAX" }
+	// NOTE: confirm $RELAX's actual decimals on-chain before relying on
+	// this for real amounts — assumed 6 (standard pump.fun default),
+	// same assumption flagged earlier tonight in worker.js.
+};
+
+const RPC_URL = "https://card.0relaxbro.xyz";
+
+const connectBtn = document.getElementById("connectBtn");
+const walletBox = document.getElementById("walletBox");
+const holderPill = document.getElementById("holderPill");
+const holderStatusText = document.getElementById("holderStatusText");
+const holderFeeBadge = document.getElementById("holderFeeBadge");
+const swapCard = document.getElementById("swapCard");
+const errorBox = document.getElementById("errorBox");
+
+const sellTokenSelect = document.getElementById("sellTokenSelect");
+const buyTokenSelect = document.getElementById("buyTokenSelect");
+const sellAmountInput = document.getElementById("sellAmountInput");
+const buyAmountInput = document.getElementById("buyAmountInput");
+const flipTokensBtn = document.getElementById("flipTokensBtn");
+const quoteDetails = document.getElementById("quoteDetails");
+const quoteRate = document.getElementById("quoteRate");
+const quoteImpact = document.getElementById("quoteImpact");
+const quoteFeeRow = document.getElementById("quoteFeeRow");
+const quoteFee = document.getElementById("quoteFee");
+const quoteMinReceived = document.getElementById("quoteMinReceived");
+const swapBtn = document.getElementById("swapBtn");
+const swapStatus = document.getElementById("swapStatus");
+const swapSuccess = document.getElementById("swapSuccess");
+const swapSuccessText = document.getElementById("swapSuccessText");
+const swapExplorerLink = document.getElementById("swapExplorerLink");
+
+let isHolderCache = false;
+let latestQuote = null;
+let quoteDebounceTimer = null;
+
+function showError(message) {
+	errorBox.textContent = message;
+	errorBox.style.display = "block";
+}
+
+function clearError() {
+	errorBox.style.display = "none";
+	errorBox.textContent = "";
+}
+
+function renderWalletConnected(publicKey) {
+	walletBox.innerHTML =
+		'<div class="wallet-connected-row">' +
+			'<span>Connected: <span class="addr">' +
+				publicKey.slice(0, 4) + "&hellip;" + publicKey.slice(-4) +
+			"</span></span>" +
+			'<span id="disconnectLink" class="disconnect-link">Disconnect</span>' +
+		"</div>";
+
+	document.getElementById("disconnectLink").addEventListener("click", () => {
+		RelaxHolder.disconnect();
+		try {
+			sessionStorage.setItem("relaxSwapExplicitDisconnect", "1");
+		} catch (err) {}
+		window.location.reload();
+	});
+}
+
+async function refreshHolderStatus() {
+	holderPill.style.display = "flex";
+	holderPill.classList.remove("is-holder");
+	holderStatusText.textContent = "Checking $RELAX balance…";
+	holderFeeBadge.textContent = "—";
+
+	try {
+		const status = await RelaxHolder.checkHolderStatus();
+
+		if (status.isHolder) {
+			holderPill.classList.add("is-holder");
+			holderStatusText.textContent =
+				"$RELAX holder (~$" + status.usdValue.toFixed(2) + ")";
+			holderFeeBadge.textContent = "FEE: 0%";
+		} else {
+			holderStatusText.textContent =
+				"Not yet holding $" + status.threshold + "+ of $RELAX";
+			holderFeeBadge.textContent = "FEE: 0.5%";
+		}
+
+		isHolderCache = status.isHolder;
+		return status.isHolder;
+	} catch (err) {
+		holderStatusText.textContent = "Couldn't verify balance — standard fee applies";
+		holderFeeBadge.textContent = "FEE: 0.5%";
+		isHolderCache = false;
+		return false;
+	}
+}
+
+function toRawAmount(uiAmount, decimals) {
+	return Math.round(Number(uiAmount) * Math.pow(10, decimals));
+}
+
+function fromRawAmount(rawAmount, decimals) {
+	return Number(rawAmount) / Math.pow(10, decimals);
+}
+
+function jupiterHeaders() {
+	const headers = { "Content-Type": "application/json" };
+	if (JUPITER_API_KEY) headers["x-api-key"] = JUPITER_API_KEY;
+	return headers;
+}
+
+async function fetchQuote() {
+	const sellKey = sellTokenSelect.value;
+	const buyKey = buyTokenSelect.value;
+	const sellAmount = sellAmountInput.value;
+
+	if (sellKey === buyKey) {
+		showError("Can't swap a token for itself — pick two different tokens.");
+		return;
+	}
+	clearError();
+
+	if (!sellAmount || Number(sellAmount) <= 0) {
+		buyAmountInput.value = "";
+		quoteDetails.style.display = "none";
+		swapBtn.disabled = true;
+		swapBtn.textContent = "ENTER AN AMOUNT";
+		latestQuote = null;
+		return;
+	}
+
+	const sellToken = TOKENS[sellKey];
+	const buyToken = TOKENS[buyKey];
+	const rawAmount = toRawAmount(sellAmount, sellToken.decimals);
+
+	swapBtn.disabled = true;
+	swapBtn.textContent = "FETCHING QUOTE…";
+
+	try {
+		const params = new URLSearchParams({
+			inputMint: sellToken.mint,
+			outputMint: buyToken.mint,
+			amount: String(rawAmount),
+			slippageBps: "50"
+		});
+
+		if (!isHolderCache) {
+			params.set("platformFeeBps", String(STANDARD_FEE_BPS));
+		}
+
+		const res = await fetch(JUPITER_API_BASE + "/quote?" + params.toString(), {
+			headers: jupiterHeaders()
+		});
+
+		if (!res.ok) throw new Error("Quote request failed (" + res.status + ")");
+
+		const quote = await res.json();
+		latestQuote = quote;
+
+		const outUiAmount = fromRawAmount(quote.outAmount, buyToken.decimals);
+		buyAmountInput.value = outUiAmount.toFixed(6);
+
+		const rate = outUiAmount / Number(sellAmount);
+		quoteRate.textContent = "1 " + sellToken.label + " ≈ " + rate.toFixed(6) + " " + buyToken.label;
+
+		const impactPct = Number(quote.priceImpactPct) * 100;
+		quoteImpact.textContent = (impactPct > 0 ? "-" : "") + Math.abs(impactPct).toFixed(2) + "%";
+
+		if (isHolderCache) {
+			quoteFeeRow.classList.add("fee-zero");
+			quoteFee.textContent = "0% (genuinely — no fee param sent)";
+		} else {
+			quoteFeeRow.classList.remove("fee-zero");
+			const feeBpsShown = (quote.platformFee && quote.platformFee.feeBps) || STANDARD_FEE_BPS;
+			quoteFee.textContent = (feeBpsShown / 100).toFixed(2) + "%";
+		}
+
+		const minReceived = fromRawAmount(quote.otherAmountThreshold, buyToken.decimals);
+		quoteMinReceived.textContent = minReceived.toFixed(6) + " " + buyToken.label;
+
+		quoteDetails.style.display = "block";
+		swapBtn.disabled = false;
+		swapBtn.textContent = "SWAP";
+	} catch (err) {
+		showError(err && err.message ? err.message : "Couldn't fetch a quote.");
+		quoteDetails.style.display = "none";
+		swapBtn.disabled = true;
+		swapBtn.textContent = "ENTER AN AMOUNT";
+		latestQuote = null;
+	}
+}
+
+function scheduleQuote() {
+	clearTimeout(quoteDebounceTimer);
+	quoteDebounceTimer = setTimeout(fetchQuote, 500);
+}
+
+/* ---------- Balance display + Max button ---------- */
+
+let sellBalanceRaw = 0; // in UI units (already divided by decimals)
+const sellBalanceLabel = document.getElementById("sellBalanceLabel");
+const maxBtn = document.getElementById("maxBtn");
+
+async function fetchTokenBalance(tokenKey, ownerAddress) {
+	const token = TOKENS[tokenKey];
+
+	if (tokenKey === "SOL") {
+		const res = await fetch(RPC_URL, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				jsonrpc: "2.0", id: 1, method: "getBalance", params: [ownerAddress]
+			})
+		});
+		const json = await res.json();
+		const lamports = (json.result && json.result.value) || 0;
+		return lamports / Math.pow(10, token.decimals);
+	}
+
+	// SPL token (USDC, RELAX)
+	const res = await fetch(RPC_URL, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({
+			jsonrpc: "2.0", id: 1, method: "getTokenAccountsByOwner",
+			params: [ownerAddress, { mint: token.mint }, { encoding: "jsonParsed" }]
+		})
+	});
+	const json = await res.json();
+	const accounts = (json.result && json.result.value) || [];
+	let total = 0;
+	for (const acc of accounts) {
+		const amt = acc && acc.account && acc.account.data && acc.account.data.parsed &&
+			acc.account.data.parsed.info && acc.account.data.parsed.info.tokenAmount &&
+			acc.account.data.parsed.info.tokenAmount.uiAmount;
+		if (typeof amt === "number") total += amt;
+	}
+	return total;
+}
+
+async function refreshSellBalance() {
+	const conn = RelaxHolder.getConnection();
+	if (!conn) {
+		sellBalanceLabel.textContent = "";
+		sellBalanceRaw = 0;
+		return;
+	}
+
+	sellBalanceLabel.textContent = "Balance: …";
+
+	try {
+		const balance = await fetchTokenBalance(sellTokenSelect.value, conn.publicKey);
+		sellBalanceRaw = balance;
+		sellBalanceLabel.textContent = "Balance: " + balance.toFixed(6);
+	} catch (err) {
+		sellBalanceLabel.textContent = "";
+		sellBalanceRaw = 0;
+	}
+}
+
+maxBtn.addEventListener("click", () => {
+	if (sellBalanceRaw <= 0) return;
+
+	// Reserve a little SOL for network fees when selling SOL itself,
+	// so "Max" doesn't leave the wallet unable to pay the tx fee.
+	const SOL_FEE_RESERVE = 0.003;
+	const amount = sellTokenSelect.value === "SOL"
+		? Math.max(0, sellBalanceRaw - SOL_FEE_RESERVE)
+		: sellBalanceRaw;
+
+	sellAmountInput.value = amount.toFixed(6);
+	scheduleQuote();
+});
+
+sellAmountInput.addEventListener("input", scheduleQuote);
+sellTokenSelect.addEventListener("change", () => {
+	scheduleQuote();
+	refreshSellBalance();
+});
+buyTokenSelect.addEventListener("change", scheduleQuote);
+
+flipTokensBtn.addEventListener("click", () => {
+	const sellVal = sellTokenSelect.value;
+	sellTokenSelect.value = buyTokenSelect.value;
+	buyTokenSelect.value = sellVal;
+	sellAmountInput.value = "";
+	buyAmountInput.value = "";
+	scheduleQuote();
+	refreshSellBalance();
+});
+
+async function sendRawTransaction(base64Tx) {
+	const res = await fetch(RPC_URL, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({
+			jsonrpc: "2.0",
+			id: 1,
+			method: "sendTransaction",
+			params: [base64Tx, { encoding: "base64", skipPreflight: false, maxRetries: 3 }]
+		})
+	});
+
+	const json = await res.json();
+	if (json.error) throw new Error(json.error.message || "Transaction failed to send");
+	return json.result;
+}
+
+async function confirmSignature(signature) {
+	const maxAttempts = 20;
+	for (let i = 0; i < maxAttempts; i++) {
+		const res = await fetch(RPC_URL, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				jsonrpc: "2.0",
+				id: 1,
+				method: "getSignatureStatuses",
+				params: [[signature], { searchTransactionHistory: true }]
+			})
+		});
+		const json = await res.json();
+		const status = json.result && json.result.value && json.result.value[0];
+		if (status && (status.confirmationStatus === "confirmed" || status.confirmationStatus === "finalized")) {
+			return status;
+		}
+		if (status && status.err) {
+			throw new Error("Transaction failed on-chain.");
+		}
+		await new Promise((r) => setTimeout(r, 1500));
+	}
+	throw new Error("Timed out waiting for confirmation — check the signature on Solana Explorer.");
+}
+
+async function handleSwap() {
+	if (!latestQuote) return;
+
+	const conn = RelaxHolder.getConnection();
+	if (!conn || !conn.rawProvider) {
+		showError("Wallet not connected.");
+		return;
+	}
+
+	clearError();
+	swapBtn.disabled = true;
+	swapBtn.textContent = "BUILDING TRANSACTION…";
+	swapStatus.style.display = "block";
+	swapStatus.textContent = "Preparing your swap…";
+
+	try {
+		const swapBody = {
+			quoteResponse: latestQuote,
+			userPublicKey: conn.publicKey,
+			wrapAndUnwrapSol: true,
+			dynamicComputeUnitLimit: true,
+			prioritizationFeeLamports: "auto"
+		};
+
+		if (!isHolderCache) {
+			swapBody.feeAccount = RELAX_FEE_ACCOUNT_PLACEHOLDER;
+		}
+
+		const swapRes = await fetch(JUPITER_API_BASE + "/swap", {
+			method: "POST",
+			headers: jupiterHeaders(),
+			body: JSON.stringify(swapBody)
+		});
+
+		if (!swapRes.ok) throw new Error("Couldn't build the swap transaction (" + swapRes.status + ")");
+
+		const swapData = await swapRes.json();
+		const unsignedTxBase64 = swapData.swapTransaction;
+
+		swapBtn.textContent = "WAITING FOR SIGNATURE…";
+		swapStatus.textContent = "Approve the swap in your wallet…";
+
+		const txBytes = Uint8Array.from(atob(unsignedTxBase64), (c) => c.charCodeAt(0));
+		const versionedTx = solanaWeb3.VersionedTransaction.deserialize(txBytes);
+
+		const signedTx = await conn.rawProvider.signTransaction(versionedTx);
+		const signedBytes = signedTx.serialize();
+		const signedBase64 = btoa(String.fromCharCode(...signedBytes));
+
+		swapBtn.textContent = "SENDING…";
+		swapStatus.textContent = "Sending your transaction…";
+
+		const signature = await sendRawTransaction(signedBase64);
+
+		swapBtn.textContent = "CONFIRMING…";
+		swapStatus.textContent = "Waiting for confirmation…";
+
+		await confirmSignature(signature);
+
+		swapStatus.style.display = "none";
+		swapSuccess.style.display = "block";
+		swapSuccessText.textContent =
+			"Swapped " + sellAmountInput.value + " " + sellTokenSelect.value +
+			" to " + buyAmountInput.value + " " + buyTokenSelect.value;
+		swapExplorerLink.href = "https://explorer.solana.com/tx/" + signature;
+
+		sellAmountInput.value = "";
+		buyAmountInput.value = "";
+		quoteDetails.style.display = "none";
+		latestQuote = null;
+		refreshSellBalance();
+		refreshHolderStatus(); // $RELAX balance may have changed if it was part of the swap
+	} catch (err) {
+		swapStatus.style.display = "none";
+		showError(err && err.message ? err.message : "Swap failed. Please try again.");
+		swapBtn.disabled = false;
+		swapBtn.textContent = "SWAP";
+	}
+}
+
+swapBtn.addEventListener("click", handleSwap);
+
+async function afterWalletConnected(publicKey) {
+	renderWalletConnected(publicKey);
+	await refreshHolderStatus();
+	swapCard.style.display = "block";
+	refreshSellBalance();
+}
+
+async function handleConnect() {
+	clearError();
+	const providers = RelaxHolder.detectProviders();
+
+	if (providers.length === 0) {
+		showError("No Solana wallet detected. Install Phantom or Solflare and reload the page.");
+		return;
+	}
+
+	try {
+		sessionStorage.removeItem("relaxSwapExplicitDisconnect");
+	} catch (err) {}
+
+	connectBtn.disabled = true;
+	connectBtn.textContent = "CONNECTING…";
+
+	try {
+		const conn = await RelaxHolder.connect();
+		await afterWalletConnected(conn.publicKey);
+	} catch (err) {
+		showError(err && err.message ? err.message : "Couldn't connect wallet.");
+		connectBtn.disabled = false;
+		connectBtn.textContent = "CONNECT WALLET";
+	}
+}
+
+connectBtn.addEventListener("click", handleConnect);
+
+(async function attemptEagerReconnect() {
+	try {
+		if (sessionStorage.getItem("relaxSwapExplicitDisconnect") === "1") return;
+	} catch (err) {}
+
+	const maxAttempts = 6;
+	const delayMs = 400;
+
+	for (let attempt = 0; attempt < maxAttempts; attempt++) {
+		try {
+			const conn = await RelaxHolder.tryEagerConnect();
+			if (conn) {
+				await afterWalletConnected(conn.publicKey);
+				return;
+			}
+		} catch (err) {}
+
+		if (RelaxHolder.detectProviders().length > 0) return;
+		await new Promise((resolve) => setTimeout(resolve, delayMs));
+	}
+})();
+
+</script>
+
+<script src="https://unpkg.com/@solana/web3.js@1.95.3/lib/index.iife.min.js"></script>
+
+</body>
+</html>
