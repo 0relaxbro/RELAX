@@ -7565,6 +7565,25 @@ document.body.classList.remove("loading");
 
 document.body.classList.add("loaded");
 
+if(window.location.hash){
+
+const hashTarget =
+document.querySelector(window.location.hash);
+
+if(hashTarget){
+
+hashTarget.scrollIntoView({
+
+behavior:"instant",
+
+block:"start"
+
+});
+
+}
+
+}
+
 const heroVideoEl =
 document.querySelector(".hero-video");
 
