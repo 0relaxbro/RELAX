@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>404 | RELAX</title>
+<meta name="theme-color" content="#050713">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+
+<style>
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+html,body{
+height:100%;
+background:#050713;
+color:#F5F7FF;
+font-family:'Inter',sans-serif;
+display:flex;
+align-items:center;
+justify-content:center;
+text-align:center;
+padding:30px;
+}
+
+.wrap{
+max-width:620px;
+}
+
+img{
+width:110px;
+height:110px;
+border-radius:50%;
+box-shadow:0 0 60px rgba(91,124,255,.35);
+animation:heroCoin 5s ease-in-out infinite;
+}
+
+@keyframes heroCoin{
+50%{
+transform:translateY(-8px);
+}
+}
+
+.logo-orbit-wrap{
+position:relative;
+display:inline-flex;
+align-items:center;
+justify-content:center;
+margin-bottom:34px;
+}
+
+.logo-orbit-ring{
+position:absolute;
+border-radius:50%;
+pointer-events:none;
+}
+
+.logo-orbit-ring.ring-a{
+inset:-12%;
+border:1px solid rgba(130,150,220,.22);
+}
+
+.logo-orbit-ring.ring-b{
+inset:-21%;
+border:1px solid rgba(153,69,255,.17);
+}
+
+.logo-orbit-motion{
+position:absolute;
+border-radius:50%;
+pointer-events:none;
+}
+
+.logo-orbit-motion.motion-a{
+inset:-12%;
+animation:orbitSpin 9s linear infinite;
+}
+
+.logo-orbit-motion.motion-a::before{
+content:"";
+position:absolute;
+top:-3px;
+left:50%;
+transform:translateX(-50%);
+width:6px;
+height:6px;
+border-radius:50%;
+background:#5B7CFF;
+box-shadow:0 0 9px 2px rgba(91,124,255,.85);
+}
+
+.logo-orbit-motion.motion-b{
+inset:-21%;
+animation:orbitSpin 15s linear infinite reverse;
+}
+
+.logo-orbit-motion.motion-b::before{
+content:"";
+position:absolute;
+bottom:-3px;
+left:50%;
+transform:translateX(-50%);
+width:5px;
+height:5px;
+border-radius:50%;
+background:#9945FF;
+box-shadow:0 0 9px 2px rgba(153,69,255,.85);
+}
+
+@keyframes orbitSpin{
+to{
+transform:rotate(360deg);
+}
+}
+
+.code{
+font-family:'Orbitron',sans-serif;
+font-weight:900;
+font-size:clamp(50px,10vw,96px);
+line-height:1;
+background:linear-gradient(90deg,#14F195,#5B7CFF,#9945FF);
+-webkit-background-clip:text;
+background-clip:text;
+color:transparent;
+margin-bottom:18px;
+}
+
+p{
+font-size:clamp(15px,2.4vw,19px);
+color:#929BB5;
+letter-spacing:.5px;
+margin-bottom:38px;
+}
+
+p strong{
+color:#F5F7FF;
+}
+
+a{
+display:inline-block;
+padding:16px 34px;
+border-radius:12px;
+background:linear-gradient(90deg,#14F195,#5B7CFF,#9945FF);
+color:#050713;
+font-family:'Orbitron',sans-serif;
+font-weight:800;
+font-size:13px;
+letter-spacing:2px;
+text-decoration:none;
+}
+
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<div class="logo-orbit-wrap">
+
+<img src="logo.png" alt="RELAX">
+
+<div class="logo-orbit-ring ring-a"></div>
+
+<div class="logo-orbit-ring ring-b"></div>
+
+<div class="logo-orbit-motion motion-a"></div>
+
+<div class="logo-orbit-motion motion-b"></div>
+
+</div>
+
+<div class="code">404</div>
+
+<p>YOU PANICKED AND TOOK THE WRONG TURN.<br>
+<strong>0&nbsp;Fear.&nbsp;0&nbsp;Panic.&nbsp;0&nbsp;Regrets.&nbsp;Just&nbsp;RELAX</strong><br>
+Even here.</p>
+
+<a href="/">RELAX. GO HOME.</a>
+
+</div>
+
+</body>
+</html>
