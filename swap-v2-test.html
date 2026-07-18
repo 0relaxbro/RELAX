@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RELAX LAB | Swap V2 Test — Internal</title>
+<meta name="description" content="Internal test page comparing Jupiter's Meta-Aggregator (Ultra) execution against the live Metis-based swap. Not linked from the main site.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#050713">
+
+<link rel="icon" href="favicon.ico" sizes="any">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@600;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+
+:root{
+--bg:#050713;
+--text:#F5F7FF;
+--muted:#929BB5;
+--green:#14F195;
+--purple:#9945FF;
+--blue:#5B7CFF;
+--danger:#FF5F87;
+--warn:#FFB020;
+--border:rgba(132,151,220,.18);
+--orbitron:'Orbitron',sans-serif;
+--inter:'Inter',sans-serif;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+background:var(--bg);
+color:var(--text);
+font-family:var(--inter);
+min-height:100vh;
+padding:40px 20px 100px;
+}
+
+.wrap{ max-width:640px; margin:0 auto; }
+
+.internal-banner{
+background:rgba(255,176,32,.08);
+border:1px solid rgba(255,176,32,.3);
+border-radius:12px;
+padding:14px 16px;
+font-size:12.5px;
+color:var(--warn);
+margin-bottom:28px;
+line-height:1.6;
+}
+
+.lab-tag{
+display:inline-block;
+font-family:var(--orbitron);
+font-size:11px;
+font-weight:700;
+letter-spacing:1.5px;
+color:var(--purple);
+background:rgba(153,69,255,.08);
+border:1px solid rgba(153,69,255,.25);
+padding:6px 12px;
+border-radius:20px;
+margin-bottom:20px;
+}
+
+h1{
+font-family:var(--orbitron);
+font-size:28px;
+font-weight:800;
+line-height:1.25;
+margin-bottom:14px;
+}
+
+h1 span{ color:var(--purple); }
+
+.subtitle{
+color:var(--muted);
+font-size:14.5px;
+line-height:1.6;
+margin-bottom:32px;
+max-width:520px;
+}
+
+.wallet-box{
+border:1px solid var(--border);
+border-radius:16px;
+padding:20px;
+margin-bottom:20px;
+text-align:center;
+}
+
+.connect-btn{
+font-family:var(--orbitron);
+font-weight:700;
+font-size:14px;
+letter-spacing:.5px;
+color:var(--bg);
+background:var(--purple);
+border:none;
+border-radius:12px;
+padding:14px 20px;
+cursor:pointer;
+width:100%;
+}
+
+.connect-btn:hover{ opacity:.85; }
+.connect-btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+.wallet-connected-row{
+display:flex;
+align-items:center;
+justify-content:space-between;
+font-size:13px;
+}
+
+.wallet-connected-row .addr{ font-family:monospace; color:var(--text); }
+
+.disconnect-link{
+color:var(--danger);
+cursor:pointer;
+font-size:12px;
+}
+
+.mode-toggle{
+display:flex;
+gap:8px;
+margin-bottom:20px;
+}
+
+.mode-btn{
+flex:1;
+font-family:var(--orbitron);
+font-weight:700;
+font-size:12px;
+letter-spacing:.5px;
+padding:12px;
+border-radius:10px;
+border:1px solid var(--border);
+background:rgba(132,151,220,.05);
+color:var(--muted);
+cursor:pointer;
+text-align:center;
+}
+
+.mode-btn.active{
+color:var(--bg);
+background:var(--purple);
+border-color:var(--purple);
+}
+
+.swap-card{
+background:rgba(132,151,220,.04);
+border:1px solid var(--border);
+border-radius:18px;
+padding:20px;
+margin-bottom:20px;
+}
+
+.swap-field{
+background:rgba(5,7,19,.5);
+border:1px solid var(--border);
+border-radius:14px;
+padding:14px 16px;
+margin-bottom:8px;
+}
+
+.swap-field-label{
+display:flex;
+justify-content:space-between;
+color:var(--muted);
+font-size:12px;
+margin-bottom:8px;
+}
+
+.swap-field-row{ display:flex; align-items:center; gap:10px; }
+
+.token-select{
+font-family:var(--orbitron);
+font-weight:700;
+font-size:14px;
+background:rgba(132,151,220,.1);
+border:1px solid var(--border);
+color:var(--text);
+border-radius:10px;
+padding:10px 12px;
+cursor:pointer;
+}
+
+.amount-input{
+flex:1;
+background:none;
+border:none;
+outline:none;
+color:var(--text);
+font-family:var(--orbitron);
+font-size:20px;
+font-weight:700;
+text-align:right;
+min-width:0;
+}
+
+.swap-arrow{
+width:34px;
+height:34px;
+border-radius:50%;
+background:rgba(153,69,255,.1);
+border:1px solid var(--border);
+display:flex;
+align-items:center;
+justify-content:center;
+margin:2px auto;
+cursor:pointer;
+font-size:14px;
+}
+
+.action-btn{
+font-family:var(--orbitron);
+font-weight:700;
+font-size:14px;
+letter-spacing:.5px;
+color:var(--bg);
+background:var(--green);
+border:none;
+border-radius:12px;
+padding:16px;
+width:100%;
+cursor:pointer;
+margin-top:8px;
+}
+
+.action-btn:hover{ opacity:.9; }
+.action-btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+.error-box{
+background:rgba(255,95,135,.08);
+border:1px solid rgba(255,95,135,.3);
+border-radius:12px;
+padding:14px 16px;
+font-size:13px;
+color:var(--danger);
+margin-bottom:16px;
+display:none;
+}
+
+.result-panel{
+margin-top:24px;
+border:1px solid var(--border);
+border-radius:16px;
+padding:20px;
+display:none;
+}
+
+.result-panel h3{
+font-family:var(--orbitron);
+font-size:14px;
+margin-bottom:14px;
+color:var(--purple);
+}
+
+.result-row{
+display:flex;
+justify-content:space-between;
+font-size:13px;
+padding:7px 0;
+border-bottom:1px solid var(--border);
+}
+
+.result-row:last-child{ border-bottom:none; }
+.result-row .label{ color:var(--muted); }
+.result-row .value{ font-family:monospace; }
+.result-row .value.ok{ color:var(--green); }
+.result-row .value.fail{ color:var(--danger); }
+
+.log-box{
+margin-top:20px;
+font-family:monospace;
+font-size:11.5px;
+color:var(--muted);
+background:rgba(5,7,19,.6);
+border:1px solid var(--border);
+border-radius:12px;
+padding:14px;
+max-height:220px;
+overflow-y:auto;
+white-space:pre-wrap;
+word-break:break-all;
+}
+
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<span class="lab-tag">SWAP V2 TEST // STAGE 1 // INTERNAL ONLY</span>
+
+<h1>Swap <span>V2 test</span> — Meta-Aggregator vs Metis</h1>
+<p class="subtitle">
+Compares Jupiter's Meta-Aggregator (Ultra) execution against the live
+swap's Metis path. RELAX platform fee is 0% on both — this page exists
+to collect real comparative data (quoted vs received output, landing
+success, timing), not to replace the live swap yet. See
+SWAP_V2_MIGRATION_PLAN.md for the full staged rollout plan.
+</p>
+
+<div class="internal-banner">
+⚠ Internal test tool. Not linked from the main site, not for regular
+users. Uses real funds on mainnet — test with small amounts.
+</div>
+
+<div class="wallet-box" id="walletBox">
+<button id="connectBtn" class="connect-btn">CONNECT WALLET</button>
+</div>
+
+<div class="swap-card" id="swapCard" style="display:none;">
+
+<div class="swap-field">
+<div class="swap-field-label">
+<span>Selling</span>
+<span id="sellBalanceLabel"></span>
+</div>
+<div class="swap-field-row">
+<select id="sellTokenSelect" class="token-select">
+<option value="SOL">SOL</option>
+<option value="USDC">USDC</option>
+<option value="RELAX">$RELAX</option>
+</select>
+<input id="sellAmountInput" class="amount-input" type="number" placeholder="0.0" min="0" step="any">
+</div>
+</div>
+
+<div class="swap-arrow" id="flipBtn">&#8645;</div>
+
+<div class="swap-field">
+<div class="swap-field-label">
+<span>Buying</span>
+<span id="buyBalanceLabel"></span>
+</div>
+<div class="swap-field-row">
+<select id="buyTokenSelect" class="token-select">
+<option value="USDC">USDC</option>
+<option value="SOL">SOL</option>
+<option value="RELAX">$RELAX</option>
+</select>
+<input id="buyAmountInput" class="amount-input" type="text" placeholder="0.0" disabled>
+</div>
+</div>
+
+<div class="error-box" id="errorBox"></div>
+
+<button id="orderBtn" class="action-btn" disabled>ENTER AN AMOUNT</button>
+
+</div>
+
+<div class="result-panel" id="resultPanel">
+<h3>Result</h3>
+<div id="resultRows"></div>
+</div>
+
+<div class="log-box" id="logBox">Waiting for first action…</div>
+
+</div>
+
+<script src="holder-verification.js"></script>
+<script src="https://unpkg.com/@solana/web3.js@1.95.3/lib/index.iife.min.js"></script>
+<script>
+
+const RPC_URL = "https://card.0relaxbro.xyz";
+const JUPITER_API_BASE = "https://card.0relaxbro.xyz";
+
+const TOKENS = {
+	SOL:   { mint: "So11111111111111111111111111111111111111112", decimals: 9, label: "SOL" },
+	USDC:  { mint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", decimals: 6, label: "USDC" },
+	RELAX: { mint: "6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump", decimals: 6, label: "$RELAX" }
+};
+
+const walletBox = document.getElementById("walletBox");
+const connectBtn = document.getElementById("connectBtn");
+const swapCard = document.getElementById("swapCard");
+const sellTokenSelect = document.getElementById("sellTokenSelect");
+const buyTokenSelect = document.getElementById("buyTokenSelect");
+const sellAmountInput = document.getElementById("sellAmountInput");
+const buyAmountInput = document.getElementById("buyAmountInput");
+const sellBalanceLabel = document.getElementById("sellBalanceLabel");
+const buyBalanceLabel = document.getElementById("buyBalanceLabel");
+const flipBtn = document.getElementById("flipBtn");
+const orderBtn = document.getElementById("orderBtn");
+const errorBox = document.getElementById("errorBox");
+const resultPanel = document.getElementById("resultPanel");
+const resultRows = document.getElementById("resultRows");
+const logBox = document.getElementById("logBox");
+
+let latestOrder = null;
+let orderDebounce = null;
+
+function log(line) {
+	const time = new Date().toISOString().split("T")[1].slice(0, 12);
+	logBox.textContent += "\n[" + time + "] " + line;
+	logBox.scrollTop = logBox.scrollHeight;
+}
+
+function showError(msg) {
+	errorBox.textContent = msg;
+	errorBox.style.display = "block";
+}
+
+function clearError() {
+	errorBox.style.display = "none";
+	errorBox.textContent = "";
+}
+
+function toRawAmount(uiAmount, decimals) {
+	const str = String(uiAmount).trim();
+	const parts = str.split(".");
+	const wholePart = parts[0] || "0";
+	const fracPart = parts[1] || "";
+	const fracPadded = (fracPart + "0".repeat(decimals)).slice(0, decimals);
+	const rawStr = (wholePart + fracPadded).replace(/^0+(?=\d)/, "");
+	return BigInt(rawStr || "0").toString();
+}
+
+function fromRawAmount(rawAmount, decimals) {
+	return Number(rawAmount) / Math.pow(10, decimals);
+}
+
+function bytesToBinaryString(bytes) {
+	const CHUNK_SIZE = 8192;
+	let result = "";
+	for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
+		result += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK_SIZE));
+	}
+	return result;
+}
+
+async function fetchTokenBalance(tokenKey, ownerAddress) {
+	const token = TOKENS[tokenKey];
+	if (tokenKey === "SOL") {
+		const res = await fetch(RPC_URL, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "getBalance", params: [ownerAddress] })
+		});
+		const json = await res.json();
+		return ((json.result && json.result.value) || 0) / Math.pow(10, token.decimals);
+	}
+	const res = await fetch(RPC_URL, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({
+			jsonrpc: "2.0", id: 1, method: "getTokenAccountsByOwner",
+			params: [ownerAddress, { mint: token.mint }, { encoding: "jsonParsed" }]
+		})
+	});
+	const json = await res.json();
+	const accounts = (json.result && json.result.value) || [];
+	let total = 0;
+	for (const acc of accounts) {
+		const amt = acc && acc.account && acc.account.data && acc.account.data.parsed &&
+			acc.account.data.parsed.info && acc.account.data.parsed.info.tokenAmount &&
+			acc.account.data.parsed.info.tokenAmount.uiAmount;
+		if (typeof amt === "number") total += amt;
+	}
+	return total;
+}
+
+async function refreshBalances() {
+	const conn = RelaxHolder.getConnection();
+	if (!conn) return;
+	try {
+		const sellBal = await fetchTokenBalance(sellTokenSelect.value, conn.publicKey);
+		sellBalanceLabel.textContent = "Balance: " + sellBal.toFixed(6);
+	} catch (err) { sellBalanceLabel.textContent = ""; }
+	try {
+		const buyBal = await fetchTokenBalance(buyTokenSelect.value, conn.publicKey);
+		buyBalanceLabel.textContent = "Balance: " + buyBal.toFixed(6);
+	} catch (err) { buyBalanceLabel.textContent = ""; }
+}
+
+async function fetchOrder() {
+	const conn = RelaxHolder.getConnection();
+	if (!conn) return;
+
+	const sellKey = sellTokenSelect.value;
+	const buyKey = buyTokenSelect.value;
+	const sellAmount = sellAmountInput.value;
+
+	if (sellKey === buyKey) {
+		showError("Pick two different tokens.");
+		return;
+	}
+	clearError();
+
+	if (!sellAmount || Number(sellAmount) <= 0) {
+		buyAmountInput.value = "";
+		orderBtn.disabled = true;
+		orderBtn.textContent = "ENTER AN AMOUNT";
+		latestOrder = null;
+		return;
+	}
+
+	const sellToken = TOKENS[sellKey];
+	const buyToken = TOKENS[buyKey];
+	const rawAmount = toRawAmount(sellAmount, sellToken.decimals);
+
+	orderBtn.disabled = true;
+	orderBtn.textContent = "FETCHING ORDER…";
+
+	try {
+		const params = new URLSearchParams({
+			inputMint: sellToken.mint,
+			outputMint: buyToken.mint,
+			amount: rawAmount,
+			taker: conn.publicKey
+		});
+
+		log("GET /jupiter-order " + sellKey + "->" + buyKey + " amount=" + sellAmount);
+		const t0 = performance.now();
+		const res = await fetch(JUPITER_API_BASE + "/jupiter-order?" + params.toString());
+		const fetchMs = Math.round(performance.now() - t0);
+
+		if (!res.ok) {
+			const errText = await res.text();
+			throw new Error("Order request failed (" + res.status + "): " + errText.slice(0, 200));
+		}
+
+		const order = await res.json();
+		latestOrder = order;
+
+		if (!order.transaction) {
+			throw new Error("No route found for this pair (errorCode: " + (order.errorCode || "unknown") + ").");
+		}
+
+		const outUiAmount = fromRawAmount(order.outAmount, buyToken.decimals);
+		buyAmountInput.value = outUiAmount.toFixed(6);
+
+		log("Order OK in " + fetchMs + "ms — quoted out: " + outUiAmount.toFixed(6) + " " + buyKey +
+			", feeBps: " + (order.feeBps ?? "?") + ", priceImpact: " + (order.priceImpactPct ?? "?"));
+
+		orderBtn.disabled = false;
+		orderBtn.textContent = "EXECUTE (V2 META-AGGREGATOR)";
+	} catch (err) {
+		showError(err && err.message ? err.message : "Couldn't fetch order.");
+		log("Order FAILED — " + (err && err.message ? err.message : String(err)));
+		orderBtn.disabled = true;
+		orderBtn.textContent = "ENTER AN AMOUNT";
+		latestOrder = null;
+	}
+}
+
+function scheduleOrder() {
+	clearTimeout(orderDebounce);
+	orderDebounce = setTimeout(fetchOrder, 500);
+}
+
+async function handleExecute() {
+	if (!latestOrder || !latestOrder.transaction) return;
+
+	const conn = RelaxHolder.getConnection();
+	if (!conn || !conn.rawProvider) {
+		showError("Wallet not connected.");
+		return;
+	}
+
+	clearError();
+	orderBtn.disabled = true;
+	orderBtn.textContent = "BUILDING…";
+	resultPanel.style.display = "none";
+
+	const sellKey = sellTokenSelect.value;
+	const buyKey = buyTokenSelect.value;
+	const buyToken = TOKENS[buyKey];
+	const quotedOut = fromRawAmount(latestOrder.outAmount, buyToken.decimals);
+
+	const t0 = performance.now();
+
+	try {
+		const txBytes = Uint8Array.from(atob(latestOrder.transaction), (c) => c.charCodeAt(0));
+		const versionedTx = solanaWeb3.VersionedTransaction.deserialize(txBytes);
+
+		orderBtn.textContent = "WAITING FOR SIGNATURE…";
+		log("Requesting signature from wallet…");
+		const signedTx = await conn.rawProvider.signTransaction(versionedTx);
+		const signedBytes = signedTx.serialize();
+		const signedBase64 = btoa(bytesToBinaryString(signedBytes));
+
+		orderBtn.textContent = "EXECUTING (JUPITER LANDING)…";
+		log("POST /jupiter-execute — Jupiter handles landing from here");
+
+		const execRes = await fetch(JUPITER_API_BASE + "/jupiter-execute", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				signedTransaction: signedBase64,
+				requestId: latestOrder.requestId
+			})
+		});
+
+		const execResult = await execRes.json();
+		const totalMs = Math.round(performance.now() - t0);
+
+		const success = execResult.status === "Success";
+		const actualOut = success && execResult.outputAmountResult
+			? fromRawAmount(execResult.outputAmountResult, buyToken.decimals)
+			: null;
+
+		resultPanel.style.display = "block";
+		resultRows.innerHTML =
+			row("Status", success ? "SUCCESS" : "FAILED (" + (execResult.status || "unknown") + ")", success ? "ok" : "fail") +
+			row("Quoted output", quotedOut.toFixed(6) + " " + buyKey) +
+			row("Actual output", actualOut !== null ? actualOut.toFixed(6) + " " + buyKey : "n/a") +
+			row("Total time (sign+land)", totalMs + " ms") +
+			row("Signature", execResult.signature ? execResult.signature.slice(0, 20) + "…" : "n/a") +
+			row("Code", execResult.code !== undefined ? String(execResult.code) : "n/a");
+
+		log("Execute result: " + JSON.stringify(execResult).slice(0, 400));
+
+		if (success) {
+			sellAmountInput.value = "";
+			buyAmountInput.value = "";
+			latestOrder = null;
+			orderBtn.disabled = true;
+			orderBtn.textContent = "ENTER AN AMOUNT";
+			setTimeout(refreshBalances, 2000);
+		} else {
+			orderBtn.disabled = false;
+			orderBtn.textContent = "EXECUTE (V2 META-AGGREGATOR)";
+		}
+	} catch (err) {
+		const totalMs = Math.round(performance.now() - t0);
+		log("Execute FAILED after " + totalMs + "ms — " + (err && err.message ? err.message : String(err)));
+		showError(err && err.message ? err.message : "Execute failed.");
+		orderBtn.disabled = false;
+		orderBtn.textContent = "EXECUTE (V2 META-AGGREGATOR)";
+	}
+}
+
+function row(label, value, cls) {
+	return '<div class="result-row"><span class="label">' + label + '</span>' +
+		'<span class="value' + (cls ? " " + cls : "") + '">' + value + "</span></div>";
+}
+
+sellAmountInput.addEventListener("input", scheduleOrder);
+sellTokenSelect.addEventListener("change", () => { scheduleOrder(); refreshBalances(); });
+buyTokenSelect.addEventListener("change", () => { scheduleOrder(); refreshBalances(); });
+
+flipBtn.addEventListener("click", () => {
+	const sellVal = sellTokenSelect.value;
+	sellTokenSelect.value = buyTokenSelect.value;
+	buyTokenSelect.value = sellVal;
+	sellAmountInput.value = "";
+	buyAmountInput.value = "";
+	scheduleOrder();
+	refreshBalances();
+});
+
+orderBtn.addEventListener("click", handleExecute);
+
+function renderWalletConnected(publicKey) {
+	walletBox.innerHTML =
+		'<div class="wallet-connected-row">' +
+			'<span>Connected: <span class="addr">' + publicKey.slice(0, 4) + "…" + publicKey.slice(-4) + "</span></span>" +
+			'<span id="disconnectLink" class="disconnect-link">Disconnect</span>' +
+		"</div>";
+	document.getElementById("disconnectLink").addEventListener("click", () => {
+		RelaxHolder.disconnect();
+		window.location.reload();
+	});
+}
+
+async function afterWalletConnected(publicKey) {
+	renderWalletConnected(publicKey);
+	swapCard.style.display = "block";
+	log("Wallet connected: " + publicKey);
+	refreshBalances();
+}
+
+connectBtn.addEventListener("click", async () => {
+	connectBtn.disabled = true;
+	connectBtn.textContent = "CONNECTING…";
+	try {
+		const providers = RelaxHolder.detectProviders();
+		if (providers.length === 0) {
+			showError("No Solana wallet found. Install Phantom, Solflare, or Backpack.");
+			connectBtn.disabled = false;
+			connectBtn.textContent = "CONNECT WALLET";
+			return;
+		}
+		const conn = await RelaxHolder.connect(providers[0].id);
+		await afterWalletConnected(conn.publicKey);
+	} catch (err) {
+		showError(err && err.message ? err.message : "Couldn't connect wallet.");
+		connectBtn.disabled = false;
+		connectBtn.textContent = "CONNECT WALLET";
+	}
+});
+
+RelaxHolder.onAccountChanged(() => window.location.reload());
+
+(async function attemptEagerReconnect() {
+	try {
+		const conn = await RelaxHolder.tryEagerConnect();
+		if (conn) await afterWalletConnected(conn.publicKey);
+	} catch (err) {}
+})();
+
+</script>
+
+</body>
+</html>
