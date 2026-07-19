@@ -636,7 +636,7 @@ Non-custodial. You sign every transaction yourself.
 <div class="quote-details-row"><span>Price Impact</span><b id="quoteImpact">&mdash;</b></div>
 <div class="quote-details-row fee-zero"><span>RELAX Fee</span><b>0%</b></div>
 <div class="quote-details-row" id="jupiterFeeRow" style="display:none;"><span>Jupiter Fee</span><b id="jupiterFeeDisplay">&mdash;</b></div>
-<div class="quote-details-row" id="totalSwapFeeRow" style="display:none;"><span>Total Swap Fee</span><b id="totalSwapFeeDisplay">&mdash;</b></div>
+<div class="quote-details-row" id="totalSwapFeeRow" style="display:none;"><span>Estimated Total Cost</span><b id="totalSwapFeeDisplay">&mdash;</b></div>
 <div class="quote-details-row"><span>Minimum Received</span><b id="quoteMinReceived">&mdash;</b></div>
 <div class="quote-details-row"><span>Gas</span><b id="quoteNetworkFee">&mdash;</b></div>
 </div>
@@ -1109,7 +1109,7 @@ async function fetchOrder() {
 		// confirmed via two real /order responses to sit at a stable
 		// 10bps (0.10%) regardless of trade size or network conditions.
 		//
-		// Total Swap Fee: order.feeBps — the REAL total percentage
+		// Estimated Total Cost: order.feeBps — the REAL total percentage
 		// deducted from the swap's output, including Jupiter's platform
 		// cut AND (on gasless orders) the network/priority fee Jupiter
 		// covers on the user's behalf. This must stay visible: an
@@ -1148,11 +1148,11 @@ async function fetchOrder() {
 		}
 
 		// FIX: "covered" implied this cost was free to the user — it
-		// isn't, it's bundled into Total Swap Fee above (deducted from
+		// isn't, it's bundled into Estimated Total Cost above (deducted from
 		// their output) rather than paid as a separate SOL transaction.
 		// Say that plainly instead.
 		document.getElementById("quoteNetworkFee").textContent = order.gasless === true
-			? "Gasless — included in Total Swap Fee"
+			? "Gasless — included in Estimated Total Cost"
 			: "~0.00001–0.0002 SOL";
 
 		const minReceived = fromRawAmount(order.otherAmountThreshold, buyToken.decimals);
