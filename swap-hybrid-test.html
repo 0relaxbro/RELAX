@@ -1881,6 +1881,7 @@ async function refreshBuyBalance() {
 
 	try {
 		const balance = await fetchTokenBalance(buyToken, conn.publicKey);
+		console.debug("[RELAX SWAP] BALANCE UPDATE DIAGNOSTIC — refreshBuyBalance() writing buyBalanceRaw", { previous: buyBalanceRaw, new: balance });
 		buyBalanceRaw = balance;
 		buyBalanceLabel.textContent = "Balance: " + balance.toFixed(6);
 	} catch (err) {
@@ -1960,6 +1961,7 @@ async function reconcileBalancesAfterSwap(
 			if (freshBuy + 0.000001 >= buyExpectedMin) {
 				buyConfirmed = true;
 				if (buyToken.address === buyTokenAtSubmit.address) {
+					console.debug("[RELAX SWAP] BALANCE UPDATE DIAGNOSTIC — reconcileBalancesAfterSwap() writing buyBalanceRaw", { attempt, previous: buyBalanceRaw, new: freshBuy, buyExpectedMin });
 					buyBalanceRaw = freshBuy;
 					buyBalanceLabel.textContent = "Balance: " + freshBuy.toFixed(6);
 				}
@@ -2756,6 +2758,25 @@ async function handleExecute() {
 		// response can never compound against a newer displayed balance.
 		const sellExpectedMax = Math.max(0, sellBalanceAtSubmit - sellAmountAtSubmit);
 		const buyExpectedMin = buyBalanceAtSubmit + actualOutputNumber;
+
+		// DIAGNOSTIC (20 Jul 2026): a transient ~2x-too-high SOL balance
+		// was reported live right after RELAX->SOL swaps, self-correcting
+		// within a couple seconds. Neither the code (buyExpectedMin is a
+		// single, non-additive assignment) nor a focus/visibilitychange
+		// race with reconcileBalancesAfterSwap() fully explains an
+		// inflated-then-corrected-DOWN pattern (a race would show a
+		// stale-then-correct jump, not an over-then-under one). Logging
+		// every input to this calculation so the next occurrence gives
+		// hard evidence instead of another guess. Safe to remove once
+		// confirmed either way — doesn't change any behavior.
+		console.debug("[RELAX SWAP] BALANCE UPDATE DIAGNOSTIC", {
+			sellBalanceAtSubmit, buyBalanceAtSubmit,
+			sellAmountAtSubmit, actualOutputNumber,
+			sellExpectedMax, buyExpectedMin,
+			sellTokenSymbol: sellTokenAtSubmit.symbol, buyTokenSymbol: buyTokenAtSubmit.symbol,
+			currentBuyBalanceRaw: buyBalanceRaw, currentSellBalanceRaw: sellBalanceRaw,
+			pendingReconciliationWasActive: pendingBalanceReconciliation !== null
+		});
 
 		if (sellToken.address === sellTokenAtSubmit.address) {
 			sellBalanceRaw = sellExpectedMax;
