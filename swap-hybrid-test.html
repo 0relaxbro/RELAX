@@ -1998,7 +1998,23 @@ maxBtn.addEventListener("click", async () => {
 
 	// Reserve a little SOL for network fees when selling SOL itself,
 	// so "Max" doesn't leave the wallet unable to pay the tx fee.
-	const SOL_FEE_RESERVE = 0.003;
+	// FIX (19 Jul 2026, review round 4 — confirmed via live testing):
+	// 0.003 was too tight for the Router path specifically. Router's
+	// real requirement is roughly 0.001 SOL mandatory tip + ~0.00204
+	// SOL rent for the temporary wSOL account created during the
+	// wrap step (needed upfront even though it's closed and refunded
+	// within the same transaction — Solana checks balance at each
+	// instruction, not net-at-end) + a small priority fee + the
+	// 0.000005 SOL base signature fee — comes out to ~0.0031+ minimum,
+	// which 0.003 doesn't quite cover. Confirmed live: MAX-derived
+	// amounts (leaving exactly 0.003) consistently failed Router's
+	// pre-flight simulation with InstructionError Custom:1
+	// (insufficient funds), while manually-entered smaller amounts
+	// leaving more headroom simulated fine. Raised to 0.005 for a
+	// real safety margin against priority fee spikes. This only
+	// affects the "Max" button's SOL reserve on the SOL-selling side
+	// of this research branch — doesn't touch live v1.0.
+	const SOL_FEE_RESERVE = 0.005;
 	const amount = sellToken.address === NATIVE_SOL_MINT
 		? Math.max(0, sellBalanceRaw - SOL_FEE_RESERVE)
 		: sellBalanceRaw;
