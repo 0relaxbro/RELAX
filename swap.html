@@ -105,6 +105,22 @@ margin-bottom:36px;
 max-width:460px;
 }
 
+.experimental-link{
+display:inline-block;
+color:var(--muted);
+font-size:12px;
+text-decoration:none;
+border:1px solid var(--border);
+border-radius:999px;
+padding:6px 14px;
+margin-bottom:28px;
+transition:color .15s, border-color .15s;
+}
+.experimental-link:hover{
+color:var(--green);
+border-color:var(--green);
+}
+
 .wallet-box{
 border:1px solid var(--border);
 border-radius:16px;
@@ -629,6 +645,8 @@ margin-bottom:20px;
 <p class="subtitle">
 Non-custodial. You sign every transaction yourself.
 </p>
+
+<a href="swap-hybrid-test.html" class="experimental-link">🧪 Want to try the experimental Hybrid Routing Engine? →</a>
 
 <div id="errorBox" class="error-box"></div>
 
