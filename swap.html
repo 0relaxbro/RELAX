@@ -265,6 +265,40 @@ box-shadow:0 12px 32px rgba(0,0,0,.5);
 
 .token-picker-panel.open{ display:block; }
 
+.jupiter-signature{
+position:absolute;
+right:16px;
+bottom:16px;
+display:flex;
+align-items:center;
+gap:6px;
+padding:6px 12px;
+background:rgba(11,14,30,.72);
+backdrop-filter:blur(8px);
+border:1px solid var(--border);
+border-radius:999px;
+font-family:var(--inter);
+font-size:11px;
+color:var(--muted);
+letter-spacing:.02em;
+z-index:15;
+pointer-events:none;
+}
+
+.jupiter-signature b{
+color:var(--text);
+font-weight:600;
+}
+
+@media (max-width:560px){
+.jupiter-signature{
+right:10px;
+bottom:10px;
+font-size:10px;
+padding:5px 10px;
+}
+}
+
 .token-search-input{
 width:100%;
 background:rgba(132,151,220,.08);
@@ -590,7 +624,7 @@ margin-bottom:20px;
 
 <span class="lab-tag">RELAX SWAP // EXPERIMENT 002</span>
 
-<h1>Powered by Jupiter.<br><span>Best available route.<br>0% RELAX platform fee.</span></h1>
+<h1>RELAX SWAP<br><span>Best available route.<br>0% RELAX platform fee.</span></h1>
 
 <p class="subtitle">
 Non-custodial. You sign every transaction yourself.
@@ -2256,6 +2290,8 @@ connectBtn.addEventListener("click", handleConnect);
 </script>
 
 <script src="https://unpkg.com/@solana/web3.js@1.95.3/lib/index.iife.min.js"></script>
+
+<div class="jupiter-signature">Powered by <b>Jupiter</b></div>
 
 </body>
 </html>
