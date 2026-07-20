@@ -59,7 +59,8 @@ the Cloudflare Worker that backs its live features.
 | `index.html` | The main site |
 | `score.html` | RELAX Score — a live tool that reads a public Solana wallet's recent on-chain activity and estimates a FOMO / Panic / RELAX read, with a one-click shareable result card. No wallet connection, no signing, no cost. |
 | `swap.html` | RELAX Swap — swap any Solana token, built on Jupiter's Swap V2 Meta-Aggregator (Metis + JupiterZ + Dflow + OKX). 0% RELAX platform fee, for everyone, always — not a holder discount. Non-custodial: every transaction is signed by your own wallet, landed through Jupiter's own managed infrastructure. |
-| `holder-verification.js` | Shared module — the one place the "$20+ $RELAX holder" check lives, used across RELAX's tools. Holder status no longer affects the Swap fee (that's 0% for everyone); it's reserved for future perks (NFT Creator / RELAX Market). |
+| `swap-hybrid-test.html` | RELAX Swap Hybrid Engine (Experiment 003) — a research branch, not the live swap. Compares Jupiter's 0%-fee Router path against the same Meta-Aggregator flow above and only picks Router when it's genuinely cheaper by a real margin; otherwise the proven Meta-Aggregator path is used, identical to `swap.html`. `noindex`, not linked from the main nav — reachable via a small link on the live Swap page for anyone who wants to try it early. |
+| `holder-verification.js` | Shared wallet-connection module — Swap and Swap Hybrid Engine both use it purely for connect/disconnect/getConnection. It also contains a `$20+ $RELAX holder` balance check, kept ready but not currently called by any live tool (the Swap fee is 0% for everyone, no holder gating today) — reserved for future perks (NFT Creator / RELAX Market). |
 | `worker.js` | The Cloudflare Worker behind everything live: a permission-limited Solana RPC proxy, the Jupiter order/execute/token-search proxy (keeps the API key server-side), and the on-the-fly share-card image generator. |
 | `wrangler.toml` | Worker deployment config. |
 | `404.html` | Custom not-found page |
@@ -86,6 +87,22 @@ it has a freeze authority or permanent delegate set — the same class
 of signal Jupiter's own swap UI surfaces. Always verify the token
 you're swapping yourself; RELAX does not curate, endorse, or guarantee
 any token available through the swap interface.
+
+## RELAX Swap Hybrid Engine (Experiment 003)
+
+An in-progress research branch, not the live Swap. `swap-hybrid-test.html`
+tries Jupiter's Router path (0% Jupiter fee, but a mandatory ~0.001 SOL
+network tip) alongside the same Meta-Aggregator flow `swap.html` uses,
+and only selects Router when it's verified — via a real cost
+simulation and a safety margin — to actually leave more in your
+wallet. In every other case (no route, failed simulation, or the
+difference isn't clearly meaningful) it falls back to the exact same
+proven Meta-Aggregator path as the live Swap, so it's never worse than
+`swap.html`, only sometimes better on larger trades.
+
+`noindex`, not linked from the main site navigation — reachable via a
+small "try the experimental Swap Hybrid Engine" link on the live Swap
+page for anyone curious enough to test it early.
 
 ## RELAX Score (Experiment 001)
 

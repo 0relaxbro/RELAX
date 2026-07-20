@@ -1,24 +1,23 @@
 <!DOCTYPE html>
 <!--
-	RELAX Swap — v1.0
-	Declared feature-frozen 19 Jul 2026, after extensive review across
-	multiple sessions: Jupiter Swap V2 Meta-Aggregator (order/execute),
-	0% RELAX platform fee for everyone, non-custodial, server-side API
-	key, Token-2022 support, stale-response/mutex/retry hardening, and
-	an honest, transparent fee breakdown (RELAX Fee / Jupiter Fee /
-	Estimated Total Cost / Gas). Full history: SWAP_V2_MIGRATION_PLAN.md
-	and SWAP_SOLFLARE_BUG_LOG.md. Future changes should be driven by
-	real Jupiter API changes, real security issues, or real user
-	reports — not speculative feature additions.
+	RELAX Swap Hybrid Engine (not v1.0 — research/testing branch)
+	Forked from the live v1.0 swap.html on 19 Jul 2026, keeping every
+	existing protection (mutex, stale-response/sequence guards, retry,
+	risk banner, token search, balance reconciliation) fully intact.
+	Adds: try Router (/build, Metis-only, 0% Jupiter fee) FIRST, fall
+	back to the proven Meta-Aggregator (/order+/execute) flow only when
+	Router can't find a route. Internal research only — not linked from
+	the main site, does not replace the live v1.0 swap.html. See
+	SWAP_V2_MIGRATION_PLAN.md "Swap Hybrid Engine" for the reasoning.
 -->
 <html lang="en">
 <head>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RELAX LAB | RELAX Swap — Experiment 002</title>
-<meta name="description" content="Swap any Solana token directly from your own wallet, powered by Jupiter's multi-router liquidity and managed transaction landing. RELAX never holds your funds and never adds a platform fee — 0%, for everyone, always.">
-<meta name="robots" content="noindex">
+<title>RELAX LAB | Swap Hybrid Engine — Experiment 003</title>
+<meta name="description" content="Internal research: tries the Router path (0% Jupiter fee) first, falls back to the proven Meta-Aggregator flow. Not linked from the main site.">
+<meta name="robots" content="noindex, nofollow">
 <link rel="canonical" href="https://0relaxbro.xyz/swap.html">
 <meta name="theme-color" content="#050713">
 
@@ -103,22 +102,6 @@ font-size:15px;
 line-height:1.6;
 margin-bottom:36px;
 max-width:460px;
-}
-
-.experimental-link{
-display:inline-block;
-color:var(--muted);
-font-size:12px;
-text-decoration:none;
-border:1px solid var(--border);
-border-radius:999px;
-padding:6px 14px;
-margin-bottom:28px;
-transition:color .15s, border-color .15s;
-}
-.experimental-link:hover{
-color:var(--green);
-border-color:var(--green);
 }
 
 .wallet-box{
@@ -280,40 +263,6 @@ box-shadow:0 12px 32px rgba(0,0,0,.5);
 }
 
 .token-picker-panel.open{ display:block; }
-
-.jupiter-signature{
-position:absolute;
-right:16px;
-bottom:16px;
-display:flex;
-align-items:center;
-gap:6px;
-padding:6px 12px;
-background:rgba(11,14,30,.72);
-backdrop-filter:blur(8px);
-border:1px solid var(--border);
-border-radius:999px;
-font-family:var(--inter);
-font-size:11px;
-color:var(--muted);
-letter-spacing:.02em;
-z-index:15;
-pointer-events:none;
-}
-
-.jupiter-signature b{
-color:var(--text);
-font-weight:600;
-}
-
-@media (max-width:560px){
-.jupiter-signature{
-right:10px;
-bottom:10px;
-font-size:10px;
-padding:5px 10px;
-}
-}
 
 .token-search-input{
 width:100%;
@@ -637,16 +586,29 @@ margin-bottom:20px;
 <div class="wrap">
 
 <a href="index.html" class="back">&larr; BACK TO RELAX</a>
+<a href="swap.html" class="back" style="margin-left:16px;">&larr; BACK TO LIVE SWAP (v1.0)</a>
 
-<span class="lab-tag">RELAX SWAP // EXPERIMENT 002</span>
+<span class="lab-tag">RELAX SWAP HYBRID ENGINE // EXPERIMENT 003</span>
 
-<h1>RELAX SWAP<br><span>Best available route.<br>0% RELAX platform fee.</span></h1>
+<h1>Powered by Jupiter.<br><span>Best available route.<br>0% RELAX platform fee.</span></h1>
 
 <p class="subtitle">
 Non-custodial. You sign every transaction yourself.
 </p>
 
-<a href="swap-hybrid-test.html" class="experimental-link">🧪 Want to try the experimental Swap Hybrid Engine? →</a>
+<div style="background:rgba(255,176,32,.08);border:1px solid rgba(255,176,32,.3);border-radius:12px;padding:14px 16px;font-size:12.5px;color:var(--warn);margin-bottom:20px;line-height:1.6;">
+⚠ <b>RELAX SWAP HYBRID ENGINE</b> — not the live v1.0 swap. Fetches
+Router (0% Jupiter fee) and, when it finds a route, compares its
+estimated cost (tip + priority + signature fee, simulated up front)
+against Meta-Aggregator's actual net output. Router is only selected
+when the full comparison ran AND Router wins by a real safety margin —
+in every other case (no route, failed simulation, missing rate, or a
+sub-margin difference) the proven Meta-Aggregator path is used. Works
+for any pair (a small SOL/USDC reference quote fills in the SOL/USD
+rate when not selling SOL directly). Test carefully, start small,
+watch the console for `[HYBRID RESEARCH]` logs. Internal only, not
+linked from the site.
+</div>
 
 <div id="errorBox" class="error-box"></div>
 
@@ -696,6 +658,7 @@ Non-custodial. You sign every transaction yourself.
 <div id="riskBanner" class="risk-banner"></div>
 
 <div id="quoteDetails" class="quote-details" style="display:none;">
+<div class="quote-details-row" id="routeIndicatorRow"><span>Route</span><b id="routeIndicator">&mdash;</b></div>
 <div class="quote-details-row"><span>Rate</span><b id="quoteRate">&mdash;</b></div>
 <div class="quote-details-row"><span>Price Impact</span><b id="quoteImpact">&mdash;</b></div>
 <div class="quote-details-row fee-zero"><span>RELAX Fee</span><b>0%</b></div>
@@ -907,6 +870,8 @@ const flipTokensBtn = document.getElementById("flipTokensBtn");
 const quoteDetails = document.getElementById("quoteDetails");
 const quoteRate = document.getElementById("quoteRate");
 const quoteImpact = document.getElementById("quoteImpact");
+const routeIndicatorRow = document.getElementById("routeIndicatorRow");
+const routeIndicator = document.getElementById("routeIndicator");
 const jupiterFeeRow = document.getElementById("jupiterFeeRow");
 const jupiterFeeDisplay = document.getElementById("jupiterFeeDisplay");
 const totalSwapFeeRow = document.getElementById("totalSwapFeeRow");
@@ -973,6 +938,300 @@ function fromRawAmount(rawAmount, decimals) {
 	return Number(rawAmount) / Math.pow(10, decimals);
 }
 
+// ---------- Router-path (/build) helpers — RESEARCH BRANCH ONLY ----------
+// /build returns raw instructions (programId + accounts + base64 data),
+// not an assembled transaction — convert to a web3.js TransactionInstruction.
+// FIX (19 Jul 2026): base64ToBytes (atob-based), not Buffer.from — Buffer
+// relies on @solana/web3.js's UMD bundle polyfilling window.Buffer, which
+// isn't a safe assumption in a plain browser script.
+function base64ToBytes(value) {
+	return Uint8Array.from(atob(value), (c) => c.charCodeAt(0));
+}
+function toTransactionInstruction(ix) {
+	return new solanaWeb3.TransactionInstruction({
+		programId: new solanaWeb3.PublicKey(ix.programId),
+		keys: ix.accounts.map((a) => ({
+			pubkey: new solanaWeb3.PublicKey(a.pubkey),
+			isSigner: !!a.isSigner,
+			isWritable: !!a.isWritable
+		})),
+		data: base64ToBytes(ix.data)
+	});
+}
+
+// blockhashWithMetadata.blockhash comes back as a raw byte array, not a
+// base58 string like everywhere else in this file — PublicKey happens
+// to be exactly the right shape (32 raw bytes -> base58) to reuse as a
+// quick, correct encoder here without pulling in a separate bs58 lib.
+function blockhashBytesToBase58(bytes) {
+	return new solanaWeb3.PublicKey(Uint8Array.from(bytes)).toBase58();
+}
+
+// FIX (19 Jul 2026, item 7 from review): "Router found a route" isn't
+// the same as "Router is cheaper" — it carries a mandatory ~0.001 SOL
+// tip plus a real priority fee, neither of which show up in Router's
+// 0%-Jupiter-fee headline number. This ESTIMATES Router's tip +
+// priority + base-signature cost by simulating the transaction up
+// front, so it can be compared against Meta-Aggregator's already-net
+// output instead of blindly preferring Router whenever it finds a
+// route. It is deliberately called an estimate, not a "real total
+// cost": possible one-time rent deposits for new token accounts and
+// the Meta path's own separately-paid gas are NOT modeled — which is
+// why the selection logic requires Router to win by a safety margin,
+// never by a rounding-level difference.
+const ROUTER_TIP_LAMPORTS = 1000000; // Jupiter's documented /submit minimum
+
+function decodeComputeUnitPriceMicroLamports(computeBudgetInstructions) {
+	// ComputeBudgetProgram's SetComputeUnitPrice instruction: byte 0 is
+	// the discriminator (3), bytes 1-8 are a little-endian u64 of
+	// microLamports per CU. Not part of any web3.js public API to parse
+	// directly, so decode the raw bytes ourselves.
+	for (const ix of (computeBudgetInstructions || [])) {
+		try {
+			const bytes = base64ToBytes(ix.data);
+			if (bytes.length >= 9 && bytes[0] === 3) {
+				const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+				return Number(view.getBigUint64(1, true));
+			}
+		} catch (e) { /* not this instruction, keep looking */ }
+	}
+	return null;
+}
+
+// FIX (19 Jul 2026, closing the last gap in item 7): the cost
+// comparison only worked when sellToken was SOL itself, since that's
+// the only case where a quote directly gives a SOL/USD rate for free.
+// For any other sell token, fetch a tiny SOL->USDC quote purely to
+// extract inUsdValue/inAmount as a general USD-per-lamport rate — this
+// makes the comparison work for ANY pair, not just SOL-denominated
+// ones. Cached briefly: SOL's price doesn't move meaningfully within a
+// few seconds, and this avoids an extra API call on every keystroke.
+let cachedSolUsdRate = null;
+let cachedSolUsdRateAt = 0;
+const SOL_USD_RATE_CACHE_MS = 20000;
+
+async function getSolUsdRate() {
+	const now = Date.now();
+	if (cachedSolUsdRate !== null && (now - cachedSolUsdRateAt) < SOL_USD_RATE_CACHE_MS) {
+		return cachedSolUsdRate;
+	}
+	try {
+		// FIX (19 Jul 2026, review round 2): this used to fake a taker
+		// with the System Program address to satisfy the worker's
+		// taker requirement. Jupiter's own docs explicitly support
+		// taker-less requests for exactly this use case — no taker
+		// means quote fields only, no assembled transaction — so the
+		// worker now allows that via an explicit quoteOnly=true flag,
+		// and this call is honest about being a pure price reference.
+		const params = new URLSearchParams({
+			inputMint: NATIVE_SOL_MINT,
+			outputMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // USDC — just for pricing reference
+			amount: "1000000", // 0.001 SOL — small, just for pricing, never actually swapped
+			quoteOnly: "true"
+		});
+		const res = await fetch(JUPITER_API_BASE + "/jupiter-order?" + params.toString());
+		if (!res.ok) return null;
+		const json = await res.json();
+		if (typeof json.inUsdValue !== "number" || !json.inAmount) return null;
+		const rate = json.inUsdValue / Number(json.inAmount); // USD per lamport
+		cachedSolUsdRate = rate;
+		cachedSolUsdRateAt = now;
+		return rate;
+	} catch (e) {
+		return null;
+	}
+}
+
+async function estimateRouterCostLamports(plan, takerPubkey) {
+	const ixOrder = []
+		.concat(plan.computeBudgetInstructions || [])
+		.concat(plan.setupInstructions || [])
+		.concat([plan.swapInstruction])
+		.concat(plan.cleanupInstruction ? [plan.cleanupInstruction] : [])
+		.concat(plan.otherInstructions || [])
+		.concat(plan.tipInstruction ? [plan.tipInstruction] : [])
+		.filter(Boolean);
+	const instructions = ixOrder.map(toTransactionInstruction);
+
+	const lookupTableAccounts = Object.entries(plan.addressesByLookupTableAddress || {}).map(
+		function (entry) {
+			return new solanaWeb3.AddressLookupTableAccount({
+				key: new solanaWeb3.PublicKey(entry[0]),
+				state: {
+					deactivationSlot: 18446744073709551615n,
+					lastExtendedSlot: 0,
+					lastExtendedSlotStartIndex: 0,
+					authority: undefined,
+					addresses: entry[1].map(function (a) { return new solanaWeb3.PublicKey(a); })
+				}
+			});
+		}
+	);
+
+	const blockhash = blockhashBytesToBase58(plan.blockhashWithMetadata.blockhash);
+	const CU_LIMIT_MAX = 1400000;
+
+	const tempMessageV0 = new solanaWeb3.TransactionMessage({
+		payerKey: new solanaWeb3.PublicKey(takerPubkey),
+		recentBlockhash: blockhash,
+		instructions: [solanaWeb3.ComputeBudgetProgram.setComputeUnitLimit({ units: CU_LIMIT_MAX })].concat(instructions)
+	}).compileToV0Message(lookupTableAccounts);
+	const tempTx = new solanaWeb3.VersionedTransaction(tempMessageV0);
+	const tempTxBase64 = btoa(bytesToBinaryString(tempTx.serialize()));
+
+	let estimatedCU = null;
+	try {
+		const simRes = await fetch(RPC_URL, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				jsonrpc: "2.0", id: 1, method: "simulateTransaction",
+				params: [tempTxBase64, { encoding: "base64", sigVerify: false, replaceRecentBlockhash: true }]
+			})
+		});
+		if (!simRes.ok) return null; // couldn't simulate — comparison unavailable
+		const simJson = await simRes.json();
+		const simValue = simJson && simJson.result && simJson.result.value;
+		// FIX (19 Jul 2026, review round 2 — critical): a simulation can
+		// return BOTH an err AND a unitsConsumed value at the same time.
+		// The old code only looked at unitsConsumed, so a Router
+		// transaction that provably FAILS in simulation could still get
+		// a "valid-looking" cost estimate and be selected as the cheaper
+		// path. A failed simulation means this Router plan is broken —
+		// report the failure distinctly so the caller routes to Meta,
+		// never treat its numbers as a usable cost.
+		if (!simValue) return null;
+		if (simValue.err) {
+			console.warn("[HYBRID RESEARCH] Router cost simulation FAILED on-sim — this Router plan would not execute. err:", JSON.stringify(simValue.err));
+			return { simFailed: true, err: simValue.err };
+		}
+		const unitsConsumed = simValue.unitsConsumed;
+		if (typeof unitsConsumed === "number" && unitsConsumed > 0) {
+			estimatedCU = Math.min(Math.ceil(unitsConsumed * 1.2), CU_LIMIT_MAX);
+		}
+	} catch (e) { /* fall through — cost estimate becomes unavailable */ }
+
+	if (estimatedCU === null) return null; // couldn't simulate — caller should treat comparison as unavailable
+
+	const priceMicroLamportsPerCU = decodeComputeUnitPriceMicroLamports(plan.computeBudgetInstructions);
+	const priorityFeeLamports = priceMicroLamportsPerCU
+		? Math.ceil((priceMicroLamportsPerCU * estimatedCU) / 1e6)
+		: 0; // no price instruction found — treat as 0 rather than guessing
+
+	// HONEST NAMING (19 Jul 2026, review round 2): this is an ESTIMATED
+	// tip + priority + base-signature cost, not a guaranteed "real total
+	// cost" — it deliberately does NOT include possible one-time
+	// rent-exempt deposits for new token accounts (createIdempotent
+	// setup instructions may or may not actually create anything,
+	// depending on what already exists in the wallet), and the Meta
+	// side's own separately-paid gas isn't modeled either. That's why
+	// the selection logic pairs this with a safety margin instead of
+	// trusting sub-cent differences.
+	const BASE_SIGNATURE_FEE_LAMPORTS = 5000; // 1 signature × 5000 lamports
+	return {
+		estimatedCU: estimatedCU,
+		priorityFeeLamports: priorityFeeLamports,
+		signatureFeeLamports: BASE_SIGNATURE_FEE_LAMPORTS,
+		tipLamports: plan.tipInstruction ? ROUTER_TIP_LAMPORTS : 0,
+		totalLamports: priorityFeeLamports + BASE_SIGNATURE_FEE_LAMPORTS + (plan.tipInstruction ? ROUTER_TIP_LAMPORTS : 0)
+	};
+}
+
+// FIX (19 Jul 2026, most critical review finding): /submit's response
+// only confirms Jupiter ACCEPTED the transaction for sending — not
+// that it landed or succeeded on-chain. Unlike /execute (which Jupiter
+// itself polls to completion for us), the Router path needs its own
+// confirmation step, or a failed on-chain transaction (bad CU limit,
+// slippage, stale blockhash) would show "Swapped!" to the user anyway.
+// Mirrors Jupiter's own reference pattern: poll getSignatureStatuses,
+// check .err for a real on-chain failure, respect lastValidBlockHeight
+// so this doesn't poll forever past the point the blockhash expired.
+async function confirmRouterSignature(signature, blockhash, lastValidBlockHeight) {
+	const pollDelayMs = 1500;
+	// FIX (19 Jul 2026, review round 2): lastValidBlockHeight was
+	// accepted as a parameter but never actually used — the comment
+	// claimed "respect lastValidBlockHeight" while the code just polled
+	// a fixed ~30s and gave an ambiguous timeout. Now each poll batches
+	// getSignatureStatuses + getBlockHeight into a single worker
+	// request (the RPC proxy accepts small batches), and when the
+	// chain's current block height passes lastValidBlockHeight with no
+	// status found (searchTransactionHistory already on), the blockhash
+	// has provably expired and the transaction can never land — that's
+	// a definitive, retry-safe failure, not an ambiguous one. This is
+	// exactly Jupiter's own reference confirmation semantics
+	// (confirmTransaction with blockhash + lastValidBlockHeight).
+	// The hard attempt cap is now sized to outlast a typical blockhash
+	// validity window (~60-90s), since the expiry check — not the cap —
+	// is the primary exit; the cap only guards against a lagging or
+	// unreachable RPC.
+	const maxAttempts = 60; // ~90s hard ceiling; expiry check exits far earlier in practice
+	const haveExpiryInfo = Number.isFinite(Number(lastValidBlockHeight));
+
+	for (let attempt = 0; attempt < maxAttempts; attempt++) {
+		let statusRes;
+		try {
+			statusRes = await fetch(RPC_URL, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify([
+					{
+						jsonrpc: "2.0", id: 1, method: "getSignatureStatuses",
+						params: [[signature], { searchTransactionHistory: true }]
+					},
+					{
+						jsonrpc: "2.0", id: 2, method: "getBlockHeight",
+						params: [{ commitment: "confirmed" }]
+					}
+				])
+			});
+		} catch (networkErr) {
+			// Transient network hiccup polling for status — not the same
+			// as the swap itself failing. Keep trying within the window.
+			await new Promise((r) => setTimeout(r, pollDelayMs));
+			continue;
+		}
+
+		const batchJson = await statusRes.json();
+		const responses = Array.isArray(batchJson) ? batchJson : [batchJson];
+		const statusResp = responses.find((r) => r && r.id === 1);
+		const heightResp = responses.find((r) => r && r.id === 2);
+		const status = statusResp && statusResp.result && statusResp.result.value && statusResp.result.value[0];
+		const currentBlockHeight = heightResp && typeof heightResp.result === "number" ? heightResp.result : null;
+
+		if (status) {
+			if (status.err) {
+				throw new Error("Transaction failed on-chain: " + JSON.stringify(status.err));
+			}
+			if (status.confirmationStatus === "confirmed" || status.confirmationStatus === "finalized") {
+				return; // genuinely confirmed — safe to show success
+			}
+		} else if (
+			haveExpiryInfo &&
+			currentBlockHeight !== null &&
+			currentBlockHeight > Number(lastValidBlockHeight)
+		) {
+			// No status found anywhere (history search included) AND the
+			// blockhash's validity window has closed — the transaction
+			// expired without ever landing. Definitive and safe to retry
+			// with a fresh quote, unlike the ambiguous-timeout case below.
+			throw new Error(
+				"Router transaction expired before it could land on-chain (blockhash validity window passed with no trace of the transaction). No funds moved — refresh the quote and try again."
+			);
+		}
+
+		await new Promise((r) => setTimeout(r, pollDelayMs));
+	}
+
+	// FIX: ran out of polling attempts with no definitive answer — this
+	// is genuinely ambiguous (may still land, may have expired), not a
+	// confirmed failure. Same conservative handling as the
+	// Meta-Aggregator path: don't claim success, don't silently prepare
+	// a new order, make the user check before trying again.
+	throw new SwapStatusUnknownError(
+		"Couldn't get a definitive answer about your Router swap after ~90 seconds of polling (the status RPC may be lagging or unreachable). Check your wallet's recent activity or Solana Explorer before trying again — don't sign a new swap for this pair until you've checked, to avoid an accidental duplicate."
+	);
+}
+
 // Large rates (e.g. 1 SOL ≈ 31,721,779 RELAX) are unreadable as a raw
 // decimal expansion — abbreviate into K/M/B, or fall back to a
 // comma-grouped integer for the mid-range, or a few decimals for small
@@ -1009,6 +1268,17 @@ let hasUsableQuote = false;
 // every caller (order fetch success, risk checkbox, etc.) respects it
 // automatically, without each one needing its own guard.
 let isExecutingSwap = false;
+// FIX (found live, second real bug from testing): reconcileBalancesAfterSwap()
+// runs in the background (fire-and-forget, up to ~12s) after each swap to
+// replace the optimistic post-swap balance estimate with real RPC data.
+// If a second swap was submitted before that finished, its
+// sellBalanceAtSubmit/buyBalanceAtSubmit were read from the STILL-optimistic
+// (unconfirmed) global balance from the first swap — stacking a second
+// optimistic estimate on top of an already-approximate one. Displayed
+// balance can end up meaningfully inflated (observed live: showed ~0.07 SOL
+// when the real balance was ~0.03). Tracked here so a new swap can wait for
+// any prior reconciliation to finish before freezing its own base balances.
+let pendingBalanceReconciliation = null;
 
 function currentRiskFlaggedTokens() {
 	return [sellToken, buyToken].filter((t) => tokenRiskFlags(t).length > 0);
@@ -1045,6 +1315,55 @@ function applySwapReadiness() {
 // to actually cancel the in-flight fetch.
 let orderRequestSequence = 0;
 
+// Populates the quote-details UI from a Meta-Aggregator /order response.
+// Extracted so both the normal fallback path and the "Meta won the real
+// cost comparison against Router" path can share it.
+function populateMetaAggregatorUI(order, sellToken, buyToken, sellAmount) {
+	const outUiAmount = fromRawAmount(order.outAmount, buyToken.decimals);
+	buyAmountInput.value = outUiAmount.toFixed(6);
+
+	const rate = outUiAmount / Number(sellAmount);
+	quoteRate.textContent = "1 " + sellToken.symbol + " ≈ " + formatRate(rate) + " " + buyToken.symbol;
+
+	const impactPct = Number(order.priceImpactPct) * 100;
+	quoteImpact.textContent = (impactPct > 0 ? "-" : "") + Math.abs(impactPct).toFixed(2) + "%";
+
+	const platformFeeBps = order.platformFee && typeof order.platformFee.feeBps === "number"
+		? order.platformFee.feeBps
+		: 0;
+	const totalFeeBps = typeof order.feeBps === "number" ? order.feeBps : 0;
+
+	if (platformFeeBps === 0) {
+		jupiterFeeRow.style.display = "none";
+	} else {
+		jupiterFeeRow.style.display = "flex";
+		jupiterFeeDisplay.textContent = (platformFeeBps / 100).toFixed(2) + "%";
+	}
+
+	if (totalFeeBps === 0) {
+		totalSwapFeeRow.style.display = "none";
+	} else {
+		totalSwapFeeRow.style.display = "flex";
+		totalSwapFeeRow.classList.remove("fee-low", "fee-mid", "fee-elevated", "fee-high");
+		if (totalFeeBps < 30) totalSwapFeeRow.classList.add("fee-low");
+		else if (totalFeeBps < 100) totalSwapFeeRow.classList.add("fee-mid");
+		else if (totalFeeBps < 300) totalSwapFeeRow.classList.add("fee-elevated");
+		else totalSwapFeeRow.classList.add("fee-high");
+		totalSwapFeeDisplay.textContent = (totalFeeBps / 100).toFixed(2) + "%";
+	}
+
+	document.getElementById("quoteNetworkFee").textContent = order.gasless === true
+		? "Gasless — included in Estimated Total Cost"
+		: "~0.00001–0.0002 SOL";
+
+	const minReceived = fromRawAmount(order.otherAmountThreshold, buyToken.decimals);
+	quoteMinReceived.textContent = minReceived.toFixed(6) + " " + buyToken.symbol;
+
+	quoteDetails.style.display = "block";
+	hasUsableQuote = true;
+	applySwapReadiness();
+}
+
 async function fetchOrder() {
 	const sellAmount = sellAmountInput.value;
 
@@ -1079,8 +1398,232 @@ async function fetchOrder() {
 
 	const rawAmount = toRawAmount(sellAmount, sellToken.decimals);
 
+	// Shared staleness guard — used by both the Router attempt below and
+	// the existing Meta-Aggregator logic further down.
+	const isStale = () =>
+		requestSequence !== orderRequestSequence ||
+		sellToken.address !== sellTokenAtRequest.address ||
+		buyToken.address !== buyTokenAtRequest.address ||
+		sellAmountInput.value !== sellAmountAtRequest;
+
 	hasUsableQuote = false;
 	swapBtn.disabled = true;
+	swapBtn.textContent = "TRYING ROUTER (0% FEE)…";
+
+	// ---------- RESEARCH BRANCH: try Router (/build) first ----------
+	// Metis-only, 0% Jupiter fee. Falls through to the proven
+	// Meta-Aggregator flow below on any failure — never blocks it.
+	// FIX (19 Jul 2026): Jupiter's own docs specify a minimum ~0.001 SOL
+	// (1,000,000 lamports) tip for /submit to accept the transaction —
+	// without tipAmount on /build, tipInstruction likely comes back
+	// null and /submit may reject the transaction outright.
+	try {
+		const routerParams = new URLSearchParams({
+			inputMint: sellToken.address,
+			outputMint: buyToken.address,
+			amount: String(rawAmount),
+			taker: conn.publicKey,
+			tipAmount: String(ROUTER_TIP_LAMPORTS)
+		});
+		const routerRes = await fetch(JUPITER_API_BASE + "/jupiter-build?" + routerParams.toString());
+
+		if (isStale()) return;
+
+		if (routerRes.ok) {
+			const plan = await routerRes.json();
+			if (isStale()) return;
+
+			if (plan.swapInstruction) {
+				// FIX (19 Jul 2026, item 7): don't commit to Router just
+				// because it found a route — estimate its real cost and
+				// compare against Meta-Aggregator's actual net output
+				// before deciding. Fetch Meta's quote in parallel with the
+				// cost estimate; both are needed to make this comparison,
+				// and neither should block showing SOMETHING to the user
+				// if one of them fails.
+				swapBtn.textContent = "COMPARING ROUTES…";
+
+				const isSellingSol = sellToken.address === NATIVE_SOL_MINT;
+				const [costEstimate, metaCompareResult, solUsdRateIfNeeded] = await Promise.all([
+					estimateRouterCostLamports(plan, conn.publicKey).catch(() => null),
+					fetch(JUPITER_API_BASE + "/jupiter-order?" + new URLSearchParams({
+						inputMint: sellToken.address, outputMint: buyToken.address,
+						amount: String(rawAmount), taker: conn.publicKey
+					}).toString()).then((r) => r.ok ? r.json() : null).catch(() => null),
+					isSellingSol ? Promise.resolve(null) : getSolUsdRate()
+				]);
+
+				if (isStale()) return;
+
+				// FIX (19 Jul 2026, review round 2 — critical): default
+				// used to be `true` ("Router since it found a route"),
+				// which contradicted both the page's own banner and the
+				// project's stated principle (best verified execution,
+				// not lowest advertised fee). Fail-safe default is now
+				// the PROVEN Meta-Aggregator path — Router is only
+				// selected when the full comparison actually ran AND
+				// Router wins by a real margin, not a sub-cent rounding
+				// artifact between two quotes taken milliseconds apart.
+				let useRouter = false;
+				let comparisonNote = "comparison unavailable — defaulting to proven Meta-Aggregator path";
+
+				// Safety margin: the cost model is an estimate (no rent
+				// deposits, Meta's own gas not modeled) and the two
+				// quotes aren't taken at the same instant. Router must
+				// beat Meta by BOTH an absolute and a relative floor to
+				// be trusted. Logged on every comparison so these
+				// thresholds can be tuned from real research data.
+				const ROUTER_MIN_SAVING_USD = 0.01;
+				const ROUTER_MIN_SAVING_BPS = 5;
+
+				// FIX (19 Jul 2026): generalized beyond the SOL-sell-token
+				// case. When selling SOL, Meta's own quote already gives a
+				// free USD-per-lamport rate. Otherwise, use the separately
+				// fetched getSolUsdRate() — same math either way once we
+				// have SOME reliable SOL/USD rate.
+				const solUsdRate = isSellingSol
+					? (metaCompareResult ? metaCompareResult.inUsdValue / Number(rawAmount) : null)
+					: solUsdRateIfNeeded;
+
+				if (costEstimate && costEstimate.simFailed) {
+					// Router's own transaction FAILED simulation — this
+					// is not "comparison unavailable", it's a Router
+					// plan that provably wouldn't execute. Meta wins by
+					// disqualification, loudly.
+					comparisonNote = "Router plan failed simulation — Meta-Aggregator selected";
+					console.warn("[HYBRID RESEARCH] Router disqualified: its transaction failed simulation before any comparison. err:", JSON.stringify(costEstimate.err));
+				} else if (
+					costEstimate && metaCompareResult && metaCompareResult.transaction &&
+					Number.isFinite(solUsdRate) && solUsdRate > 0 &&
+					Number.isFinite(metaCompareResult.outUsdValue) && metaCompareResult.outUsdValue > 0 &&
+					Number(metaCompareResult.outAmount) > 0 && Number(plan.outAmount) > 0
+				) {
+					// Meta's own outUsdValue (already net of Jupiter's fee)
+					// is the direct comparison point for Router's
+					// equivalent, approximated via the same per-token rate
+					// implied by Meta's quote, since both quotes are for
+					// the same pair at essentially the same moment.
+					const routerCostUsd = costEstimate.totalLamports * solUsdRate;
+					const buyTokenUsdRate = metaCompareResult.outUsdValue / Number(metaCompareResult.outAmount);
+					const routerGrossUsd = Number(plan.outAmount) * buyTokenUsdRate;
+					const routerNetUsd = routerGrossUsd - routerCostUsd;
+
+					// FAIRNESS FIX (19 Jul 2026, review round 3): Router's
+					// cost estimate always includes its own base signature
+					// fee (5000 lamports) since Router is a self-submitted
+					// transaction the user pays gas on directly. Meta's
+					// order is only free of that same cost when
+					// `order.gasless === true` (Jupiter sponsors landing).
+					// When Meta is NOT gasless, the user pays Meta's own
+					// network fee too — Jupiter's docs quote a
+					// ~0.00001-0.0002 SOL range for this. Previously that
+					// range was shown to the user in the UI but never
+					// subtracted here, silently making Router look pricier
+					// than it really is relative to Meta on non-gasless
+					// quotes (the gap is small — well under a cent at
+					// current SOL prices — but it's the same order of
+					// magnitude as the safety margin itself, so it's worth
+					// modeling rather than ignoring). Using the midpoint of
+					// Jupiter's documented range as a reasonable estimate,
+					// same spirit as Router's own estimate: approximate,
+					// not exact, and documented as such.
+					const META_NON_GASLESS_FEE_LAMPORTS_ESTIMATE = 100000; // ~midpoint of 0.00001-0.0002 SOL
+					const metaNetworkFeeUsd = metaCompareResult.gasless === false
+						? META_NON_GASLESS_FEE_LAMPORTS_ESTIMATE * solUsdRate
+						: 0;
+					const metaNetUsd = metaCompareResult.outUsdValue - metaNetworkFeeUsd;
+
+					const absoluteSavingUsd = routerNetUsd - metaNetUsd;
+					const savingBps = metaNetUsd > 0 ? (absoluteSavingUsd / metaNetUsd) * 10000 : 0;
+					useRouter =
+						absoluteSavingUsd >= ROUTER_MIN_SAVING_USD &&
+						savingBps >= ROUTER_MIN_SAVING_BPS;
+
+					comparisonNote = "Router net ~$" + routerNetUsd.toFixed(4) +
+						" (est. cost ~$" + routerCostUsd.toFixed(4) + ") vs Meta net ~$" + metaNetUsd.toFixed(4) +
+						(metaNetworkFeeUsd > 0 ? " (incl. est. non-gasless network fee ~$" + metaNetworkFeeUsd.toFixed(4) + ")" : " (gasless)") +
+						" | saving $" + absoluteSavingUsd.toFixed(4) + " / " + savingBps.toFixed(1) + " bps" +
+						" (need >= $" + ROUTER_MIN_SAVING_USD + " and >= " + ROUTER_MIN_SAVING_BPS + " bps)";
+					console.debug("[HYBRID RESEARCH] Cost comparison:", comparisonNote, { costEstimate: costEstimate, solUsdRate: solUsdRate, sellingSol: isSellingSol, absoluteSavingUsd: absoluteSavingUsd, savingBps: savingBps, metaGasless: metaCompareResult.gasless });
+				} else {
+					console.debug("[HYBRID RESEARCH] Real cost comparison unavailable (couldn't get a SOL/USD rate, or simulation/Meta quote failed) — defaulting to the PROVEN Meta-Aggregator path. Router is never selected unverified.");
+				}
+
+				if (useRouter) {
+					latestOrder = Object.assign({ mode: "router" }, plan);
+
+					const outUiAmount = fromRawAmount(plan.outAmount, buyToken.decimals);
+					buyAmountInput.value = outUiAmount.toFixed(6);
+
+					const rate = outUiAmount / Number(sellAmount);
+					quoteRate.textContent = "1 " + sellToken.symbol + " ≈ " + formatRate(rate) + " " + buyToken.symbol;
+
+					// FIX (19 Jul 2026): priceImpactPct is documented on
+					// /order's response, not confirmed present on /build's
+					// BuildResponse type — guard against it being absent
+					// instead of rendering "NaN%".
+					const rawImpact = Number(plan.priceImpactPct);
+					quoteImpact.textContent = Number.isFinite(rawImpact)
+						? (rawImpact > 0 ? "-" : "") + Math.abs(rawImpact * 100).toFixed(2) + "%"
+						: "Unavailable";
+
+					// Router has no Jupiter platform fee at all — hide both fee
+					// rows entirely rather than showing "0%" twice alongside
+					// the already-visible static RELAX Fee row.
+					jupiterFeeRow.style.display = "none";
+					totalSwapFeeRow.style.display = "none";
+
+					document.getElementById("quoteNetworkFee").textContent =
+						"Self-managed via /submit (~" + ((costEstimate ? costEstimate.totalLamports : ROUTER_TIP_LAMPORTS) / 1e9).toFixed(6) + " SOL tip+priority)";
+
+					const minReceived = fromRawAmount(plan.otherAmountThreshold, buyToken.decimals);
+					quoteMinReceived.textContent = minReceived.toFixed(6) + " " + buyToken.symbol;
+
+					routeIndicator.textContent = "Router — chosen (" + comparisonNote + ")";
+					routeIndicatorRow.classList.add("fee-zero");
+
+					quoteDetails.style.display = "block";
+					hasUsableQuote = true;
+					applySwapReadiness();
+					console.debug("[HYBRID RESEARCH] Router selected", plan);
+					return; // Router genuinely compared favorably — done, skip the Meta-Aggregator block below
+				}
+
+				// Comparison ran and Meta-Aggregator actually won — use the
+				// quote we already fetched for the comparison instead of
+				// fetching a third time.
+				if (metaCompareResult && metaCompareResult.transaction) {
+					latestOrder = Object.assign({ mode: "meta" }, metaCompareResult);
+					routeIndicator.textContent = "Meta-Aggregator — chosen (" + comparisonNote + ")";
+					routeIndicatorRow.classList.remove("fee-zero");
+					populateMetaAggregatorUI(metaCompareResult, sellToken, buyToken, sellAmount);
+					console.debug("[HYBRID RESEARCH] Meta-Aggregator selected over Router after real cost comparison", comparisonNote);
+					return;
+				}
+				// Meta's compare-quote came back unusable — fall through
+				// to the normal Meta-Aggregator flow below, which retries
+				// properly instead of trusting this one-shot fetch.
+			}
+			// swapInstruction missing but response was 2xx — malformed/
+			// unexpected shape, not a genuine "no route". Surface clearly.
+			console.warn("[HYBRID RESEARCH] Router returned OK but no swapInstruction — unexpected response shape, not a real 'no route'.", plan);
+		} else if (routerRes.status === 400) {
+			console.debug("[HYBRID RESEARCH] Router: genuine no-route (400) — falling back to Meta-Aggregator.");
+		} else if (routerRes.status === 429) {
+			console.warn("[HYBRID RESEARCH] Router: rate-limited (429) — falling back to Meta-Aggregator, not a real 'no route'.");
+		} else {
+			// 401/403/500/etc — a real problem (auth, worker bug, Jupiter
+			// outage), not evidence Router lacks liquidity. Falls back
+			// anyway so the user isn't blocked, but this is logged loudly
+			// so it doesn't get misread as routing data.
+			console.warn("[HYBRID RESEARCH] Router request FAILED with an unexpected status (" + routerRes.status + ") — this is a real error, not a genuine 'no route'. Falling back to Meta-Aggregator, but check this.");
+		}
+	} catch (err) {
+		if (isStale()) return;
+		console.warn("[HYBRID RESEARCH] Router request threw (network/parse error) — falling back to Meta-Aggregator, but this is a real error worth checking, not a genuine 'no route'.", err);
+	}
+
+	// ---------- Fall through to the existing, unchanged Meta-Aggregator flow ----------
 	swapBtn.textContent = "FETCHING ORDER…";
 
 	try {
@@ -1094,16 +1637,6 @@ async function fetchOrder() {
 		let res;
 		let attempt = 0;
 		const maxAttempts = 3; // 1 initial try + 2 short retries
-
-		// Stale-response guard: if a newer request has started, or the
-		// form no longer matches what THIS request was for, treat any
-		// response as dead on arrival — don't touch latestOrder, don't
-		// touch the UI. A newer fetchOrder() call already owns the screen.
-		const isStale = () =>
-			requestSequence !== orderRequestSequence ||
-			sellToken.address !== sellTokenAtRequest.address ||
-			buyToken.address !== buyTokenAtRequest.address ||
-			sellAmountInput.value !== sellAmountAtRequest;
 
 		console.debug("[RELAX SWAP] ORDER REQUEST", {
 			inputMint: sellToken.address,
@@ -1170,76 +1703,10 @@ async function fetchOrder() {
 			throw new Error("No route found for this pair right now (errorCode: " + (order.errorCode || "unknown") + ").");
 		}
 
-		latestOrder = order;
-
-		const outUiAmount = fromRawAmount(order.outAmount, buyToken.decimals);
-		buyAmountInput.value = outUiAmount.toFixed(6);
-
-		const rate = outUiAmount / Number(sellAmount);
-		quoteRate.textContent = "1 " + sellToken.symbol + " ≈ " + formatRate(rate) + " " + buyToken.symbol;
-
-		const impactPct = Number(order.priceImpactPct) * 100;
-		quoteImpact.textContent = (impactPct > 0 ? "-" : "") + Math.abs(impactPct).toFixed(2) + "%";
-
-		// RELAX's own platform fee is always 0% (shown as a static value
-		// in the HTML — nothing to compute).
-		//
-		// Jupiter Fee: their actual take, from platformFee.feeBps —
-		// confirmed via two real /order responses to sit at a stable
-		// 10bps (0.10%) regardless of trade size or network conditions.
-		//
-		// Estimated Total Cost: order.feeBps — the REAL total percentage
-		// deducted from the swap's output, including Jupiter's platform
-		// cut AND (on gasless orders) the network/priority fee Jupiter
-		// covers on the user's behalf. This must stay visible: an
-		// earlier version of this screen dropped it and only showed the
-		// small Jupiter Fee + a "covered" network fee note, which made
-		// the swap look cheaper than it actually is — the user's real
-		// received amount is net of this whole percentage, whether or
-		// not any of it was paid as a separate SOL transaction from
-		// their wallet. Graduated color (not a flat green/red): under
-		// 0.3% negligible, 0.3-1% normal, 1-3% worth noticing (usually a
-		// low-liquidity token or, on gasless orders, just a small trade
-		// size making a near-fixed network cost look proportionally
-		// large), 3%+ worth pausing on.
-		const platformFeeBps = order.platformFee && typeof order.platformFee.feeBps === "number"
-			? order.platformFee.feeBps
-			: 0;
-		const totalFeeBps = typeof order.feeBps === "number" ? order.feeBps : 0;
-
-		if (platformFeeBps === 0) {
-			jupiterFeeRow.style.display = "none";
-		} else {
-			jupiterFeeRow.style.display = "flex";
-			jupiterFeeDisplay.textContent = (platformFeeBps / 100).toFixed(2) + "%";
-		}
-
-		if (totalFeeBps === 0) {
-			totalSwapFeeRow.style.display = "none";
-		} else {
-			totalSwapFeeRow.style.display = "flex";
-			totalSwapFeeRow.classList.remove("fee-low", "fee-mid", "fee-elevated", "fee-high");
-			if (totalFeeBps < 30) totalSwapFeeRow.classList.add("fee-low");
-			else if (totalFeeBps < 100) totalSwapFeeRow.classList.add("fee-mid");
-			else if (totalFeeBps < 300) totalSwapFeeRow.classList.add("fee-elevated");
-			else totalSwapFeeRow.classList.add("fee-high");
-			totalSwapFeeDisplay.textContent = (totalFeeBps / 100).toFixed(2) + "%";
-		}
-
-		// FIX: "covered" implied this cost was free to the user — it
-		// isn't, it's bundled into Estimated Total Cost above (deducted from
-		// their output) rather than paid as a separate SOL transaction.
-		// Say that plainly instead.
-		document.getElementById("quoteNetworkFee").textContent = order.gasless === true
-			? "Gasless — included in Estimated Total Cost"
-			: "~0.00001–0.0002 SOL";
-
-		const minReceived = fromRawAmount(order.otherAmountThreshold, buyToken.decimals);
-		quoteMinReceived.textContent = minReceived.toFixed(6) + " " + buyToken.symbol;
-
-		quoteDetails.style.display = "block";
-		hasUsableQuote = true;
-		applySwapReadiness();
+		latestOrder = Object.assign({ mode: "meta" }, order);
+		routeIndicator.textContent = "Meta-Aggregator — Jupiter fee applies";
+		routeIndicatorRow.classList.remove("fee-zero");
+		populateMetaAggregatorUI(order, sellToken, buyToken, sellAmount);
 	} catch (err) {
 		// Same staleness check on the error path — an old, now-superseded
 		// request failing shouldn't be allowed to blank out a newer,
@@ -1415,6 +1882,7 @@ async function refreshBuyBalance() {
 
 	try {
 		const balance = await fetchTokenBalance(buyToken, conn.publicKey);
+		console.debug("[RELAX SWAP] BALANCE UPDATE DIAGNOSTIC — refreshBuyBalance() writing buyBalanceRaw", { previous: buyBalanceRaw, new: balance });
 		buyBalanceRaw = balance;
 		buyBalanceLabel.textContent = "Balance: " + balance.toFixed(6);
 	} catch (err) {
@@ -1494,6 +1962,7 @@ async function reconcileBalancesAfterSwap(
 			if (freshBuy + 0.000001 >= buyExpectedMin) {
 				buyConfirmed = true;
 				if (buyToken.address === buyTokenAtSubmit.address) {
+					console.debug("[RELAX SWAP] BALANCE UPDATE DIAGNOSTIC — reconcileBalancesAfterSwap() writing buyBalanceRaw", { attempt, previous: buyBalanceRaw, new: freshBuy, buyExpectedMin });
 					buyBalanceRaw = freshBuy;
 					buyBalanceLabel.textContent = "Balance: " + freshBuy.toFixed(6);
 				}
@@ -1543,7 +2012,23 @@ maxBtn.addEventListener("click", async () => {
 
 	// Reserve a little SOL for network fees when selling SOL itself,
 	// so "Max" doesn't leave the wallet unable to pay the tx fee.
-	const SOL_FEE_RESERVE = 0.003;
+	// FIX (19 Jul 2026, review round 4 — confirmed via live testing):
+	// 0.003 was too tight for the Router path specifically. Router's
+	// real requirement is roughly 0.001 SOL mandatory tip + ~0.00204
+	// SOL rent for the temporary wSOL account created during the
+	// wrap step (needed upfront even though it's closed and refunded
+	// within the same transaction — Solana checks balance at each
+	// instruction, not net-at-end) + a small priority fee + the
+	// 0.000005 SOL base signature fee — comes out to ~0.0031+ minimum,
+	// which 0.003 doesn't quite cover. Confirmed live: MAX-derived
+	// amounts (leaving exactly 0.003) consistently failed Router's
+	// pre-flight simulation with InstructionError Custom:1
+	// (insufficient funds), while manually-entered smaller amounts
+	// leaving more headroom simulated fine. Raised to 0.005 for a
+	// real safety margin against priority fee spikes. This only
+	// affects the "Max" button's SOL reserve on the SOL-selling side
+	// of this research branch — doesn't touch live v1.0.
+	const SOL_FEE_RESERVE = 0.005;
 	const amount = sellToken.address === NATIVE_SOL_MINT
 		? Math.max(0, sellBalanceRaw - SOL_FEE_RESERVE)
 		: sellBalanceRaw;
@@ -1989,7 +2474,9 @@ async function handleExecute() {
 	// clickable in that window either — this is defense in depth, not
 	// the only line of defense.
 	if (isExecutingSwap) return;
-	if (!latestOrder || !latestOrder.transaction) return;
+	if (!latestOrder) return;
+	if (latestOrder.mode === "router" && !latestOrder.swapInstruction) return;
+	if (latestOrder.mode !== "router" && !latestOrder.transaction) return;
 
 	const conn = RelaxHolder.getConnection();
 	if (!conn || !conn.rawProvider) {
@@ -2004,6 +2491,19 @@ async function handleExecute() {
 	buyTokenBtn.disabled = true;
 	flipTokensBtn.style.pointerEvents = "none";
 	maxBtn.disabled = true;
+
+	// FIX (found live, second real bug): if a previous swap's balance
+	// reconciliation is still running in the background, wait for it
+	// here before reading sellBalanceRaw/buyBalanceRaw below — otherwise
+	// this swap's optimistic estimate would stack on top of the
+	// previous one's still-unconfirmed guess (observed live: displayed
+	// balance ended up meaningfully inflated after two swaps back to
+	// back). swapBtn is already disabled/isExecutingSwap is already
+	// true at this point, so this wait can't be raced by a second click.
+	if (pendingBalanceReconciliation) {
+		swapBtn.textContent = "CONFIRMING PREVIOUS BALANCE…";
+		try { await pendingBalanceReconciliation; } catch (e) { /* best-effort — proceed either way */ }
+	}
 
 	// FIX (18 Jul 2026, second review pass): freeze everything about
 	// this specific order — including the transaction bytes and
@@ -2030,31 +2530,193 @@ async function handleExecute() {
 	swapStatus.textContent = "Preparing your swap…";
 
 	try {
-		const txBytes = Uint8Array.from(atob(orderAtSubmit.transaction), (c) => c.charCodeAt(0));
-		const versionedTx = solanaWeb3.VersionedTransaction.deserialize(txBytes);
+		let signedBase64;
+		let execResult;
 
-		swapBtn.textContent = "WAITING FOR SIGNATURE…";
-		swapStatus.textContent = "Approve the swap in your wallet…";
+		if (orderAtSubmit.mode === "router") {
+			// ---------- RESEARCH BRANCH: Router path ----------
+			swapStatus.textContent = "Building transaction from raw Router instructions…";
 
-		const signedTx = await conn.rawProvider.signTransaction(versionedTx);
-		const signedBytes = signedTx.serialize();
-		// Chunked conversion — String.fromCharCode(...bytes) can hit the
-		// JS engine's function-argument limit on larger byte arrays;
-		// building in small chunks has no such ceiling.
-		const signedBase64 = btoa(bytesToBinaryString(signedBytes));
+			const ixOrder = []
+				.concat(orderAtSubmit.computeBudgetInstructions || [])
+				.concat(orderAtSubmit.setupInstructions || [])
+				.concat([orderAtSubmit.swapInstruction])
+				.concat(orderAtSubmit.cleanupInstruction ? [orderAtSubmit.cleanupInstruction] : [])
+				.concat(orderAtSubmit.otherInstructions || [])
+				.concat(orderAtSubmit.tipInstruction ? [orderAtSubmit.tipInstruction] : [])
+				.filter(Boolean);
 
-		swapBtn.textContent = "EXECUTING…";
-		swapStatus.textContent = "Jupiter is landing your transaction (Beam)…";
+			const instructions = ixOrder.map(toTransactionInstruction);
 
-		// Jupiter handles the actual sending + landing here — no more of
-		// our own sendTransaction/getSignatureStatuses polling loop. Beam
-		// (Jupiter's managed landing infra) is what cuts MEV exposure and
-		// lands faster than a plain RPC send — see the product-decision
-		// note near the top of this file / SWAP_V2_MIGRATION_PLAN.md.
-		// executeWithRetry (not a single fetch) handles the case where
-		// this takes longer than one request/timeout allows. Uses the
-		// FROZEN requestId, matching the transaction actually signed.
-		const execResult = await executeWithRetry(signedBase64, orderAtSubmit.requestId);
+			const lookupTableAccounts = Object.entries(orderAtSubmit.addressesByLookupTableAddress || {}).map(
+				function (entry) {
+					return new solanaWeb3.AddressLookupTableAccount({
+						key: new solanaWeb3.PublicKey(entry[0]),
+						state: {
+							deactivationSlot: 18446744073709551615n,
+							lastExtendedSlot: 0,
+							lastExtendedSlotStartIndex: 0,
+							authority: undefined,
+							addresses: entry[1].map(function (a) { return new solanaWeb3.PublicKey(a); })
+						}
+					});
+				}
+			);
+
+			const blockhash = blockhashBytesToBase58(orderAtSubmit.blockhashWithMetadata.blockhash);
+			const lastValidBlockHeight = orderAtSubmit.blockhashWithMetadata.lastValidBlockHeight;
+
+			// FIX (19 Jul 2026): Jupiter's own /build response includes a
+			// compute-unit PRICE (inside computeBudgetInstructions) but no
+			// compute-unit LIMIT — sending as-is risks "compute budget
+			// exceeded" on some routes, and /submit does NOT simulate
+			// (sends straight to TPU), so an under-provisioned limit only
+			// ever surfaces as an on-chain failure, never a clean upfront
+			// error. Jupiter's own reference flow: simulate with a high
+			// placeholder limit, read the real usage, add ~20% buffer,
+			// prepend the corrected limit instruction, THEN sign for real.
+			swapStatus.textContent = "Simulating to estimate compute units…";
+
+			const CU_LIMIT_MAX = 1400000;
+			const tempMessageV0 = new solanaWeb3.TransactionMessage({
+				payerKey: new solanaWeb3.PublicKey(conn.publicKey),
+				recentBlockhash: blockhash,
+				instructions: [solanaWeb3.ComputeBudgetProgram.setComputeUnitLimit({ units: CU_LIMIT_MAX })].concat(instructions)
+			}).compileToV0Message(lookupTableAccounts);
+			const tempTx = new solanaWeb3.VersionedTransaction(tempMessageV0);
+			const tempTxBase64 = btoa(bytesToBinaryString(tempTx.serialize()));
+
+			// FIX (19 Jul 2026, review round 2 — critical, fail-closed):
+			// this used to fall back to the max CU limit whenever the
+			// simulation failed or returned nothing usable — and never
+			// checked sim.value.err at all. That combination meant a
+			// transaction that PROVABLY fails in simulation (Solana
+			// returns err AND unitsConsumed together) would still be
+			// signed by the user and submitted with its mandatory
+			// 0.001 SOL tip, guaranteed to fail on-chain. Jupiter's own
+			// reference flow checks the simulation error first and
+			// aborts. Nothing has been signed at this point, so
+			// aborting is completely safe — the user just refreshes the
+			// quote (which, post-review, defaults to the proven
+			// Meta-Aggregator path whenever Router can't be verified).
+			let estimatedCU;
+			let simRes;
+			try {
+				simRes = await fetch(RPC_URL, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						jsonrpc: "2.0", id: 1, method: "simulateTransaction",
+						params: [tempTxBase64, { encoding: "base64", sigVerify: false, replaceRecentBlockhash: true }]
+					})
+				});
+			} catch (simErr) {
+				throw new Error("Router pre-flight simulation request failed — nothing was signed or sent. Refresh the quote and try again (it will use the Meta-Aggregator path if Router can't be verified).");
+			}
+			if (!simRes.ok) {
+				throw new Error("Router pre-flight simulation request failed (" + simRes.status + ") — nothing was signed or sent. Refresh the quote and try again.");
+			}
+			const simJson = await simRes.json();
+			const simValue = simJson && simJson.result && simJson.result.value;
+			if (!simValue) {
+				throw new Error("Router pre-flight simulation returned no usable result — nothing was signed or sent. Refresh the quote and try again.");
+			}
+			if (simValue.err) {
+				throw new Error("Router transaction failed pre-flight simulation (" + JSON.stringify(simValue.err) + ") — nothing was signed or sent. Refresh the quote; the Meta-Aggregator path will be used instead.");
+			}
+			const unitsConsumed = simValue.unitsConsumed;
+			if (typeof unitsConsumed === "number" && unitsConsumed > 0) {
+				estimatedCU = Math.min(Math.ceil(unitsConsumed * 1.2), CU_LIMIT_MAX);
+				console.debug("Simulated CU usage: " + unitsConsumed + " -> using " + estimatedCU + " (with 20% buffer)");
+			} else {
+				throw new Error("Router pre-flight simulation returned no compute-unit estimate — nothing was signed or sent. Refresh the quote and try again.");
+			}
+
+			const messageV0 = new solanaWeb3.TransactionMessage({
+				payerKey: new solanaWeb3.PublicKey(conn.publicKey),
+				recentBlockhash: blockhash,
+				instructions: [solanaWeb3.ComputeBudgetProgram.setComputeUnitLimit({ units: estimatedCU })].concat(instructions)
+			}).compileToV0Message(lookupTableAccounts);
+
+			const versionedTx = new solanaWeb3.VersionedTransaction(messageV0);
+
+			swapBtn.textContent = "WAITING FOR SIGNATURE…";
+			swapStatus.textContent = "Approve the swap in your wallet…";
+
+			const signedTx = await conn.rawProvider.signTransaction(versionedTx);
+			signedBase64 = btoa(bytesToBinaryString(signedTx.serialize()));
+
+			swapBtn.textContent = "SUBMITTING (ROUTER)…";
+			swapStatus.textContent = "Submitting via Jupiter's landing pipeline (SOL tip)…";
+
+			// FIX: /submit is a single, direct-to-TPU call, not a polling
+			// job like /execute — a network failure here is genuinely
+			// ambiguous (may have landed anyway), so treat it the same
+			// conservative way as the Meta-Aggregator's SwapStatusUnknownError:
+			// don't assume failure, don't silently prepare a new order.
+			let submitRes;
+			try {
+				submitRes = await fetch(JUPITER_API_BASE + "/jupiter-submit", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ transaction: signedBase64 })
+				});
+			} catch (networkErr) {
+				throw new SwapStatusUnknownError(
+					"Couldn't confirm your Router swap's status — the submit request itself failed. Check your wallet's recent activity or Solana Explorer before trying again."
+				);
+			}
+
+			const submitJson = await submitRes.json();
+			if (!submitRes.ok || !submitJson.signature) {
+				throw new Error((submitJson && submitJson.error) || ("Router submit failed (" + submitRes.status + ")"));
+			}
+
+			// FIX (19 Jul 2026, most critical): a signature back from
+			// /submit only means Jupiter accepted it for SENDING — not
+			// that it landed or succeeded on-chain. /submit does not
+			// confirm for you (unlike /execute, which Jupiter itself
+			// polls to completion). Poll for real on-chain confirmation
+			// here, exactly like Jupiter's own reference flow
+			// (confirmTransaction + checking .err) — showing "success"
+			// before this was the most serious issue found in review.
+			swapBtn.textContent = "CONFIRMING ON-CHAIN…";
+			swapStatus.textContent = "Waiting for on-chain confirmation…";
+			await confirmRouterSignature(submitJson.signature, blockhash, lastValidBlockHeight);
+
+			// /submit's own response isn't swap-specific (no
+			// totalOutputAmount/outputAmountResult like /execute has) —
+			// fall back to the quoted amount, corrected afterward by the
+			// real balance reconciliation below.
+			execResult = { signature: submitJson.signature };
+		} else {
+			// ---------- Existing, unchanged Meta-Aggregator path ----------
+			const txBytes = Uint8Array.from(atob(orderAtSubmit.transaction), (c) => c.charCodeAt(0));
+			const versionedTx = solanaWeb3.VersionedTransaction.deserialize(txBytes);
+
+			swapBtn.textContent = "WAITING FOR SIGNATURE…";
+			swapStatus.textContent = "Approve the swap in your wallet…";
+
+			const signedTx = await conn.rawProvider.signTransaction(versionedTx);
+			const signedBytes = signedTx.serialize();
+			// Chunked conversion — String.fromCharCode(...bytes) can hit the
+			// JS engine's function-argument limit on larger byte arrays;
+			// building in small chunks has no such ceiling.
+			signedBase64 = btoa(bytesToBinaryString(signedBytes));
+
+			swapBtn.textContent = "EXECUTING…";
+			swapStatus.textContent = "Jupiter is landing your transaction (Beam)…";
+
+			// Jupiter handles the actual sending + landing here — no more of
+			// our own sendTransaction/getSignatureStatuses polling loop. Beam
+			// (Jupiter's managed landing infra) is what cuts MEV exposure and
+			// lands faster than a plain RPC send — see the product-decision
+			// note near the top of this file / SWAP_V2_MIGRATION_PLAN.md.
+			// executeWithRetry (not a single fetch) handles the case where
+			// this takes longer than one request/timeout allows. Uses the
+			// FROZEN requestId, matching the transaction actually signed.
+			execResult = await executeWithRetry(signedBase64, orderAtSubmit.requestId);
+		}
 
 		// FIX (18 Jul 2026, second review pass): totalOutputAmount is what
 		// actually lands in the wallet; outputAmountResult is the raw
@@ -2079,12 +2741,43 @@ async function handleExecute() {
 		quoteDetails.style.display = "none";
 		latestOrder = null;
 
+		// FIX (found live via real testing): setting .value = "" above
+		// is programmatic and does NOT fire an 'input' event — so the
+		// normal handler that resets swapBtn back to "ENTER AN AMOUNT"
+		// never runs. Without this, the button stays stuck showing
+		// "EXECUTING…" (disabled) forever after a successful swap,
+		// even though the swap genuinely completed and the success
+		// checkmark is shown right below it. Mirrors exactly what
+		// fetchOrder() does for an empty/zero amount.
+		hasUsableQuote = false;
+		swapBtn.disabled = true;
+		swapBtn.textContent = "ENTER AN AMOUNT";
+
 		// Update both visible balances immediately from the confirmed swap,
 		// then reconcile them against RPC data in the background. Use the
 		// balances frozen at submit time, not mutable globals, so a delayed
 		// response can never compound against a newer displayed balance.
 		const sellExpectedMax = Math.max(0, sellBalanceAtSubmit - sellAmountAtSubmit);
 		const buyExpectedMin = buyBalanceAtSubmit + actualOutputNumber;
+
+		// DIAGNOSTIC (20 Jul 2026): a transient ~2x-too-high SOL balance
+		// was reported live right after RELAX->SOL swaps, self-correcting
+		// within a couple seconds. Neither the code (buyExpectedMin is a
+		// single, non-additive assignment) nor a focus/visibilitychange
+		// race with reconcileBalancesAfterSwap() fully explains an
+		// inflated-then-corrected-DOWN pattern (a race would show a
+		// stale-then-correct jump, not an over-then-under one). Logging
+		// every input to this calculation so the next occurrence gives
+		// hard evidence instead of another guess. Safe to remove once
+		// confirmed either way — doesn't change any behavior.
+		console.debug("[RELAX SWAP] BALANCE UPDATE DIAGNOSTIC", {
+			sellBalanceAtSubmit, buyBalanceAtSubmit,
+			sellAmountAtSubmit, actualOutputNumber,
+			sellExpectedMax, buyExpectedMin,
+			sellTokenSymbol: sellTokenAtSubmit.symbol, buyTokenSymbol: buyTokenAtSubmit.symbol,
+			currentBuyBalanceRaw: buyBalanceRaw, currentSellBalanceRaw: sellBalanceRaw,
+			pendingReconciliationWasActive: pendingBalanceReconciliation !== null
+		});
 
 		if (sellToken.address === sellTokenAtSubmit.address) {
 			sellBalanceRaw = sellExpectedMax;
@@ -2096,12 +2789,13 @@ async function handleExecute() {
 			buyBalanceLabel.textContent = "Balance: " + buyBalanceRaw.toFixed(6);
 		}
 
-		void reconcileBalancesAfterSwap(
+		pendingBalanceReconciliation = reconcileBalancesAfterSwap(
 			sellExpectedMax,
 			buyExpectedMin,
 			sellTokenAtSubmit,
 			buyTokenAtSubmit
-		);
+		).finally(() => { pendingBalanceReconciliation = null; });
+		void pendingBalanceReconciliation;
 	} catch (err) {
 		swapStatus.style.display = "none";
 		showError(friendlySwapErrorMessage(err));
@@ -2308,8 +3002,6 @@ connectBtn.addEventListener("click", handleConnect);
 </script>
 
 <script src="https://unpkg.com/@solana/web3.js@1.95.3/lib/index.iife.min.js"></script>
-
-<div class="jupiter-signature">Powered by <b>Jupiter</b></div>
 
 </body>
 </html>

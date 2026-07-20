@@ -1,7 +1,12 @@
 /* =========================================================
    RELAX HOLDER VERIFICATION — shared module
-   Used by: Swap, NFT Creator, NFT Market (any RELAX tool that
-   needs to know "is this wallet a $RELAX holder worth >= $20?")
+   Currently active use: wallet connection plumbing (connect/
+   disconnect/getConnection/detectProviders/onAccountChanged) for
+   Swap and Swap Hybrid Engine — neither one currently calls
+   checkHolderStatus() below; the Swap fee is 0% for everyone,
+   holder status doesn't gate anything today. checkHolderStatus()
+   is kept ready, dormant, for future NFT Creator / NFT Market
+   perks — not wired into any live tool yet.
 
    Design notes (see teknik plan, Bölüm 1 + Holder Verification
    architecture discussion):
