@@ -1009,6 +1009,18 @@ let hasUsableQuote = false;
 // every caller (order fetch success, risk checkbox, etc.) respects it
 // automatically, without each one needing its own guard.
 let isExecutingSwap = false;
+// FIX (20 Jul 2026, ported from the Swap Hybrid Engine branch where
+// this was first found and fixed via real live testing):
+// reconcileBalancesAfterSwap() runs in the background (fire-and-forget,
+// up to ~12s) after each swap to replace the optimistic post-swap
+// balance estimate with real RPC data. If a second swap was submitted
+// before that finished, its sellBalanceAtSubmit/buyBalanceAtSubmit
+// were read from the STILL-optimistic (unconfirmed) global balance
+// from the first swap — stacking a second optimistic estimate on top
+// of an already-approximate one. This file had the same
+// reconcileBalancesAfterSwap() pattern as the hybrid branch but never
+// got this specific guard — same live bug was possible here too.
+let pendingBalanceReconciliation = null;
 
 function currentRiskFlaggedTokens() {
 	return [sellToken, buyToken].filter((t) => tokenRiskFlags(t).length > 0);
@@ -2005,6 +2017,21 @@ async function handleExecute() {
 	flipTokensBtn.style.pointerEvents = "none";
 	maxBtn.disabled = true;
 
+	// FIX (20 Jul 2026, ported from Swap Hybrid Engine branch): if a
+	// previous swap's balance reconciliation is still running in the
+	// background, wait for it here before reading
+	// sellBalanceRaw/buyBalanceRaw below — otherwise this swap's
+	// optimistic estimate would stack on top of the previous one's
+	// still-unconfirmed guess (this was observed live: displayed
+	// balance ended up meaningfully inflated after two swaps back to
+	// back). swapBtn is already disabled/isExecutingSwap is already
+	// true at this point, so this wait can't be raced by a second
+	// click.
+	if (pendingBalanceReconciliation) {
+		swapBtn.textContent = "CONFIRMING PREVIOUS BALANCE…";
+		try { await pendingBalanceReconciliation; } catch (e) { /* best-effort — proceed either way */ }
+	}
+
 	// FIX (18 Jul 2026, second review pass): freeze everything about
 	// this specific order — including the transaction bytes and
 	// requestId — the instant the user commits to it. Signing can take
@@ -2079,6 +2106,18 @@ async function handleExecute() {
 		quoteDetails.style.display = "none";
 		latestOrder = null;
 
+		// FIX (20 Jul 2026, ported from Swap Hybrid Engine branch where
+		// this was first found via real live testing): setting .value =
+		// "" above is programmatic and does NOT fire an 'input' event —
+		// so the normal handler that resets swapBtn back to
+		// "ENTER AN AMOUNT" never ran. Without this, the button stayed
+		// stuck showing "EXECUTING…" (disabled) after a successful
+		// swap, even though the swap genuinely completed. Mirrors what
+		// fetchOrder() does for an empty/zero amount.
+		hasUsableQuote = false;
+		swapBtn.disabled = true;
+		swapBtn.textContent = "ENTER AN AMOUNT";
+
 		// Update both visible balances immediately from the confirmed swap,
 		// then reconcile them against RPC data in the background. Use the
 		// balances frozen at submit time, not mutable globals, so a delayed
@@ -2096,12 +2135,13 @@ async function handleExecute() {
 			buyBalanceLabel.textContent = "Balance: " + buyBalanceRaw.toFixed(6);
 		}
 
-		void reconcileBalancesAfterSwap(
+		pendingBalanceReconciliation = reconcileBalancesAfterSwap(
 			sellExpectedMax,
 			buyExpectedMin,
 			sellTokenAtSubmit,
 			buyTokenAtSubmit
-		);
+		).finally(() => { pendingBalanceReconciliation = null; });
+		void pendingBalanceReconciliation;
 	} catch (err) {
 		swapStatus.style.display = "none";
 		showError(friendlySwapErrorMessage(err));
