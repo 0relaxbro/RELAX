@@ -597,14 +597,16 @@ Non-custodial. You sign every transaction yourself.
 
 <div style="background:rgba(255,176,32,.08);border:1px solid rgba(255,176,32,.3);border-radius:12px;padding:14px 16px;font-size:12.5px;color:var(--warn);margin-bottom:20px;line-height:1.6;">
 ⚠ <b>METIS HYBRID RESEARCH BRANCH</b> — not the live v1.0 swap. Fetches
-Router (0% Jupiter fee) and, when it finds a route, compares its real
-simulated cost (tip + priority fee) against Meta-Aggregator's actual
-net output before picking a path — works for any pair now (a small
-SOL/USDC reference quote fills in the SOL/USD rate when not selling SOL
-directly). Falls back to Meta-Aggregator whenever Router finds no
-route, or when the comparison itself can't get a usable rate. Test
-carefully, start small, watch the console for `[HYBRID RESEARCH]` logs.
-Internal only, not linked from the site.
+Router (0% Jupiter fee) and, when it finds a route, compares its
+estimated cost (tip + priority + signature fee, simulated up front)
+against Meta-Aggregator's actual net output. Router is only selected
+when the full comparison ran AND Router wins by a real safety margin —
+in every other case (no route, failed simulation, missing rate, or a
+sub-margin difference) the proven Meta-Aggregator path is used. Works
+for any pair (a small SOL/USDC reference quote fills in the SOL/USD
+rate when not selling SOL directly). Test carefully, start small,
+watch the console for `[HYBRID RESEARCH]` logs. Internal only, not
+linked from the site.
 </div>
 
 <div id="errorBox" class="error-box"></div>
@@ -967,11 +969,15 @@ function blockhashBytesToBase58(bytes) {
 // FIX (19 Jul 2026, item 7 from review): "Router found a route" isn't
 // the same as "Router is cheaper" — it carries a mandatory ~0.001 SOL
 // tip plus a real priority fee, neither of which show up in Router's
-// 0%-Jupiter-fee headline number. This estimates Router's REAL total
-// lamport cost (tip + priority fee) by simulating the transaction
-// up front, so it can be compared against Meta-Aggregator's
-// already-net output instead of blindly preferring Router whenever it
-// finds a route.
+// 0%-Jupiter-fee headline number. This ESTIMATES Router's tip +
+// priority + base-signature cost by simulating the transaction up
+// front, so it can be compared against Meta-Aggregator's already-net
+// output instead of blindly preferring Router whenever it finds a
+// route. It is deliberately called an estimate, not a "real total
+// cost": possible one-time rent deposits for new token accounts and
+// the Meta path's own separately-paid gas are NOT modeled — which is
+// why the selection logic requires Router to win by a safety margin,
+// never by a rounding-level difference.
 const ROUTER_TIP_LAMPORTS = 1000000; // Jupiter's documented /submit minimum
 
 function decodeComputeUnitPriceMicroLamports(computeBudgetInstructions) {
@@ -1009,11 +1015,18 @@ async function getSolUsdRate() {
 		return cachedSolUsdRate;
 	}
 	try {
+		// FIX (19 Jul 2026, review round 2): this used to fake a taker
+		// with the System Program address to satisfy the worker's
+		// taker requirement. Jupiter's own docs explicitly support
+		// taker-less requests for exactly this use case — no taker
+		// means quote fields only, no assembled transaction — so the
+		// worker now allows that via an explicit quoteOnly=true flag,
+		// and this call is honest about being a pure price reference.
 		const params = new URLSearchParams({
 			inputMint: NATIVE_SOL_MINT,
 			outputMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // USDC — just for pricing reference
 			amount: "1000000", // 0.001 SOL — small, just for pricing, never actually swapped
-			taker: "11111111111111111111111111111111" // System Program address — valid base58, /order only needs a well-formed taker to return a quote+tx pair; this quote is discarded, never signed or sent
+			quoteOnly: "true"
 		});
 		const res = await fetch(JUPITER_API_BASE + "/jupiter-order?" + params.toString());
 		if (!res.ok) return null;
@@ -1075,8 +1088,23 @@ async function estimateRouterCostLamports(plan, takerPubkey) {
 				params: [tempTxBase64, { encoding: "base64", sigVerify: false, replaceRecentBlockhash: true }]
 			})
 		});
+		if (!simRes.ok) return null; // couldn't simulate — comparison unavailable
 		const simJson = await simRes.json();
-		const unitsConsumed = simJson && simJson.result && simJson.result.value && simJson.result.value.unitsConsumed;
+		const simValue = simJson && simJson.result && simJson.result.value;
+		// FIX (19 Jul 2026, review round 2 — critical): a simulation can
+		// return BOTH an err AND a unitsConsumed value at the same time.
+		// The old code only looked at unitsConsumed, so a Router
+		// transaction that provably FAILS in simulation could still get
+		// a "valid-looking" cost estimate and be selected as the cheaper
+		// path. A failed simulation means this Router plan is broken —
+		// report the failure distinctly so the caller routes to Meta,
+		// never treat its numbers as a usable cost.
+		if (!simValue) return null;
+		if (simValue.err) {
+			console.warn("[HYBRID RESEARCH] Router cost simulation FAILED on-sim — this Router plan would not execute. err:", JSON.stringify(simValue.err));
+			return { simFailed: true, err: simValue.err };
+		}
+		const unitsConsumed = simValue.unitsConsumed;
 		if (typeof unitsConsumed === "number" && unitsConsumed > 0) {
 			estimatedCU = Math.min(Math.ceil(unitsConsumed * 1.2), CU_LIMIT_MAX);
 		}
@@ -1089,11 +1117,22 @@ async function estimateRouterCostLamports(plan, takerPubkey) {
 		? Math.ceil((priceMicroLamportsPerCU * estimatedCU) / 1e6)
 		: 0; // no price instruction found — treat as 0 rather than guessing
 
+	// HONEST NAMING (19 Jul 2026, review round 2): this is an ESTIMATED
+	// tip + priority + base-signature cost, not a guaranteed "real total
+	// cost" — it deliberately does NOT include possible one-time
+	// rent-exempt deposits for new token accounts (createIdempotent
+	// setup instructions may or may not actually create anything,
+	// depending on what already exists in the wallet), and the Meta
+	// side's own separately-paid gas isn't modeled either. That's why
+	// the selection logic pairs this with a safety margin instead of
+	// trusting sub-cent differences.
+	const BASE_SIGNATURE_FEE_LAMPORTS = 5000; // 1 signature × 5000 lamports
 	return {
 		estimatedCU: estimatedCU,
 		priorityFeeLamports: priorityFeeLamports,
+		signatureFeeLamports: BASE_SIGNATURE_FEE_LAMPORTS,
 		tipLamports: plan.tipInstruction ? ROUTER_TIP_LAMPORTS : 0,
-		totalLamports: priorityFeeLamports + (plan.tipInstruction ? ROUTER_TIP_LAMPORTS : 0)
+		totalLamports: priorityFeeLamports + BASE_SIGNATURE_FEE_LAMPORTS + (plan.tipInstruction ? ROUTER_TIP_LAMPORTS : 0)
 	};
 }
 
@@ -1108,7 +1147,24 @@ async function estimateRouterCostLamports(plan, takerPubkey) {
 // so this doesn't poll forever past the point the blockhash expired.
 async function confirmRouterSignature(signature, blockhash, lastValidBlockHeight) {
 	const pollDelayMs = 1500;
-	const maxAttempts = 20; // ~30s — generous for a direct-to-TPU submit, which Jupiter's own docs describe as typically landing in well under this
+	// FIX (19 Jul 2026, review round 2): lastValidBlockHeight was
+	// accepted as a parameter but never actually used — the comment
+	// claimed "respect lastValidBlockHeight" while the code just polled
+	// a fixed ~30s and gave an ambiguous timeout. Now each poll batches
+	// getSignatureStatuses + getBlockHeight into a single worker
+	// request (the RPC proxy accepts small batches), and when the
+	// chain's current block height passes lastValidBlockHeight with no
+	// status found (searchTransactionHistory already on), the blockhash
+	// has provably expired and the transaction can never land — that's
+	// a definitive, retry-safe failure, not an ambiguous one. This is
+	// exactly Jupiter's own reference confirmation semantics
+	// (confirmTransaction with blockhash + lastValidBlockHeight).
+	// The hard attempt cap is now sized to outlast a typical blockhash
+	// validity window (~60-90s), since the expiry check — not the cap —
+	// is the primary exit; the cap only guards against a lagging or
+	// unreachable RPC.
+	const maxAttempts = 60; // ~90s hard ceiling; expiry check exits far earlier in practice
+	const haveExpiryInfo = Number.isFinite(Number(lastValidBlockHeight));
 
 	for (let attempt = 0; attempt < maxAttempts; attempt++) {
 		let statusRes;
@@ -1116,10 +1172,16 @@ async function confirmRouterSignature(signature, blockhash, lastValidBlockHeight
 			statusRes = await fetch(RPC_URL, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					jsonrpc: "2.0", id: 1, method: "getSignatureStatuses",
-					params: [[signature], { searchTransactionHistory: true }]
-				})
+				body: JSON.stringify([
+					{
+						jsonrpc: "2.0", id: 1, method: "getSignatureStatuses",
+						params: [[signature], { searchTransactionHistory: true }]
+					},
+					{
+						jsonrpc: "2.0", id: 2, method: "getBlockHeight",
+						params: [{ commitment: "confirmed" }]
+					}
+				])
 			});
 		} catch (networkErr) {
 			// Transient network hiccup polling for status — not the same
@@ -1128,8 +1190,12 @@ async function confirmRouterSignature(signature, blockhash, lastValidBlockHeight
 			continue;
 		}
 
-		const statusJson = await statusRes.json();
-		const status = statusJson && statusJson.result && statusJson.result.value && statusJson.result.value[0];
+		const batchJson = await statusRes.json();
+		const responses = Array.isArray(batchJson) ? batchJson : [batchJson];
+		const statusResp = responses.find((r) => r && r.id === 1);
+		const heightResp = responses.find((r) => r && r.id === 2);
+		const status = statusResp && statusResp.result && statusResp.result.value && statusResp.result.value[0];
+		const currentBlockHeight = heightResp && typeof heightResp.result === "number" ? heightResp.result : null;
 
 		if (status) {
 			if (status.err) {
@@ -1138,6 +1204,18 @@ async function confirmRouterSignature(signature, blockhash, lastValidBlockHeight
 			if (status.confirmationStatus === "confirmed" || status.confirmationStatus === "finalized") {
 				return; // genuinely confirmed — safe to show success
 			}
+		} else if (
+			haveExpiryInfo &&
+			currentBlockHeight !== null &&
+			currentBlockHeight > Number(lastValidBlockHeight)
+		) {
+			// No status found anywhere (history search included) AND the
+			// blockhash's validity window has closed — the transaction
+			// expired without ever landing. Definitive and safe to retry
+			// with a fresh quote, unlike the ambiguous-timeout case below.
+			throw new Error(
+				"Router transaction expired before it could land on-chain (blockhash validity window passed with no trace of the transaction). No funds moved — refresh the quote and try again."
+			);
 		}
 
 		await new Promise((r) => setTimeout(r, pollDelayMs));
@@ -1149,7 +1227,7 @@ async function confirmRouterSignature(signature, blockhash, lastValidBlockHeight
 	// Meta-Aggregator path: don't claim success, don't silently prepare
 	// a new order, make the user check before trying again.
 	throw new SwapStatusUnknownError(
-		"Couldn't confirm your Router swap landed on-chain after 30 seconds. Check your wallet's recent activity or Solana Explorer before trying again — don't sign a new swap for this pair until you've checked, to avoid an accidental duplicate."
+		"Couldn't get a definitive answer about your Router swap after ~90 seconds of polling (the status RPC may be lagging or unreachable). Check your wallet's recent activity or Solana Explorer before trying again — don't sign a new swap for this pair until you've checked, to avoid an accidental duplicate."
 	);
 }
 
@@ -1365,8 +1443,26 @@ async function fetchOrder() {
 
 				if (isStale()) return;
 
-				let useRouter = true; // default when comparison isn't possible — Router still works, just unverified as "cheaper"
-				let comparisonNote = "comparison unavailable";
+				// FIX (19 Jul 2026, review round 2 — critical): default
+				// used to be `true` ("Router since it found a route"),
+				// which contradicted both the page's own banner and the
+				// project's stated principle (best verified execution,
+				// not lowest advertised fee). Fail-safe default is now
+				// the PROVEN Meta-Aggregator path — Router is only
+				// selected when the full comparison actually ran AND
+				// Router wins by a real margin, not a sub-cent rounding
+				// artifact between two quotes taken milliseconds apart.
+				let useRouter = false;
+				let comparisonNote = "comparison unavailable — defaulting to proven Meta-Aggregator path";
+
+				// Safety margin: the cost model is an estimate (no rent
+				// deposits, Meta's own gas not modeled) and the two
+				// quotes aren't taken at the same instant. Router must
+				// beat Meta by BOTH an absolute and a relative floor to
+				// be trusted. Logged on every comparison so these
+				// thresholds can be tuned from real research data.
+				const ROUTER_MIN_SAVING_USD = 0.01;
+				const ROUTER_MIN_SAVING_BPS = 5;
 
 				// FIX (19 Jul 2026): generalized beyond the SOL-sell-token
 				// case. When selling SOL, Meta's own quote already gives a
@@ -1377,7 +1473,19 @@ async function fetchOrder() {
 					? (metaCompareResult ? metaCompareResult.inUsdValue / Number(rawAmount) : null)
 					: solUsdRateIfNeeded;
 
-				if (costEstimate && metaCompareResult && metaCompareResult.transaction && solUsdRate) {
+				if (costEstimate && costEstimate.simFailed) {
+					// Router's own transaction FAILED simulation — this
+					// is not "comparison unavailable", it's a Router
+					// plan that provably wouldn't execute. Meta wins by
+					// disqualification, loudly.
+					comparisonNote = "Router plan failed simulation — Meta-Aggregator selected";
+					console.warn("[HYBRID RESEARCH] Router disqualified: its transaction failed simulation before any comparison. err:", JSON.stringify(costEstimate.err));
+				} else if (
+					costEstimate && metaCompareResult && metaCompareResult.transaction &&
+					Number.isFinite(solUsdRate) && solUsdRate > 0 &&
+					Number.isFinite(metaCompareResult.outUsdValue) && metaCompareResult.outUsdValue > 0 &&
+					Number(metaCompareResult.outAmount) > 0 && Number(plan.outAmount) > 0
+				) {
 					// Meta's own outUsdValue (already net of Jupiter's fee)
 					// is the direct comparison point for Router's
 					// equivalent, approximated via the same per-token rate
@@ -1387,14 +1495,46 @@ async function fetchOrder() {
 					const buyTokenUsdRate = metaCompareResult.outUsdValue / Number(metaCompareResult.outAmount);
 					const routerGrossUsd = Number(plan.outAmount) * buyTokenUsdRate;
 					const routerNetUsd = routerGrossUsd - routerCostUsd;
-					const metaNetUsd = metaCompareResult.outUsdValue;
 
-					useRouter = routerNetUsd > metaNetUsd;
+					// FAIRNESS FIX (19 Jul 2026, review round 3): Router's
+					// cost estimate always includes its own base signature
+					// fee (5000 lamports) since Router is a self-submitted
+					// transaction the user pays gas on directly. Meta's
+					// order is only free of that same cost when
+					// `order.gasless === true` (Jupiter sponsors landing).
+					// When Meta is NOT gasless, the user pays Meta's own
+					// network fee too — Jupiter's docs quote a
+					// ~0.00001-0.0002 SOL range for this. Previously that
+					// range was shown to the user in the UI but never
+					// subtracted here, silently making Router look pricier
+					// than it really is relative to Meta on non-gasless
+					// quotes (the gap is small — well under a cent at
+					// current SOL prices — but it's the same order of
+					// magnitude as the safety margin itself, so it's worth
+					// modeling rather than ignoring). Using the midpoint of
+					// Jupiter's documented range as a reasonable estimate,
+					// same spirit as Router's own estimate: approximate,
+					// not exact, and documented as such.
+					const META_NON_GASLESS_FEE_LAMPORTS_ESTIMATE = 100000; // ~midpoint of 0.00001-0.0002 SOL
+					const metaNetworkFeeUsd = metaCompareResult.gasless === false
+						? META_NON_GASLESS_FEE_LAMPORTS_ESTIMATE * solUsdRate
+						: 0;
+					const metaNetUsd = metaCompareResult.outUsdValue - metaNetworkFeeUsd;
+
+					const absoluteSavingUsd = routerNetUsd - metaNetUsd;
+					const savingBps = metaNetUsd > 0 ? (absoluteSavingUsd / metaNetUsd) * 10000 : 0;
+					useRouter =
+						absoluteSavingUsd >= ROUTER_MIN_SAVING_USD &&
+						savingBps >= ROUTER_MIN_SAVING_BPS;
+
 					comparisonNote = "Router net ~$" + routerNetUsd.toFixed(4) +
-						" (cost ~$" + routerCostUsd.toFixed(4) + ") vs Meta net ~$" + metaNetUsd.toFixed(4);
-					console.debug("[HYBRID RESEARCH] Cost comparison:", comparisonNote, { costEstimate: costEstimate, solUsdRate: solUsdRate, sellingSol: isSellingSol });
+						" (est. cost ~$" + routerCostUsd.toFixed(4) + ") vs Meta net ~$" + metaNetUsd.toFixed(4) +
+						(metaNetworkFeeUsd > 0 ? " (incl. est. non-gasless network fee ~$" + metaNetworkFeeUsd.toFixed(4) + ")" : " (gasless)") +
+						" | saving $" + absoluteSavingUsd.toFixed(4) + " / " + savingBps.toFixed(1) + " bps" +
+						" (need >= $" + ROUTER_MIN_SAVING_USD + " and >= " + ROUTER_MIN_SAVING_BPS + " bps)";
+					console.debug("[HYBRID RESEARCH] Cost comparison:", comparisonNote, { costEstimate: costEstimate, solUsdRate: solUsdRate, sellingSol: isSellingSol, absoluteSavingUsd: absoluteSavingUsd, savingBps: savingBps, metaGasless: metaCompareResult.gasless });
 				} else {
-					console.debug("[HYBRID RESEARCH] Real cost comparison unavailable (couldn't get a SOL/USD rate, or simulation/Meta quote failed) — defaulting to Router since it found a route, but this is NOT verified as actually cheaper.");
+					console.debug("[HYBRID RESEARCH] Real cost comparison unavailable (couldn't get a SOL/USD rate, or simulation/Meta quote failed) — defaulting to the PROVEN Meta-Aggregator path. Router is never selected unverified.");
 				}
 
 				if (useRouter) {
@@ -2403,9 +2543,23 @@ async function handleExecute() {
 			const tempTx = new solanaWeb3.VersionedTransaction(tempMessageV0);
 			const tempTxBase64 = btoa(bytesToBinaryString(tempTx.serialize()));
 
-			let estimatedCU = CU_LIMIT_MAX;
+			// FIX (19 Jul 2026, review round 2 — critical, fail-closed):
+			// this used to fall back to the max CU limit whenever the
+			// simulation failed or returned nothing usable — and never
+			// checked sim.value.err at all. That combination meant a
+			// transaction that PROVABLY fails in simulation (Solana
+			// returns err AND unitsConsumed together) would still be
+			// signed by the user and submitted with its mandatory
+			// 0.001 SOL tip, guaranteed to fail on-chain. Jupiter's own
+			// reference flow checks the simulation error first and
+			// aborts. Nothing has been signed at this point, so
+			// aborting is completely safe — the user just refreshes the
+			// quote (which, post-review, defaults to the proven
+			// Meta-Aggregator path whenever Router can't be verified).
+			let estimatedCU;
+			let simRes;
 			try {
-				const simRes = await fetch(RPC_URL, {
+				simRes = await fetch(RPC_URL, {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({
@@ -2413,16 +2567,26 @@ async function handleExecute() {
 						params: [tempTxBase64, { encoding: "base64", sigVerify: false, replaceRecentBlockhash: true }]
 					})
 				});
-				const simJson = await simRes.json();
-				const unitsConsumed = simJson && simJson.result && simJson.result.value && simJson.result.value.unitsConsumed;
-				if (typeof unitsConsumed === "number" && unitsConsumed > 0) {
-					estimatedCU = Math.min(Math.ceil(unitsConsumed * 1.2), CU_LIMIT_MAX);
-					console.debug("Simulated CU usage: " + unitsConsumed + " -> using " + estimatedCU + " (with 20% buffer)");
-				} else {
-					console.debug("Simulation didn't return usable unitsConsumed — falling back to max CU limit (" + CU_LIMIT_MAX + "). Real result: " + JSON.stringify(simJson && simJson.result));
-				}
 			} catch (simErr) {
-				console.debug("Simulation request failed — falling back to max CU limit. " + (simErr && simErr.message ? simErr.message : simErr));
+				throw new Error("Router pre-flight simulation request failed — nothing was signed or sent. Refresh the quote and try again (it will use the Meta-Aggregator path if Router can't be verified).");
+			}
+			if (!simRes.ok) {
+				throw new Error("Router pre-flight simulation request failed (" + simRes.status + ") — nothing was signed or sent. Refresh the quote and try again.");
+			}
+			const simJson = await simRes.json();
+			const simValue = simJson && simJson.result && simJson.result.value;
+			if (!simValue) {
+				throw new Error("Router pre-flight simulation returned no usable result — nothing was signed or sent. Refresh the quote and try again.");
+			}
+			if (simValue.err) {
+				throw new Error("Router transaction failed pre-flight simulation (" + JSON.stringify(simValue.err) + ") — nothing was signed or sent. Refresh the quote; the Meta-Aggregator path will be used instead.");
+			}
+			const unitsConsumed = simValue.unitsConsumed;
+			if (typeof unitsConsumed === "number" && unitsConsumed > 0) {
+				estimatedCU = Math.min(Math.ceil(unitsConsumed * 1.2), CU_LIMIT_MAX);
+				console.debug("Simulated CU usage: " + unitsConsumed + " -> using " + estimatedCU + " (with 20% buffer)");
+			} else {
+				throw new Error("Router pre-flight simulation returned no compute-unit estimate — nothing was signed or sent. Refresh the quote and try again.");
 			}
 
 			const messageV0 = new solanaWeb3.TransactionMessage({
