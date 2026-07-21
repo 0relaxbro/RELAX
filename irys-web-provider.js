@@ -108,17 +108,24 @@ const RelaxIrysWebProvider = (function () {
 			publicKey: rawProvider.publicKey,
 
 			async signTransaction(transaction) {
-				return await rawProvider.signTransaction(transaction);
+				console.log("[IRYS DIAG] wrapper.signTransaction: called");
+				const result = await rawProvider.signTransaction(transaction);
+				console.log("[IRYS DIAG] wrapper.signTransaction: returned");
+				return result;
 			},
 
 			async signAllTransactions(transactions) {
+				console.log("[IRYS DIAG] wrapper.signAllTransactions: called", { count: transactions.length });
 				if (typeof rawProvider.signAllTransactions === "function") {
-					return await rawProvider.signAllTransactions(transactions);
+					const result = await rawProvider.signAllTransactions(transactions);
+					console.log("[IRYS DIAG] wrapper.signAllTransactions: returned (native)");
+					return result;
 				}
 				const signed = [];
 				for (const transaction of transactions) {
 					signed.push(await rawProvider.signTransaction(transaction));
 				}
+				console.log("[IRYS DIAG] wrapper.signAllTransactions: returned (manual loop)");
 				return signed;
 			},
 
@@ -133,27 +140,34 @@ const RelaxIrysWebProvider = (function () {
 			// live symptom: funding succeeded, but upload hung
 			// indefinitely with no wallet popup and no console error).
 			async signMessage(message) {
+				console.log("[IRYS DIAG] wrapper.signMessage: called", { messageLength: message && message.length });
 				if (typeof rawProvider.signMessage !== "function") {
 					throw new Error("This wallet does not support message signing, which storage upload requires.");
 				}
 				const result = await rawProvider.signMessage(message, "utf8");
+				console.log("[IRYS DIAG] wrapper.signMessage: raw provider returned", { resultShape: result && Object.keys(result) });
 				if (result && result.signature) return result.signature;
 				if (result instanceof Uint8Array) return result;
 				throw new Error("Wallet returned an unsupported message signature format.");
 			},
 
 			async sendTransaction(transaction, connection, options = {}) {
+				console.log("[IRYS DIAG] wrapper.sendTransaction: called");
 				const signed = await rawProvider.signTransaction(transaction);
-				return await connection.sendRawTransaction(signed.serialize(), {
+				console.log("[IRYS DIAG] wrapper.sendTransaction: signed, now broadcasting");
+				const sig = await connection.sendRawTransaction(signed.serialize(), {
 					skipPreflight: options.skipPreflight ?? false,
 					preflightCommitment: options.preflightCommitment || "confirmed",
 					maxRetries: options.maxRetries
 				});
+				console.log("[IRYS DIAG] wrapper.sendTransaction: broadcast returned", { sig });
+				return sig;
 			}
 		};
 	}
 
 	async function getUploader(walletProvider) {
+		console.log("[IRYS DIAG] getUploader: start");
 		const walletAddress = walletProvider && walletProvider.publicKey ? walletProvider.publicKey.toString() : null;
 		if (!walletAddress) {
 			throw new Error("Connect a Solana wallet before using storage.");
@@ -187,27 +201,11 @@ const RelaxIrysWebProvider = (function () {
 		}
 
 		try {
-			// FIX (found via review, 21 Jul 2026 — genuinely critical
-			// catch): this used to call .withProvider() with no network
-			// configuration at all, meaning Irys itself defaulted to its
-			// mainnet bundler network REGARDLESS of the Solana side
-			// being switched to devnet — a real "mixed network" risk
-			// (devnet mint, but mainnet-priced/mainnet-charged storage).
-			// Confirmed via Irys's own documented pattern (docs.irys.xyz
-			// + linea.build/irys-quickstart, fetched 21 Jul 2026,
-			// consistent across every chain's example): the builder
-			// chain is `.withRpc(rpcUrl).devnet()` — `.withRpc()` points
-			// Irys at the CHAIN's own devnet RPC (reusing our own
-			// /rpc-devnet route for consistency with the rest of the
-			// devnet setup), and `.devnet()` switches IRYS's own network
-			// to its temporary/test storage tier (~60 day retention,
-			// funded with worthless devnet SOL, per Irys's own docs).
-			// DEVNET_MODE toggles this; flip to false only once a
-			// devnet mint has fully succeeded and real deployment is
-			// being prepared.
+			console.log("[IRYS DIAG] getUploader: bundle loaded, calling WebUploader(WebSolana).withProvider()...withRpc()...devnet()");
 			const uploader = DEVNET_MODE
 				? await WebUploader(WebSolana).withProvider(wrapProviderForIrys(walletProvider)).withRpc(DEVNET_RPC_URL).devnet()
 				: await WebUploader(WebSolana).withProvider(wrapProviderForIrys(walletProvider));
+			console.log("[IRYS DIAG] getUploader: uploader constructed successfully");
 			cachedUploader = uploader;
 			cachedWalletAddress = cacheKey;
 			return uploader;
@@ -248,12 +246,21 @@ const RelaxIrysWebProvider = (function () {
 	// previous upload, no new funding transaction/signature is
 	// needed).
 	async function ensureFunded(walletProvider, requiredLamports) {
+		console.log("[IRYS DIAG] ensureFunded: start", { requiredLamports: requiredLamports.toString() });
 		const uploader = await getUploader(walletProvider);
+		console.log("[IRYS DIAG] ensureFunded: got uploader");
 		const required = BigInt(requiredLamports);
+		console.log("[IRYS DIAG] ensureFunded: calling getLoadedBalance()");
 		const balance = BigInt((await uploader.getLoadedBalance()).toString());
+		console.log("[IRYS DIAG] ensureFunded: getLoadedBalance() returned", { balance: balance.toString() });
 		if (balance < required) {
+			console.log("[IRYS DIAG] ensureFunded: calling uploader.fund()", { amount: (required - balance).toString() });
 			await uploader.fund(required - balance);
+			console.log("[IRYS DIAG] ensureFunded: uploader.fund() returned");
+		} else {
+			console.log("[IRYS DIAG] ensureFunded: already funded, skipping fund()");
 		}
+		console.log("[IRYS DIAG] ensureFunded: done");
 	}
 
 	// Uploads raw file bytes (image, gif, mp4 — anything). Returns a
@@ -263,15 +270,20 @@ const RelaxIrysWebProvider = (function () {
 	// insufficient balance even if a UI's own explicit "fund" step was
 	// skipped or the balance changed since that step ran.
 	async function uploadFile(walletProvider, bytes, contentType) {
+		console.log("[IRYS DIAG] uploadFile: start", { byteLength: bytes.length, contentType });
 		const uploader = await getUploader(walletProvider);
+		console.log("[IRYS DIAG] uploadFile: got uploader, calling getPrice()");
 		const price = await uploader.getPrice(bytes.length);
+		console.log("[IRYS DIAG] uploadFile: getPrice() returned", { price: price.toString() });
 		await ensureFunded(walletProvider, BigInt(price.toString()));
+		console.log("[IRYS DIAG] uploadFile: ensureFunded() returned, calling uploader.upload()");
 		const tags = [{ name: "Content-Type", value: contentType }];
 		const receipt = await withTimeout(
 			uploader.upload(bytes, { tags }),
 			60000,
 			"Media upload timed out after 60 seconds. No mint transaction was started — check your wallet for any pending signature requests, then try again."
 		);
+		console.log("[IRYS DIAG] uploadFile: uploader.upload() returned", { receiptId: receipt.id });
 		return "https://gateway.irys.xyz/" + receipt.id;
 	}
 
