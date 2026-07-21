@@ -50,8 +50,23 @@ const RelaxIrysWebProvider = (function () {
 	// latest published version is 0.0.15. @irys/web-upload-solana's
 	// 0.1.8 pin was already correct (npm confirms this is its real
 	// latest too) — only the first package's version was wrong.
-	const IRYS_UPLOAD_CDN = "https://esm.sh/@irys/web-upload@0.0.15";
-	const IRYS_SOLANA_CDN = "https://esm.sh/@irys/web-upload-solana@0.1.8";
+	// FIX (found live via real devnet testing, 21 Jul 2026 — second
+	// real bug found this session, after the version-pin mistake):
+	// after fixing the version, a DEEPER esm.sh issue surfaced —
+	// "/@irys/bundles@^0.2.3 does not provide an export named
+	// 'ArweaveSigner'". This is exactly the multi-package
+	// transitive-dependency fragility flagged as a real (if smaller
+	// than Metaplex's) risk when Irys was first chosen as a CDN-loaded
+	// provider: esm.sh's default per-file resolution can fail to
+	// correctly resolve a deep re-export across several internal
+	// Irys packages (@irys/web-upload -> @irys/bundles ->
+	// @irys/arweave). Adding `?bundle` forces esm.sh to bundle the
+	// ENTIRE dependency tree into one self-contained file instead of
+	// serving many separately-resolved deep imports — this is esm.sh's
+	// own documented fix for this exact class of "does not provide an
+	// export named X" error.
+	const IRYS_UPLOAD_CDN = "https://esm.sh/@irys/web-upload@0.0.15?bundle";
+	const IRYS_SOLANA_CDN = "https://esm.sh/@irys/web-upload-solana@0.1.8?bundle";
 
 	let cachedUploader = null;
 	let cachedWalletAddress = null;
