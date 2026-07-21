@@ -58,25 +58,30 @@ const RelaxIrysWebProvider = (function () {
 	}
 
 	// FIX (found live via repeated 402s during real devnet testing, 21
-	// Jul 2026 — confirmed recurring, not the one-off it first looked
-	// like): Irys's own bundled uploader already detects this exact
-	// situation and throws an error shaped like
-	// "402 error: <body> - retry after Xs" (see the `case 402:` branch
-	// inside Uploader.uploadTransaction in irys-bundle.js) — the retry
-	// interval even comes from the bundler's own `retry-after` response
-	// header when present, so it's Irys's own recommended wait, not a
-	// guess. This was happening even when ensureFunded() had just
-	// logged "already funded, skipping fund()", so it isn't (only) a
-	// funding-transaction confirmation lag — it's the upload/payment
-	// check on Irys's devnet bundler lagging behind whatever balance
-	// getLoadedBalance() itself sees as sufficient. A single retry
-	// wasn't reliably enough, so this retries a few times with the
-	// suggested (or a sane default) backoff before giving up with a
-	// clear error. Only 402s are retried this way — any other error
-	// (wallet rejection, network failure, timeout) still fails
-	// immediately, unchanged.
-	async function uploadWithRetry(uploadCall, timeoutMs, timeoutMessage, maxAttempts) {
-		maxAttempts = maxAttempts || 3;
+	// Jul 2026 — first attempt at this fix assumed a bundler-side
+	// indexing lag and just waited-and-retried; that turned out to be
+	// the WRONG diagnosis. The actual error Irys's bundle throws is
+	// "402 error: Not enough balance for transaction" — a genuine
+	// shortfall, not a timing issue, so waiting alone never helped.
+	// Root cause: ensureFunded() only funds for getPrice(bytes.length)
+	// — the price of the raw payload — but Irys's real data item also
+	// includes tag/header/signature overhead, and devnet bundler
+	// pricing can move between our estimate and the actual charge. A
+	// small buffer covers both. This distinguishes the two known 402
+	// shapes from Irys's own code (see the `case 402:` branch in
+	// Uploader.uploadTransaction, irys-bundle.js):
+	//   - "Not enough balance for transaction" -> re-fund with a
+	//     buffer (via the caller-supplied onInsufficientBalance) before
+	//     retrying — waiting does nothing here.
+	//   - anything else 402 (e.g. genuine bundler rate-limiting, which
+	//     DOES carry Irys's own `retry-after` header) -> wait that many
+	//     seconds (or a sane default) and retry as before.
+	// Any non-402 error (wallet rejection, network failure, timeout)
+	// still fails immediately, unchanged.
+	async function uploadWithRetry(uploadCall, timeoutMs, timeoutMessage, opts) {
+		opts = opts || {};
+		const maxAttempts = opts.maxAttempts || 3;
+		const onInsufficientBalance = opts.onInsufficientBalance;
 		let lastErr;
 		for (let attempt = 1; attempt <= maxAttempts; attempt++) {
 			try {
@@ -88,17 +93,27 @@ const RelaxIrysWebProvider = (function () {
 				if (!is402 || attempt === maxAttempts) {
 					throw err;
 				}
-				const retryAfterMatch = msg.match(/retry after ([\d.]+)s/);
-				const waitSeconds = retryAfterMatch ? parseFloat(retryAfterMatch[1]) : attempt * 2;
-				console.log(
-					"[IRYS DIAG] uploadWithRetry: got 402 Payment Required, retrying",
-					{ attempt, maxAttempts, waitSeconds, message: msg }
-				);
-				await new Promise((resolve) => setTimeout(resolve, waitSeconds * 1000));
+				const isInsufficientBalance = /not enough balance/i.test(msg);
+				if (isInsufficientBalance && onInsufficientBalance) {
+					console.log(
+						"[IRYS DIAG] uploadWithRetry: 402 insufficient balance, topping up before retry",
+						{ attempt, maxAttempts, message: msg }
+					);
+					await onInsufficientBalance(attempt);
+				} else {
+					const retryAfterMatch = msg.match(/retry after ([\d.]+)s/);
+					const waitSeconds = retryAfterMatch ? parseFloat(retryAfterMatch[1]) : attempt * 2;
+					console.log(
+						"[IRYS DIAG] uploadWithRetry: got 402, waiting then retrying",
+						{ attempt, maxAttempts, waitSeconds, message: msg }
+					);
+					await new Promise((resolve) => setTimeout(resolve, waitSeconds * 1000));
+				}
 			}
 		}
 		throw lastErr;
 	}
+
 
 	// *** DEVNET MODE — flip to false only after a full devnet mint
 	// has succeeded end-to-end, per SWAP_V2_MIGRATION_PLAN.md / NFT
@@ -279,6 +294,19 @@ const RelaxIrysWebProvider = (function () {
 		return BigInt(balance.toString());
 	}
 
+	// FIX (found live, 21 Jul 2026, via the recurring "402 error: Not
+	// enough balance for transaction"): getPrice(bytes.length) only
+	// prices the raw payload, but the actual uploaded data item also
+	// carries tag/header/signature overhead, and devnet bundler
+	// pricing can move slightly between our estimate and the moment
+	// the upload actually lands. A modest buffer (+20%, plus a small
+	// fixed pad so tiny-value uploads like this one aren't left with
+	// an effectively-zero buffer after integer rounding) covers both
+	// without materially changing what the user is shown/charged.
+	function withFundingBuffer(lamports) {
+		return lamports + (lamports / 5n) + 5000n;
+	}
+
 	// FIX (found via review, 21 Jul 2026): the original version
 	// computed a price via getPrice() but never actually funded the
 	// account before calling upload() — Irys's own official flow is
@@ -318,7 +346,7 @@ const RelaxIrysWebProvider = (function () {
 		console.log("[IRYS DIAG] uploadFile: got uploader, calling getPrice()");
 		const price = await uploader.getPrice(bytes.length);
 		console.log("[IRYS DIAG] uploadFile: getPrice() returned", { price: price.toString() });
-		await ensureFunded(walletProvider, BigInt(price.toString()));
+		await ensureFunded(walletProvider, withFundingBuffer(BigInt(price.toString())));
 		console.log("[IRYS DIAG] uploadFile: ensureFunded() returned, calling uploader.upload()");
 		const tags = [{ name: "Content-Type", value: contentType }];
 		// FIX (found live, traced via [IRYS BUNDLE DIAG] logs, 21 Jul
@@ -331,7 +359,13 @@ const RelaxIrysWebProvider = (function () {
 		const receipt = await uploadWithRetry(
 			() => uploader.upload(bufferBytes, { tags }),
 			60000,
-			"Media upload timed out after 60 seconds. No mint transaction was started — check your wallet for any pending signature requests, then try again."
+			"Media upload timed out after 60 seconds. No mint transaction was started — check your wallet for any pending signature requests, then try again.",
+			{
+				onInsufficientBalance: async () => {
+					const freshPrice = BigInt((await uploader.getPrice(bytes.length)).toString());
+					await ensureFunded(walletProvider, withFundingBuffer(freshPrice));
+				}
+			}
 		);
 		console.log("[IRYS DIAG] uploadFile: uploader.upload() returned", { receiptId: receipt.id });
 		return "https://gateway.irys.xyz/" + receipt.id;
@@ -348,13 +382,19 @@ const RelaxIrysWebProvider = (function () {
 		const uploader = await getUploader(walletProvider);
 		const bytes = new TextEncoder().encode(JSON.stringify(obj));
 		const price = await uploader.getPrice(bytes.length);
-		await ensureFunded(walletProvider, BigInt(price.toString()));
+		await ensureFunded(walletProvider, withFundingBuffer(BigInt(price.toString())));
 		const tags = [{ name: "Content-Type", value: "application/json" }];
 		const bufferBytes = window.RelaxIrysBundle.Buffer.from(bytes);
 		const receipt = await uploadWithRetry(
 			() => uploader.upload(bufferBytes, { tags }),
 			60000,
-			"Metadata upload timed out after 60 seconds. No mint transaction was started — check your wallet for any pending signature requests, then try again."
+			"Metadata upload timed out after 60 seconds. No mint transaction was started — check your wallet for any pending signature requests, then try again.",
+			{
+				onInsufficientBalance: async () => {
+					const freshPrice = BigInt((await uploader.getPrice(bytes.length)).toString());
+					await ensureFunded(walletProvider, withFundingBuffer(freshPrice));
+				}
+			}
 		);
 		return "https://gateway.irys.xyz/" + receipt.id;
 	}
