@@ -278,8 +278,15 @@ const RelaxIrysWebProvider = (function () {
 		await ensureFunded(walletProvider, BigInt(price.toString()));
 		console.log("[IRYS DIAG] uploadFile: ensureFunded() returned, calling uploader.upload()");
 		const tags = [{ name: "Content-Type", value: contentType }];
+		// FIX (found live, traced via [IRYS BUNDLE DIAG] logs, 21 Jul
+		// 2026): Irys's uploadData() checks Buffer.isBuffer(data) to
+		// pick its fast path — a plain Uint8Array fails that check and
+		// silently falls through to an untested chunked-upload path,
+		// which is exactly where this was hanging. Wrap with the SAME
+		// Buffer class Irys's own bundled code uses internally.
+		const bufferBytes = window.RelaxIrysBundle.Buffer.from(bytes);
 		const receipt = await withTimeout(
-			uploader.upload(bytes, { tags }),
+			uploader.upload(bufferBytes, { tags }),
 			60000,
 			"Media upload timed out after 60 seconds. No mint transaction was started — check your wallet for any pending signature requests, then try again."
 		);
@@ -300,8 +307,9 @@ const RelaxIrysWebProvider = (function () {
 		const price = await uploader.getPrice(bytes.length);
 		await ensureFunded(walletProvider, BigInt(price.toString()));
 		const tags = [{ name: "Content-Type", value: "application/json" }];
+		const bufferBytes = window.RelaxIrysBundle.Buffer.from(bytes);
 		const receipt = await withTimeout(
-			uploader.upload(bytes, { tags }),
+			uploader.upload(bufferBytes, { tags }),
 			60000,
 			"Metadata upload timed out after 60 seconds. No mint transaction was started — check your wallet for any pending signature requests, then try again."
 		);
