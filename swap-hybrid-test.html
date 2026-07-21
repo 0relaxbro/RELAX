@@ -6,9 +6,11 @@
 	risk banner, token search, balance reconciliation) fully intact.
 	Adds: try Router (/build, Metis-only, 0% Jupiter fee) FIRST, fall
 	back to the proven Meta-Aggregator (/order+/execute) flow only when
-	Router can't find a route. Internal research only — not linked from
-	the main site, does not replace the live v1.0 swap.html. See
-	SWAP_V2_MIGRATION_PLAN.md "Swap Hybrid Engine" for the reasoning.
+	Router can't find a route. Research/testing branch — not in the
+	main site navigation, noindex, does not replace the live v1.0
+	swap.html. Reachable via a small link from swap.html for anyone
+	who wants to try it early. See SWAP_V2_MIGRATION_PLAN.md "Swap
+	Hybrid Engine" for the reasoning.
 -->
 <html lang="en">
 <head>
@@ -16,7 +18,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RELAX LAB | Swap Hybrid Engine — Experiment 003</title>
-<meta name="description" content="Internal research: tries the Router path (0% Jupiter fee) first, falls back to the proven Meta-Aggregator flow. Not linked from the main site.">
+<meta name="description" content="Experimental research branch: tries the Router path (0% Jupiter fee) first, falls back to the proven Meta-Aggregator flow. Not in the main site navigation — test carefully, start small.">
 <meta name="robots" content="noindex, nofollow">
 <link rel="canonical" href="https://0relaxbro.xyz/swap.html">
 <meta name="theme-color" content="#050713">
@@ -639,9 +641,10 @@ when the full comparison ran AND Router wins by a real safety margin —
 in every other case (no route, failed simulation, missing rate, or a
 sub-margin difference) the proven Meta-Aggregator path is used. Works
 for any pair (a small SOL/USDC reference quote fills in the SOL/USD
-rate when not selling SOL directly). Test carefully, start small,
-watch the console for `[HYBRID RESEARCH]` logs. Internal only, not
-linked from the site.
+rate when not selling SOL directly). Experimental research branch —
+test carefully and start small. Watch the console for
+`[HYBRID RESEARCH]` logs. Not in the main site navigation, and
+noindex — reachable via the link on the live Swap page.
 </div>
 
 <div id="errorBox" class="error-box"></div>
