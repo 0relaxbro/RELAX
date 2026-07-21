@@ -43,7 +43,14 @@ const RelaxIrysWebProvider = (function () {
 	// dependency (unlike @solana/web3.js's own maintained iife CDN
 	// build). Pinned to specific versions (not @latest) so a future
 	// Irys release can't silently change behavior underneath RELAX.
-	const IRYS_UPLOAD_CDN = "https://esm.sh/@irys/web-upload@0.2.9";
+	// FIX (found live via real devnet testing, 21 Jul 2026): pinned to
+	// 0.2.9 originally, but that version was never actually published —
+	// esm.sh returned a real 404 the first time this ran for real.
+	// Confirmed via npm's own registry: @irys/web-upload's actual
+	// latest published version is 0.0.15. @irys/web-upload-solana's
+	// 0.1.8 pin was already correct (npm confirms this is its real
+	// latest too) — only the first package's version was wrong.
+	const IRYS_UPLOAD_CDN = "https://esm.sh/@irys/web-upload@0.0.15";
 	const IRYS_SOLANA_CDN = "https://esm.sh/@irys/web-upload-solana@0.1.8";
 
 	let cachedUploader = null;
