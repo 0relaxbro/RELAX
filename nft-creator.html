@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<!--
+	RELAX NFT Creator — v1
+	Legacy Token Metadata mint tool. Mint is fully non-custodial: the
+	connected wallet pays for and signs every instruction (mint account
+	creation, metadata, master edition) AND every storage upload (Irys,
+	via the user's own wallet — RELAX never holds a key that matters
+	economically here). See SWAP_V2_MIGRATION_PLAN.md / NFT Creator
+	section for the full architecture decision trail:
+	  Adapter -> Provider -> InstructionBuilder -> Serializer (mint)
+	  Creator UI -> RelaxStorage -> RelaxIrysWebProvider (storage)
+	This file ONLY calls RelaxStorage.*, RelaxMetadataBuilder.build(),
+	and RelaxNFT.mint() — never the internal layers directly, so a
+	future provider swap (Core, a different storage backend) never
+	requires touching this page.
+	NOT YET DEVNET-TESTED — see the mandatory test note at the bottom
+	of this file before any real (or even devnet) mint attempt.
+-->
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RELAX LAB | NFT Creator — Experiment 004</title>
+<meta name="description" content="Mint a Legacy Token Metadata NFT directly from your own wallet. Non-custodial: you sign every transaction and pay every storage cost yourself.">
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://0relaxbro.xyz/nft-creator.html">
+<meta name="theme-color" content="#050713">
+
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Orbitron:wght@600;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+
+:root{
+--bg:#050713;
+--text:#F5F7FF;
+--muted:#929BB5;
+--green:#14F195;
+--purple:#9945FF;
+--blue:#5B7CFF;
+--danger:#FF5F87;
+--warn:#FFB020;
+--border:rgba(132,151,220,.18);
+--orbitron:'Orbitron',sans-serif;
+--inter:'Inter',sans-serif;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+background:var(--bg);
+color:var(--text);
+font-family:var(--inter);
+min-height:100vh;
+padding:40px 20px 100px;
+}
+
+.wrap{ max-width:560px; margin:0 auto; }
+
+.back{
+display:inline-flex; align-items:center; gap:8px;
+color:var(--muted); text-decoration:none; font-size:13px;
+letter-spacing:.5px; margin-bottom:30px;
+}
+.back:hover{ color:var(--text); }
+
+.lab-tag{
+display:inline-block; font-family:var(--orbitron); font-size:11px;
+font-weight:700; letter-spacing:1.5px; color:var(--green);
+background:rgba(20,241,149,.08); border:1px solid rgba(20,241,149,.25);
+padding:6px 12px; border-radius:20px; margin-bottom:20px;
+}
+
+h1{ font-family:var(--orbitron); font-size:32px; font-weight:800; line-height:1.25; margin-bottom:14px; }
+h1 span{ color:var(--green); }
+
+.subtitle{ color:var(--muted); font-size:15px; line-height:1.6; margin-bottom:28px; max-width:460px; }
+
+.devnet-banner{
+background:rgba(255,176,32,.08); border:1px solid rgba(255,176,32,.3);
+border-radius:12px; padding:14px 16px; font-size:12.5px; color:var(--warn);
+margin-bottom:28px; line-height:1.6;
+}
+
+.wallet-box{ border:1px solid var(--border); border-radius:16px; padding:20px; margin-bottom:24px; text-align:center; }
+
+.connect-btn{
+font-family:var(--orbitron); font-weight:700; font-size:14px; letter-spacing:.5px;
+color:var(--bg); background:var(--green); border:none; border-radius:12px;
+padding:14px 24px; cursor:pointer; width:100%; transition:opacity .15s ease;
+}
+.connect-btn:hover{ opacity:.85; }
+.connect-btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+.wallet-picker-btn.provider-phantom{ background:#AB9FF2; }
+.wallet-picker-btn.provider-solflare{ background:#FFEF46; }
+
+.wallet-connected-row{ display:flex; align-items:center; justify-content:space-between; font-size:13px; color:var(--muted); }
+.wallet-connected-row .addr{ color:var(--text); font-family:monospace; }
+.disconnect-link{ color:var(--danger); text-decoration:none; font-size:12px; cursor:pointer; }
+
+.holder-badge{
+display:inline-flex; align-items:center; gap:6px; font-size:11px;
+color:var(--green); margin-top:8px;
+}
+
+.card{ border:1px solid var(--border); border-radius:16px; padding:20px; margin-bottom:20px; display:none; }
+.card.visible{ display:block; }
+
+.field{ margin-bottom:18px; }
+.field label{ display:block; font-size:12px; color:var(--muted); margin-bottom:8px; }
+.field input[type="text"], .field textarea, .field input[type="number"]{
+width:100%; background:rgba(132,151,220,.05); border:1px solid var(--border);
+border-radius:12px; padding:12px 14px; color:var(--text); font-family:var(--inter);
+font-size:14px;
+}
+.field textarea{ resize:vertical; min-height:70px; }
+.field .hint{ font-size:11px; color:var(--muted); margin-top:6px; }
+
+.file-drop{
+border:1px dashed var(--border); border-radius:12px; padding:20px;
+text-align:center; cursor:pointer; font-size:13px; color:var(--muted);
+transition:border-color .15s;
+}
+.file-drop:hover{ border-color:var(--green); }
+.file-drop.has-file{ border-style:solid; color:var(--text); }
+
+.holder-only-section{
+border-top:1px solid var(--border); margin-top:20px; padding-top:20px;
+}
+.holder-only-tag{
+font-family:var(--orbitron); font-size:10px; font-weight:700; letter-spacing:1px;
+color:var(--purple); background:rgba(153,69,255,.1); border:1px solid rgba(153,69,255,.3);
+padding:3px 8px; border-radius:8px; margin-left:8px;
+}
+
+.attributes-row{ display:flex; gap:8px; margin-bottom:8px; }
+.attributes-row input{ flex:1; }
+.attributes-row button{
+background:rgba(255,95,135,.1); border:1px solid rgba(255,95,135,.3);
+color:var(--danger); border-radius:8px; padding:0 12px; cursor:pointer;
+}
+.add-attribute-btn{
+font-size:12px; color:var(--green); background:none; border:none; cursor:pointer; padding:6px 0;
+}
+
+.preview-box{
+border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-bottom:16px;
+background:rgba(132,151,220,.03); aspect-ratio:1; display:flex; align-items:center; justify-content:center;
+}
+.preview-box img, .preview-box video{ width:100%; height:100%; object-fit:cover; }
+.preview-box .placeholder{ color:var(--muted); font-size:13px; }
+
+.cost-row{ display:flex; justify-content:space-between; font-size:13px; padding:8px 0; color:var(--muted); }
+.cost-row b{ color:var(--text); }
+
+.timeline{ margin-top:20px; }
+.timeline-step{
+display:flex; align-items:center; gap:10px; font-size:13px; color:var(--muted);
+padding:6px 0;
+}
+.timeline-step .dot{
+width:8px; height:8px; border-radius:50%; background:var(--border); flex-shrink:0;
+}
+.timeline-step.done .dot{ background:var(--green); }
+.timeline-step.active .dot{ background:var(--warn); animation:pulse 1s infinite; }
+.timeline-step.done, .timeline-step.active{ color:var(--text); }
+@keyframes pulse{ 0%,100%{opacity:1} 50%{opacity:.4} }
+
+.mint-btn{
+font-family:var(--orbitron); font-weight:700; font-size:14px; letter-spacing:.5px;
+color:var(--bg); background:var(--green); border:none; border-radius:14px;
+padding:16px; cursor:pointer; width:100%; transition:opacity .15s ease;
+}
+.mint-btn:hover{ opacity:.9; }
+.mint-btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+.error-box{
+display:none; background:rgba(255,95,135,.08); border:1px solid rgba(255,95,135,.3);
+border-radius:12px; padding:14px 16px; font-size:13px; color:var(--danger); margin-bottom:20px; line-height:1.5;
+}
+
+.success-box{
+display:none; text-align:center; padding:20px;
+}
+.success-box .check{
+width:56px; height:56px; border-radius:50%; border:2px solid var(--green);
+display:flex; align-items:center; justify-content:center; margin:0 auto 16px;
+color:var(--green); font-size:24px;
+}
+.success-box a{ color:var(--green); text-decoration:none; font-size:13px; }
+
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<a href="index.html" class="back">&larr; BACK TO RELAX</a>
+
+<span class="lab-tag">RELAX NFT CREATOR // EXPERIMENT 004</span>
+
+<h1>NFT Creator<br><span>Mint, straight from your wallet.</span></h1>
+
+<p class="subtitle">
+Legacy Token Metadata, non-custodial. You sign every transaction and
+pay every storage cost yourself — RELAX holds no key that matters
+here, ever.
+</p>
+
+<div class="devnet-banner">
+⚠ <b>DEVNET TEST MODE.</b> This page is wired to Solana devnet (worthless
+test SOL, get some free from a devnet faucet). It has NOT yet had a
+successful end-to-end mint. Do not point this at mainnet until a
+devnet mint has fully succeeded. (A prior version of this banner
+incorrectly implied devnet safety while the page was actually wired
+to mainnet — fixed 21 Jul 2026, see SWAP_V2_MIGRATION_PLAN.md.)
+</div>
+<div class="devnet-banner" style="border-color:rgba(255,95,135,.4);color:var(--danger);">
+⚠ Irys/storage uploads below have NOT been separately confirmed to
+run in devnet/testnet mode yet — verify this against Irys's current
+docs before funding anything real. If in doubt, stop after the cost
+estimate step and don't confirm funding.
+</div>
+
+<div id="walletBox" class="wallet-box">
+<button id="connectBtn" class="connect-btn">CONNECT WALLET</button>
+</div>
+
+<div id="errorBox" class="error-box"></div>
+
+<div id="formCard" class="card">
+
+<div class="field">
+<label>Name</label>
+<input type="text" id="nftName" maxlength="32" placeholder="My RELAX NFT">
+</div>
+
+<div class="field">
+<label>Description</label>
+<textarea id="nftDescription" maxlength="500" placeholder="Say something about it."></textarea>
+</div>
+
+<div class="field">
+<label>Image / GIF</label>
+<div class="file-drop" id="imageDrop">Click to choose an image or GIF</div>
+<input type="file" id="imageInput" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none;">
+<div class="hint">PNG, JPG, WebP, or GIF. This becomes the NFT's cover image either way.</div>
+</div>
+
+<div class="field">
+<label>Royalty (%)</label>
+<input type="number" id="royaltyPercent" min="0" max="100" step="0.1" value="0">
+<div class="hint">Percentage of future secondary sales that goes to you as the creator. 0-100%.</div>
+</div>
+
+<div id="holderSection" class="holder-only-section" style="display:none;">
+
+<div class="field">
+<label>Video (MP4) <span class="holder-only-tag">HOLDER</span></label>
+<div class="file-drop" id="videoDrop">Click to choose an MP4</div>
+<input type="file" id="videoInput" accept="video/mp4" style="display:none;">
+<div class="hint">Optional. The image above becomes the required cover for this video.</div>
+</div>
+
+<div class="field">
+<label>Custom Attributes <span class="holder-only-tag">HOLDER</span></label>
+<div id="attributesList"></div>
+<button type="button" class="add-attribute-btn" id="addAttributeBtn">+ Add attribute</button>
+</div>
+
+</div>
+
+<div class="field" style="margin-top:20px;">
+<label>Preview</label>
+<div class="preview-box" id="previewBox"><span class="placeholder">Upload an image to preview</span></div>
+</div>
+
+<div id="costSummary" style="display:none;">
+<div class="cost-row"><span>Media storage</span><b id="costMedia">—</b></div>
+<div class="cost-row"><span>Metadata storage</span><b id="costMetadata">calculated after media upload</b></div>
+<div class="cost-row"><span>Network mint fees</span><b id="costMint">shown before minting</b></div>
+</div>
+
+<div class="timeline" id="timeline"></div>
+
+<button id="mintBtn" class="mint-btn" style="margin-top:20px;" disabled>ESTIMATE COST</button>
+
+<div class="success-box" id="successBox">
+<div class="check">✓</div>
+<div style="margin-bottom:10px;">NFT minted successfully.</div>
+<a id="explorerLink" href="#" target="_blank" rel="noopener">View on Solana Explorer &rarr;</a>
+</div>
+
+</div>
+
+</div>
+
+<script src="https://unpkg.com/@solana/web3.js@1.95.3/lib/index.iife.min.js"></script>
+
+<script src="serializer.js"></script>
+<script src="instruction-builder.js"></script>
+<script src="legacy-provider.js"></script>
+<script src="nft-adapter.js"></script>
+
+<script src="irys-web-provider.js"></script>
+<script src="storage-adapter.js"></script>
+<script src="metadata-builder.js"></script>
+
+<script src="holder-verification.js"></script>
+
+<script>
+
+const RPC_URL = "https://card.0relaxbro.xyz/rpc-devnet";
+const SOLANA_CLUSTER = "devnet"; // used for the explorer link — keep in sync with RPC_URL above
+const connection = new solanaWeb3.Connection(RPC_URL, "confirmed");
+
+const walletBox = document.getElementById("walletBox");
+const errorBox = document.getElementById("errorBox");
+const formCard = document.getElementById("formCard");
+const holderSection = document.getElementById("holderSection");
+const imageDrop = document.getElementById("imageDrop");
+const imageInput = document.getElementById("imageInput");
+const videoDrop = document.getElementById("videoDrop");
+const videoInput = document.getElementById("videoInput");
+const previewBox = document.getElementById("previewBox");
+const attributesList = document.getElementById("attributesList");
+const addAttributeBtn = document.getElementById("addAttributeBtn");
+const costSummary = document.getElementById("costSummary");
+const costMedia = document.getElementById("costMedia");
+const costMetadata = document.getElementById("costMetadata");
+const costMint = document.getElementById("costMint");
+const timeline = document.getElementById("timeline");
+const mintBtn = document.getElementById("mintBtn");
+const successBox = document.getElementById("successBox");
+const explorerLink = document.getElementById("explorerLink");
+
+let isHolder = false;
+let imageFile = null;
+let videoFile = null;
+let isMinting = false;
+let mintPhase = "idle"; // idle -> estimated -> minting
+
+function showError(msg) {
+	errorBox.textContent = msg;
+	errorBox.style.display = "block";
+}
+function clearError() {
+	errorBox.style.display = "none";
+	errorBox.textContent = "";
+}
+
+/* ---------- Wallet connect (same pattern as swap.html) ---------- */
+
+async function afterWalletConnected(publicKeyStr) {
+	clearError();
+
+	// FIX (found via review, 21 Jul 2026): switching wallets/accounts
+	// (holder -> non-holder) used to leave the holder section visible
+	// and any already-selected video file still in memory — this
+	// explicit reset runs BEFORE the new account's holder check, so a
+	// non-holder account always starts from a clean, correct state.
+	isHolder = false;
+	holderSection.style.display = "none";
+	attributesList.innerHTML = "";
+	videoFile = null;
+	videoInput.value = "";
+	videoDrop.textContent = "Click to choose an MP4";
+	videoDrop.classList.remove("has-file");
+	renderPreview();
+
+	walletBox.innerHTML =
+		'<div class="wallet-connected-row"><span>Connected: <span class="addr">' +
+		publicKeyStr.slice(0, 4) + '&hellip;' + publicKeyStr.slice(-4) +
+		'</span></span><a class="disconnect-link" id="disconnectLink">Disconnect</a></div>' +
+		'<div id="holderBadgeSlot"></div>';
+	document.getElementById("disconnectLink").addEventListener("click", () => {
+		RelaxHolder.disconnect();
+		renderWalletPicker();
+		formCard.classList.remove("visible");
+	});
+
+	formCard.classList.add("visible");
+
+	try {
+		const status = await RelaxHolder.checkHolderStatus();
+		isHolder = !!status.isHolder;
+		if (isHolder) {
+			document.getElementById("holderBadgeSlot").innerHTML =
+				'<div class="holder-badge">✓ $RELAX holder — extra tools unlocked</div>';
+			holderSection.style.display = "block";
+		}
+	} catch (err) {
+		// Holder check failing shouldn't block minting — just no extra tools.
+		isHolder = false;
+	}
+
+	updateMintButtonState();
+}
+
+async function connectWithProvider(providerId) {
+	try {
+		const conn = await RelaxHolder.connect(providerId);
+		await afterWalletConnected(conn.publicKey);
+	} catch (err) {
+		showError(err && err.message ? err.message : "Couldn't connect wallet.");
+		renderWalletPicker();
+	}
+}
+
+function renderWalletPicker() {
+	const providers = RelaxHolder.detectProviders();
+	if (providers.length <= 1) {
+		walletBox.innerHTML = '<button id="connectBtn" class="connect-btn">CONNECT WALLET</button>';
+		document.getElementById("connectBtn").addEventListener("click", handleConnect);
+		return;
+	}
+	walletBox.innerHTML = providers.map((p) =>
+		'<button class="connect-btn wallet-picker-btn provider-' + p.id + '" data-provider="' + p.id + '" style="margin-bottom:8px;">' +
+		p.label.toUpperCase() + '</button>'
+	).join("");
+	providers.forEach((p) => {
+		walletBox.querySelector('[data-provider="' + p.id + '"]').addEventListener("click", () => connectWithProvider(p.id));
+	});
+}
+
+async function handleConnect() {
+	clearError();
+	const providers = RelaxHolder.detectProviders();
+	if (providers.length === 0) {
+		showError("No Solana wallet detected. Install Phantom, Solflare, or Backpack and reload the page.");
+		return;
+	}
+	if (providers.length > 1) { renderWalletPicker(); return; }
+
+	const btn = document.getElementById("connectBtn");
+	btn.disabled = true;
+	btn.textContent = "CONNECTING…";
+	try {
+		const conn = await RelaxHolder.connect();
+		await afterWalletConnected(conn.publicKey);
+	} catch (err) {
+		showError(err && err.message ? err.message : "Couldn't connect wallet.");
+		btn.disabled = false;
+		btn.textContent = "CONNECT WALLET";
+	}
+}
+
+document.getElementById("connectBtn").addEventListener("click", handleConnect);
+
+(async function tryEager() {
+	const conn = await RelaxHolder.tryEagerConnect();
+	if (conn) await afterWalletConnected(conn.publicKey);
+})();
+
+/* ---------- File handling + live preview ---------- */
+
+const STANDARD_IMAGE_MAX_BYTES = 5 * 1024 * 1024;   // 5 MB — non-holder
+const HOLDER_IMAGE_MAX_BYTES = 20 * 1024 * 1024;    // 20 MB — holder
+const HOLDER_VIDEO_MAX_BYTES = 50 * 1024 * 1024;    // 50 MB — holder-only feature, no non-holder limit needed since non-holders can't select video at all
+
+function validateImageFile(file) {
+	const allowed = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
+	if (!allowed.has(file.type)) {
+		throw new Error("Unsupported image format — use PNG, JPG, WebP, or GIF.");
+	}
+	// FIX (found via review, 21 Jul 2026): GIF was never actually
+	// restricted to holders in code, despite being planned as a
+	// holder-only perk (see SWAP_V2_MIGRATION_PLAN.md / NFT Creator
+	// holder features list) — enforcing it for real here.
+	if (!isHolder && file.type === "image/gif") {
+		throw new Error("GIF upload is available to $RELAX holders.");
+	}
+	const limit = isHolder ? HOLDER_IMAGE_MAX_BYTES : STANDARD_IMAGE_MAX_BYTES;
+	if (file.size > limit) {
+		throw new Error("Image exceeds the " + (limit / 1024 / 1024) + " MB limit" + (isHolder ? "." : " (holders get a higher limit)."));
+	}
+}
+
+function validateVideoFile(file) {
+	if (!isHolder) {
+		throw new Error("Video upload is available to $RELAX holders.");
+	}
+	if (file.type !== "video/mp4") {
+		throw new Error("Unsupported video format — use MP4.");
+	}
+	if (file.size > HOLDER_VIDEO_MAX_BYTES) {
+		throw new Error("Video exceeds the " + (HOLDER_VIDEO_MAX_BYTES / 1024 / 1024) + " MB limit.");
+	}
+}
+
+imageDrop.addEventListener("click", () => imageInput.click());
+imageInput.addEventListener("change", () => {
+	if (!imageInput.files[0]) return;
+	const file = imageInput.files[0];
+	try {
+		validateImageFile(file);
+	} catch (err) {
+		showError(err.message);
+		imageInput.value = "";
+		return;
+	}
+	clearError();
+	imageFile = file;
+	imageDrop.textContent = imageFile.name;
+	imageDrop.classList.add("has-file");
+	renderPreview();
+	updateMintButtonState();
+	resetToIdlePhase();
+});
+
+videoDrop.addEventListener("click", () => videoInput.click());
+videoInput.addEventListener("change", () => {
+	if (!videoInput.files[0]) return;
+	const file = videoInput.files[0];
+	try {
+		validateVideoFile(file);
+	} catch (err) {
+		showError(err.message);
+		videoInput.value = "";
+		return;
+	}
+	clearError();
+	videoFile = file;
+	videoDrop.textContent = videoFile.name;
+	videoDrop.classList.add("has-file");
+	renderPreview();
+	updateMintButtonState();
+	resetToIdlePhase();
+});
+
+function renderPreview() {
+	if (videoFile) {
+		const url = URL.createObjectURL(videoFile);
+		previewBox.innerHTML = '<video src="' + url + '" controls muted></video>';
+	} else if (imageFile) {
+		const url = URL.createObjectURL(imageFile);
+		previewBox.innerHTML = '<img src="' + url + '" alt="preview">';
+	}
+}
+
+/* ---------- Custom attributes (holder-only) ---------- */
+
+function addAttributeRow() {
+	const row = document.createElement("div");
+	row.className = "attributes-row";
+	row.innerHTML =
+		'<input type="text" placeholder="Trait (e.g. Background)" class="attr-trait">' +
+		'<input type="text" placeholder="Value (e.g. Purple)" class="attr-value">' +
+		'<button type="button">&times;</button>';
+	row.querySelector("button").addEventListener("click", () => row.remove());
+	attributesList.appendChild(row);
+}
+addAttributeBtn.addEventListener("click", addAttributeRow);
+
+function collectAttributes() {
+	const rows = attributesList.querySelectorAll(".attributes-row");
+	const attrs = [];
+	rows.forEach((row) => {
+		const trait = row.querySelector(".attr-trait").value.trim();
+		const value = row.querySelector(".attr-value").value.trim();
+		if (trait && value) attrs.push({ trait_type: trait, value: value });
+	});
+	return attrs;
+}
+
+/* ---------- Mint button state ---------- */
+
+function updateMintButtonState() {
+	const conn = RelaxHolder.getConnection();
+	const nameOk = document.getElementById("nftName").value.trim().length > 0;
+	const ready = !!(conn && imageFile && nameOk);
+
+	if (mintPhase === "idle") {
+		mintBtn.textContent = "ESTIMATE COST";
+		mintBtn.disabled = !ready || isMinting;
+	} else if (mintPhase === "estimated") {
+		mintBtn.textContent = "CONFIRM & MINT";
+		mintBtn.disabled = isMinting;
+	}
+}
+
+function resetToIdlePhase() {
+	if (mintPhase !== "idle" && !isMinting) {
+		mintPhase = "idle";
+		costSummary.style.display = "none";
+		updateMintButtonState();
+	}
+}
+
+document.getElementById("nftName").addEventListener("input", () => { updateMintButtonState(); resetToIdlePhase(); });
+document.getElementById("nftDescription").addEventListener("input", resetToIdlePhase);
+document.getElementById("royaltyPercent").addEventListener("input", resetToIdlePhase);
+
+/* ---------- Timeline UI ---------- */
+
+const STEPS = [
+	"Estimate media storage cost",
+	"Fund storage",
+	"Upload media",
+	"Build metadata",
+	"Upload metadata",
+	"Build mint transaction",
+	"Sign & send",
+	"Confirm on-chain"
+];
+
+function renderTimeline(activeIndex, doneCount) {
+	timeline.innerHTML = STEPS.map((label, i) => {
+		const cls = i < doneCount ? "done" : (i === activeIndex ? "active" : "");
+		return '<div class="timeline-step ' + cls + '"><div class="dot"></div>' + label + '</div>';
+	}).join("");
+}
+
+/* ---------- Main mint flow (two phases: estimate, then confirm+mint) ---------- */
+
+async function fileToBytes(file) {
+	const buf = await file.arrayBuffer();
+	return new Uint8Array(buf);
+}
+
+// Cached between the estimate and confirm phases so CONFIRM & MINT
+// doesn't redo the (already-paid-for, in Irys request terms) pricing
+// calls, and so the two phases definitely operate on the exact same
+// bytes/values the user saw the estimate for.
+let pendingContext = null;
+
+async function handleEstimateCost() {
+	clearError();
+	isMinting = true;
+	updateMintButtonState();
+	mintBtn.textContent = "ESTIMATING…";
+
+	const conn = RelaxHolder.getConnection();
+	const walletProvider = conn.rawProvider;
+
+	try {
+		renderTimeline(0, 0);
+		// FIX (found via review, 21 Jul 2026): isHolder can change
+		// between when a video was selected and when mint actually
+		// runs (e.g. wallet switched to a non-holder account) — the
+		// UI-level reset in afterWalletConnected() already clears
+		// videoFile in that case, but this is a second, independent
+		// gate right at the point of use, so a non-holder account can
+		// never have a video bundled into their mint even if some
+		// future code path ever left videoFile populated.
+		const allowedVideoFile = isHolder ? videoFile : null;
+
+		const royaltyPercent = Number(document.getElementById("royaltyPercent").value);
+		if (!Number.isFinite(royaltyPercent) || royaltyPercent < 0 || royaltyPercent > 100) {
+			throw new Error("Royalty must be a number between 0% and 100%.");
+		}
+
+		const imageBytes = await fileToBytes(imageFile);
+		const videoBytes = allowedVideoFile ? await fileToBytes(allowedVideoFile) : null;
+
+		const imageCost = await RelaxStorage.estimateCost(walletProvider, imageBytes);
+		const videoCost = videoBytes ? await RelaxStorage.estimateCost(walletProvider, videoBytes) : 0n;
+		const totalMediaCost = imageCost + videoCost;
+
+		costSummary.style.display = "block";
+		costMedia.textContent = (Number(totalMediaCost) / 1e9).toFixed(6) + " SOL";
+		costMetadata.textContent = "calculated after media upload";
+		costMint.textContent = "shown in your wallet before you approve";
+
+		pendingContext = {
+			imageBytes, videoBytes, allowedVideoFile,
+			totalMediaCost, royaltyPercent,
+			name: document.getElementById("nftName").value,
+			description: document.getElementById("nftDescription").value,
+			attributes: isHolder ? collectAttributes() : []
+		};
+		mintPhase = "estimated";
+	} catch (err) {
+		showError(err && err.message ? err.message : "Couldn't estimate cost.");
+		mintPhase = "idle";
+	} finally {
+		isMinting = false;
+		updateMintButtonState();
+	}
+}
+
+async function handleConfirmAndMint() {
+	clearError();
+	successBox.style.display = "none";
+	isMinting = true;
+	updateMintButtonState();
+	mintBtn.textContent = "WORKING…";
+
+	const conn = RelaxHolder.getConnection();
+	const walletProvider = conn.rawProvider;
+	const ctx = pendingContext;
+
+	// FIX (found via review, 21 Jul 2026): if mint fails partway
+	// through, the user needs to know exactly what already happened —
+	// storage fees are non-refundable and already-uploaded content is
+	// already permanent, regardless of whether the mint itself
+	// completes. Tracking each URI as it's produced so any later
+	// failure can report precisely how far things got.
+	let uploadedImageUri = null;
+	let uploadedVideoUri = null;
+	let uploadedMetadataUri = null;
+
+	try {
+		renderTimeline(1, 1);
+		await RelaxStorage.ensureFunded(walletProvider, ctx.totalMediaCost);
+
+		renderTimeline(2, 2);
+		uploadedImageUri = await RelaxStorage.uploadMedia(walletProvider, ctx.imageBytes, imageFile.type || "image/png");
+		if (ctx.videoBytes) {
+			uploadedVideoUri = await RelaxStorage.uploadMedia(walletProvider, ctx.videoBytes, ctx.allowedVideoFile.type || "video/mp4");
+		}
+
+		renderTimeline(3, 3);
+		const metadataObject = RelaxMetadataBuilder.build({
+			name: ctx.name,
+			description: ctx.description,
+			imageUri: uploadedImageUri,
+			imageContentType: imageFile.type || "image/png",
+			animationUri: uploadedVideoUri || undefined,
+			animationContentType: uploadedVideoUri ? (ctx.allowedVideoFile.type || "video/mp4") : undefined,
+			attributes: ctx.attributes,
+			ownerAddress: conn.publicKey,
+			wasHolderAtMintTime: isHolder
+		});
+
+		renderTimeline(4, 4);
+		const metadataBytes = new TextEncoder().encode(JSON.stringify(metadataObject));
+		const metadataCost = await RelaxStorage.estimateCost(walletProvider, metadataBytes);
+		costMetadata.textContent = (Number(metadataCost) / 1e9).toFixed(6) + " SOL";
+		await RelaxStorage.ensureFunded(walletProvider, metadataCost);
+		uploadedMetadataUri = await RelaxStorage.uploadMetadataJson(walletProvider, metadataObject);
+
+		renderTimeline(5, 5);
+		const sellerFeeBasisPoints = Math.round(ctx.royaltyPercent * 100);
+		const { transaction } = await RelaxNFT.mint({
+			connection: connection,
+			owner: conn.publicKey,
+			name: ctx.name,
+			symbol: "RELAX",
+			metadataUri: uploadedMetadataUri,
+			sellerFeeBasisPoints: sellerFeeBasisPoints
+		});
+
+		renderTimeline(6, 6);
+		const signedTx = await walletProvider.signTransaction(transaction);
+		const rawTx = signedTx.serialize();
+		const signature = await connection.sendRawTransaction(rawTx, { skipPreflight: false });
+
+		renderTimeline(7, 7);
+		// FIX (found via review, 21 Jul 2026): confirming by signature
+		// alone can hang ambiguously if the blockhash expires before
+		// landing. The transaction already carries its own blockhash
+		// (set when RelaxNFT.mint() built it) — using the
+		// blockhash-aware confirmation form gives a definitive
+		// "expired" instead of an indefinite wait. Falls back to a
+		// signature-only confirm if, for any reason, the transaction
+		// object doesn't expose these (older web3.js versions vary).
+		if (signedTx.recentBlockhash && typeof signedTx.lastValidBlockHeight === "number") {
+			await connection.confirmTransaction({
+				signature: signature,
+				blockhash: signedTx.recentBlockhash,
+				lastValidBlockHeight: signedTx.lastValidBlockHeight
+			}, "confirmed");
+		} else {
+			await connection.confirmTransaction(signature, "confirmed");
+		}
+
+		renderTimeline(8, 8);
+		explorerLink.href = "https://explorer.solana.com/tx/" + signature + "?cluster=" + SOLANA_CLUSTER;
+		successBox.style.display = "block";
+		formCard.querySelectorAll(".field, #costSummary, #timeline").forEach((el) => { el.style.display = "none"; });
+		mintBtn.style.display = "none";
+		mintPhase = "idle";
+		pendingContext = null;
+	} catch (err) {
+		// FIX (found via review, 21 Jul 2026): be explicit about what
+		// was already spent/uploaded (non-refundable) vs. what never
+		// happened, rather than a generic "nothing further was
+		// attempted" that could be misread as "nothing was spent".
+		let msg = err && err.message ? err.message : "Mint failed.";
+		if (uploadedMetadataUri) {
+			msg += " Storage was already spent through metadata upload (non-refundable). Your metadata remains at: " + uploadedMetadataUri;
+		} else if (uploadedVideoUri) {
+			msg += " Storage was already spent through video upload (non-refundable): " + uploadedVideoUri;
+		} else if (uploadedImageUri) {
+			msg += " Storage was already spent through image upload (non-refundable): " + uploadedImageUri;
+		}
+		showError(msg);
+	} finally {
+		isMinting = false;
+		if (mintPhase !== "idle") mintPhase = "estimated"; // stay in "estimated" so retry doesn't re-charge for a fresh estimate unnecessarily
+		updateMintButtonState();
+	}
+}
+
+function handleMintButtonClick() {
+	if (mintPhase === "idle") {
+		void handleEstimateCost();
+	} else if (mintPhase === "estimated") {
+		void handleConfirmAndMint();
+	}
+}
+
+mintBtn.addEventListener("click", handleMintButtonClick);
+
+</script>
+
+</body>
+</html>
