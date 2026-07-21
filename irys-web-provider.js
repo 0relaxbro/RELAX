@@ -57,6 +57,49 @@ const RelaxIrysWebProvider = (function () {
 		]);
 	}
 
+	// FIX (found live via repeated 402s during real devnet testing, 21
+	// Jul 2026 — confirmed recurring, not the one-off it first looked
+	// like): Irys's own bundled uploader already detects this exact
+	// situation and throws an error shaped like
+	// "402 error: <body> - retry after Xs" (see the `case 402:` branch
+	// inside Uploader.uploadTransaction in irys-bundle.js) — the retry
+	// interval even comes from the bundler's own `retry-after` response
+	// header when present, so it's Irys's own recommended wait, not a
+	// guess. This was happening even when ensureFunded() had just
+	// logged "already funded, skipping fund()", so it isn't (only) a
+	// funding-transaction confirmation lag — it's the upload/payment
+	// check on Irys's devnet bundler lagging behind whatever balance
+	// getLoadedBalance() itself sees as sufficient. A single retry
+	// wasn't reliably enough, so this retries a few times with the
+	// suggested (or a sane default) backoff before giving up with a
+	// clear error. Only 402s are retried this way — any other error
+	// (wallet rejection, network failure, timeout) still fails
+	// immediately, unchanged.
+	async function uploadWithRetry(uploadCall, timeoutMs, timeoutMessage, maxAttempts) {
+		maxAttempts = maxAttempts || 3;
+		let lastErr;
+		for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+			try {
+				return await withTimeout(uploadCall(), timeoutMs, timeoutMessage);
+			} catch (err) {
+				lastErr = err;
+				const msg = err && err.message ? err.message : String(err);
+				const is402 = /^402 error:/.test(msg);
+				if (!is402 || attempt === maxAttempts) {
+					throw err;
+				}
+				const retryAfterMatch = msg.match(/retry after ([\d.]+)s/);
+				const waitSeconds = retryAfterMatch ? parseFloat(retryAfterMatch[1]) : attempt * 2;
+				console.log(
+					"[IRYS DIAG] uploadWithRetry: got 402 Payment Required, retrying",
+					{ attempt, maxAttempts, waitSeconds, message: msg }
+				);
+				await new Promise((resolve) => setTimeout(resolve, waitSeconds * 1000));
+			}
+		}
+		throw lastErr;
+	}
+
 	// *** DEVNET MODE — flip to false only after a full devnet mint
 	// has succeeded end-to-end, per SWAP_V2_MIGRATION_PLAN.md / NFT
 	// Creator's testing plan. While true, storage uploads run on
@@ -285,8 +328,8 @@ const RelaxIrysWebProvider = (function () {
 		// which is exactly where this was hanging. Wrap with the SAME
 		// Buffer class Irys's own bundled code uses internally.
 		const bufferBytes = window.RelaxIrysBundle.Buffer.from(bytes);
-		const receipt = await withTimeout(
-			uploader.upload(bufferBytes, { tags }),
+		const receipt = await uploadWithRetry(
+			() => uploader.upload(bufferBytes, { tags }),
 			60000,
 			"Media upload timed out after 60 seconds. No mint transaction was started — check your wallet for any pending signature requests, then try again."
 		);
@@ -308,8 +351,8 @@ const RelaxIrysWebProvider = (function () {
 		await ensureFunded(walletProvider, BigInt(price.toString()));
 		const tags = [{ name: "Content-Type", value: "application/json" }];
 		const bufferBytes = window.RelaxIrysBundle.Buffer.from(bytes);
-		const receipt = await withTimeout(
-			uploader.upload(bufferBytes, { tags }),
+		const receipt = await uploadWithRetry(
+			() => uploader.upload(bufferBytes, { tags }),
 			60000,
 			"Metadata upload timed out after 60 seconds. No mint transaction was started — check your wallet for any pending signature requests, then try again."
 		);
