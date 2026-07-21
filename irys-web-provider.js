@@ -22,11 +22,25 @@
    — acceptable as a controlled, isolated provider, not a core
    mint-instruction dependency.
 
-   FAIL-CLOSED BY DESIGN: if the dynamic import fails for any reason
-   (CDN issue, version mismatch, network problem), this throws a
-   clear, specific error. There is no silent fallback and no
-   half-completed upload — nothing is charged, nothing is uploaded,
-   the caller gets an unambiguous "try again" state.
+   FAIL-CLOSED BY DESIGN: if the bundle isn't loaded for any reason,
+   this throws a clear, specific error. There is no silent fallback
+   and no half-completed upload — nothing is charged, nothing is
+   uploaded, the caller gets an unambiguous "try again" state.
+
+   UPDATE (21 Jul 2026, real devnet testing): the original plan was a
+   dynamic esm.sh import at runtime. In practice this failed twice —
+   first a wrong version pin (real bug, fixed), then a genuine esm.sh
+   packaging failure for @irys/web-upload-solana specifically: dozens
+   of cascading 404s for internal @noble/curves/@noble/hashes/uuid
+   chunks, plus Irys's own packages importing real Node.js builtins
+   (stream/crypto/events) that a browser has no native equivalent for
+   and esm.sh wasn't polyfilling correctly. Per the escalation path
+   agreed in advance (SWAP_V2_MIGRATION_PLAN.md), moved to a locally
+   pre-built bundle instead: `irys-bundle.js`, built once via esbuild
+   with proper Node-builtin browser polyfills (crypto-browserify,
+   stream-browserify), exposing `window.RelaxIrysBundle.{WebUploader,
+   WebSolana}`. Zero runtime CDN dependency now — the whole dependency
+   tree is resolved once, at build time, not on every page load.
    ========================================================= */
 
 const RelaxIrysWebProvider = (function () {
@@ -37,36 +51,6 @@ const RelaxIrysWebProvider = (function () {
 	// instead of its real mainnet tier. ***
 	const DEVNET_MODE = true;
 	const DEVNET_RPC_URL = "https://card.0relaxbro.xyz/rpc-devnet"; // same devnet route the mint flow itself uses — one devnet config to keep in sync, not two
-
-	// esm.sh transpiles npm packages into browser-native ES modules on
-	// the fly — no bundler needed, but genuinely a live external
-	// dependency (unlike @solana/web3.js's own maintained iife CDN
-	// build). Pinned to specific versions (not @latest) so a future
-	// Irys release can't silently change behavior underneath RELAX.
-	// FIX (found live via real devnet testing, 21 Jul 2026): pinned to
-	// 0.2.9 originally, but that version was never actually published —
-	// esm.sh returned a real 404 the first time this ran for real.
-	// Confirmed via npm's own registry: @irys/web-upload's actual
-	// latest published version is 0.0.15. @irys/web-upload-solana's
-	// 0.1.8 pin was already correct (npm confirms this is its real
-	// latest too) — only the first package's version was wrong.
-	// FIX (found live via real devnet testing, 21 Jul 2026 — second
-	// real bug found this session, after the version-pin mistake):
-	// after fixing the version, a DEEPER esm.sh issue surfaced —
-	// "/@irys/bundles@^0.2.3 does not provide an export named
-	// 'ArweaveSigner'". This is exactly the multi-package
-	// transitive-dependency fragility flagged as a real (if smaller
-	// than Metaplex's) risk when Irys was first chosen as a CDN-loaded
-	// provider: esm.sh's default per-file resolution can fail to
-	// correctly resolve a deep re-export across several internal
-	// Irys packages (@irys/web-upload -> @irys/bundles ->
-	// @irys/arweave). Adding `?bundle` forces esm.sh to bundle the
-	// ENTIRE dependency tree into one self-contained file instead of
-	// serving many separately-resolved deep imports — this is esm.sh's
-	// own documented fix for this exact class of "does not provide an
-	// export named X" error.
-	const IRYS_UPLOAD_CDN = "https://esm.sh/@irys/web-upload@0.0.15?bundle";
-	const IRYS_SOLANA_CDN = "https://esm.sh/@irys/web-upload-solana@0.1.8?bundle";
 
 	let cachedUploader = null;
 	let cachedWalletAddress = null;
@@ -110,8 +94,10 @@ const RelaxIrysWebProvider = (function () {
 
 		let WebUploader, WebSolana;
 		try {
-			({ WebUploader } = await import(IRYS_UPLOAD_CDN));
-			({ WebSolana } = await import(IRYS_SOLANA_CDN));
+			if (!window.RelaxIrysBundle || !window.RelaxIrysBundle.WebUploader || !window.RelaxIrysBundle.WebSolana) {
+				throw new Error("irys-bundle.js did not load correctly or wasn't included on this page — check the <script src=\"irys-bundle.js\"> tag runs before this file.");
+			}
+			({ WebUploader, WebSolana } = window.RelaxIrysBundle);
 		} catch (err) {
 			// FAIL CLOSED — exactly per the design requirement above.
 			throw new Error(
