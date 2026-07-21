@@ -73,6 +73,37 @@ const RelaxIrysWebProvider = (function () {
 	// verified yet — confirm on devnet with both wallets before
 	// trusting this for real uploads, same as the mint flow itself
 	// needs a devnet pass.
+	// FIX (found via real devnet testing + reading Irys's own source
+	// code directly, 21 Jul 2026 — the actual root cause behind the
+	// "stuck with no wallet popup, no error, endless getLatestBlockhash
+	// calls" symptom): Irys's SolanaConfig.sendTx() (in
+	// @irys/web-upload-solana/dist/esm/token.js) calls
+	// `this.wallet.sendTransaction(transaction, connection, options)` —
+	// this is the @solana/wallet-adapter-base SHAPE (sign AND send in
+	// one call), which raw injected providers like window.solana do
+	// NOT implement at all (Phantom's raw API only has
+	// .signTransaction(), which signs but doesn't send). Calling a
+	// missing method fails inside Irys's own retry wrapper, which
+	// silently retries the whole preparation sequence (re-fetching a
+	// blockhash each time) instead of surfacing a clean error — exactly
+	// matching what was observed live. This wraps the raw provider in a
+	// minimal adapter-shaped object that adds a working
+	// sendTransaction(), built from the raw provider's own
+	// signTransaction() plus a real broadcast via the given connection.
+	function wrapProviderForIrys(rawProvider) {
+		return {
+			publicKey: rawProvider.publicKey,
+			signTransaction: rawProvider.signTransaction ? rawProvider.signTransaction.bind(rawProvider) : undefined,
+			signAllTransactions: rawProvider.signAllTransactions ? rawProvider.signAllTransactions.bind(rawProvider) : undefined,
+			signMessage: rawProvider.signMessage ? rawProvider.signMessage.bind(rawProvider) : undefined,
+			sendTransaction: async (transaction, connection, options) => {
+				const signed = await rawProvider.signTransaction(transaction);
+				const raw = signed.serialize();
+				return await connection.sendRawTransaction(raw, options);
+			}
+		};
+	}
+
 	async function getUploader(walletProvider) {
 		const walletAddress = walletProvider && walletProvider.publicKey ? walletProvider.publicKey.toString() : null;
 		if (!walletAddress) {
@@ -126,8 +157,8 @@ const RelaxIrysWebProvider = (function () {
 			// devnet mint has fully succeeded and real deployment is
 			// being prepared.
 			const uploader = DEVNET_MODE
-				? await WebUploader(WebSolana).withProvider(walletProvider).withRpc(DEVNET_RPC_URL).devnet()
-				: await WebUploader(WebSolana).withProvider(walletProvider);
+				? await WebUploader(WebSolana).withProvider(wrapProviderForIrys(walletProvider)).withRpc(DEVNET_RPC_URL).devnet()
+				: await WebUploader(WebSolana).withProvider(wrapProviderForIrys(walletProvider));
 			cachedUploader = uploader;
 			cachedWalletAddress = cacheKey;
 			return uploader;
