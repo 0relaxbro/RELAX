@@ -44,6 +44,19 @@
    ========================================================= */
 
 const RelaxIrysWebProvider = (function () {
+	// FIX (found live, 21 Jul 2026): the signMessage bug above caused
+	// an indefinite silent hang with no error at all — this timeout
+	// ensures that if something similar ever happens again (a
+	// different wallet's quirk, a future Irys version, etc.), the
+	// user gets a clear, actionable error instead of a frozen "WORKING…"
+	// button forever.
+	function withTimeout(promise, ms, message) {
+		return Promise.race([
+			promise,
+			new Promise((_, reject) => setTimeout(() => reject(new Error(message)), ms))
+		]);
+	}
+
 	// *** DEVNET MODE — flip to false only after a full devnet mint
 	// has succeeded end-to-end, per SWAP_V2_MIGRATION_PLAN.md / NFT
 	// Creator's testing plan. While true, storage uploads run on
@@ -93,13 +106,49 @@ const RelaxIrysWebProvider = (function () {
 	function wrapProviderForIrys(rawProvider) {
 		return {
 			publicKey: rawProvider.publicKey,
-			signTransaction: rawProvider.signTransaction ? rawProvider.signTransaction.bind(rawProvider) : undefined,
-			signAllTransactions: rawProvider.signAllTransactions ? rawProvider.signAllTransactions.bind(rawProvider) : undefined,
-			signMessage: rawProvider.signMessage ? rawProvider.signMessage.bind(rawProvider) : undefined,
-			sendTransaction: async (transaction, connection, options) => {
+
+			async signTransaction(transaction) {
+				return await rawProvider.signTransaction(transaction);
+			},
+
+			async signAllTransactions(transactions) {
+				if (typeof rawProvider.signAllTransactions === "function") {
+					return await rawProvider.signAllTransactions(transactions);
+				}
+				const signed = [];
+				for (const transaction of transactions) {
+					signed.push(await rawProvider.signTransaction(transaction));
+				}
+				return signed;
+			},
+
+			// FIX (found via source-code verification, 21 Jul 2026 —
+			// confirmed by reading Irys's own installed source directly:
+			// @irys/bundles/.../injectedSolanaSigner.js does
+			// `return await this.provider.signMessage(message);` with
+			// ZERO post-processing). Phantom's raw signMessage() resolves
+			// to { signature, publicKey } — NOT a plain Uint8Array — so
+			// passing it straight through fed Irys a wrong-shaped value,
+			// which silently broke its internal retry loop (matching the
+			// live symptom: funding succeeded, but upload hung
+			// indefinitely with no wallet popup and no console error).
+			async signMessage(message) {
+				if (typeof rawProvider.signMessage !== "function") {
+					throw new Error("This wallet does not support message signing, which storage upload requires.");
+				}
+				const result = await rawProvider.signMessage(message, "utf8");
+				if (result && result.signature) return result.signature;
+				if (result instanceof Uint8Array) return result;
+				throw new Error("Wallet returned an unsupported message signature format.");
+			},
+
+			async sendTransaction(transaction, connection, options = {}) {
 				const signed = await rawProvider.signTransaction(transaction);
-				const raw = signed.serialize();
-				return await connection.sendRawTransaction(raw, options);
+				return await connection.sendRawTransaction(signed.serialize(), {
+					skipPreflight: options.skipPreflight ?? false,
+					preflightCommitment: options.preflightCommitment || "confirmed",
+					maxRetries: options.maxRetries
+				});
 			}
 		};
 	}
@@ -218,7 +267,11 @@ const RelaxIrysWebProvider = (function () {
 		const price = await uploader.getPrice(bytes.length);
 		await ensureFunded(walletProvider, BigInt(price.toString()));
 		const tags = [{ name: "Content-Type", value: contentType }];
-		const receipt = await uploader.upload(bytes, { tags });
+		const receipt = await withTimeout(
+			uploader.upload(bytes, { tags }),
+			60000,
+			"Media upload timed out after 60 seconds. No mint transaction was started — check your wallet for any pending signature requests, then try again."
+		);
 		return "https://gateway.irys.xyz/" + receipt.id;
 	}
 
@@ -235,7 +288,11 @@ const RelaxIrysWebProvider = (function () {
 		const price = await uploader.getPrice(bytes.length);
 		await ensureFunded(walletProvider, BigInt(price.toString()));
 		const tags = [{ name: "Content-Type", value: "application/json" }];
-		const receipt = await uploader.upload(bytes, { tags });
+		const receipt = await withTimeout(
+			uploader.upload(bytes, { tags }),
+			60000,
+			"Metadata upload timed out after 60 seconds. No mint transaction was started — check your wallet for any pending signature requests, then try again."
+		);
 		return "https://gateway.irys.xyz/" + receipt.id;
 	}
 
