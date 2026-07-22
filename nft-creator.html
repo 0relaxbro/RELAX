@@ -1317,13 +1317,24 @@ async function handleConfirmAndMint() {
 
 		renderTimeline(5, 5);
 		const sellerFeeBasisPoints = Math.round(ctx.royaltyPercent * 100);
+		// FIX (found live, 22 Jul 2026): VerifyCollection failed with
+		// "Collection Not Found on Metadata" (custom program error 0x50)
+		// on every NFT minted before this fix — collectionMint was never
+		// actually passed here, so the on-chain Collection struct was
+		// never written at all (not even unverified), leaving nothing
+		// for VerifyCollection to flip. Only passed when the config
+		// actually has one configured (stays undefined on mainnet until
+		// a real mainnet Collection exists, matching every other
+		// fail-closed check around this feature) — never silently opts
+		// a mint into a collection that doesn't exist yet.
 		const { transaction, mint } = await RelaxNFT.mint({
 			connection: connection,
 			owner: conn.publicKey,
 			name: ctx.name,
 			symbol: "RELAX",
 			metadataUri: uploadedMetadataUri,
-			sellerFeeBasisPoints: sellerFeeBasisPoints
+			sellerFeeBasisPoints: sellerFeeBasisPoints,
+			collectionMint: window.RELAX_NFT_CONFIG.collectionMint || undefined
 		});
 		// lastValidBlockHeight is NOT part of the serialized wire format,
 		// so it can't be read back off the wallet-returned signedTx — read
