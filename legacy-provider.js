@@ -86,10 +86,31 @@ const RelaxLegacyProvider = (function () {
 			}),
 
 			// 2. Initialize it as an SPL Token mint. decimals: 0 (NFTs are
-			//    whole units). mintAuthority: the owner, temporarily — see
-			//    step 6, this gets permanently transferred away.
+			//    whole units).
+			//    mintAuthority AND freezeAuthority are BOTH set to the
+			//    owner here, temporarily — see step 6.
+			//
+			//    *** CRITICAL — do NOT set freezeAuthority to null here. ***
+			//    CreateMasterEditionV3 (step 6) transfers BOTH the mint
+			//    authority and the freeze authority to the Edition PDA
+			//    (confirmed against Metaplex Token Metadata docs). To
+			//    TRANSFER the freeze authority, the mint must already HAVE
+			//    one at this point, and its current holder (the owner) must
+			//    sign the transfer. If freezeAuthority is null, step 6's
+			//    internal SetAuthority(FreezeAccount) CPI has no authority
+			//    to move and fails ("mint has no freeze authority" /
+			//    "owner does not match"), which fails the ENTIRE mint
+			//    transaction at simulation — this was the exact reason
+			//    minting never succeeded before (fixed 22 Jul 2026).
+			//
+			//    This does NOT compromise the non-custodial ethos: after
+			//    step 6 the freeze authority lives on the Edition PDA (no
+			//    private key, nobody controls it), and the owner only holds
+			//    it for the microseconds BETWEEN step 2 and step 6 inside
+			//    this one atomic transaction — never exposed to RELAX or
+			//    anyone else. This is the standard, correct 1/1 NFT setup.
 			IB.buildInitializeMint2({
-				mint: mintPk, decimals: 0, mintAuthority: ownerPk, freezeAuthority: null
+				mint: mintPk, decimals: 0, mintAuthority: ownerPk, freezeAuthority: ownerPk
 			}),
 
 			// 3. Create the owner's associated token account for this mint
