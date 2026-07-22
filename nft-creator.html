@@ -122,6 +122,26 @@ font-size:14px;
 .field textarea{ resize:vertical; min-height:70px; }
 .field .hint{ font-size:11px; color:var(--muted); margin-top:6px; }
 
+/* Native number input spin arrows default to a white background in
+   most browsers, which clashes hard with the dark theme — same fix
+   as swap.html's .amount-input (kept visually consistent across the
+   site rather than reinventing it here). Recolor the WebKit spin
+   button to blend in (dark background, light arrows) and remove
+   Firefox's built-in spinner entirely (same input, arrows just don't
+   render there — no dark-mode fix needed if there's nothing to
+   clash). */
+#royaltyPercent::-webkit-inner-spin-button,
+#royaltyPercent::-webkit-outer-spin-button{
+background:var(--bg);
+filter:invert(1) brightness(1.6);
+border-radius:4px;
+margin-left:4px;
+opacity:.8;
+}
+#royaltyPercent{
+-moz-appearance:textfield;
+}
+
 .file-drop{
 border:1px dashed var(--border); border-radius:12px; padding:20px;
 text-align:center; cursor:pointer; font-size:13px; color:var(--muted);
@@ -295,6 +315,7 @@ estimate step and don't confirm funding.
 <div class="check">✓</div>
 <div style="margin-bottom:10px;">NFT minted successfully.</div>
 <a id="explorerLink" href="#" target="_blank" rel="noopener">View on Solana Explorer &rarr;</a>
+<button id="mintAnotherBtn" class="mint-btn" style="margin-top:20px;">MINT ANOTHER</button>
 </div>
 
 </div>
@@ -598,6 +619,24 @@ document.getElementById("nftName").addEventListener("input", () => { updateMintB
 document.getElementById("nftDescription").addEventListener("input", resetToIdlePhase);
 document.getElementById("royaltyPercent").addEventListener("input", resetToIdlePhase);
 
+// FIX (22 Jul 2026, per feedback — field showed "01" while typing):
+// the field starts at "0", and typing "1" without first clearing it
+// just appends a digit rather than replacing it, since a plain
+// <input type="number"> doesn't do that on its own. Two-part fix:
+// select the existing text on focus (so the very next keystroke
+// naturally replaces "0" instead of appending to it — this alone
+// covers normal typing), plus a safety-net normalizer on input for
+// any other way a leading zero could appear (paste, spinner clicks,
+// etc.) — strips it unless followed by a decimal point (so "0.5"
+// stays intact).
+const royaltyInput = document.getElementById("royaltyPercent");
+royaltyInput.addEventListener("focus", () => royaltyInput.select());
+royaltyInput.addEventListener("input", () => {
+	if (/^0[0-9]/.test(royaltyInput.value)) {
+		royaltyInput.value = royaltyInput.value.replace(/^0+/, "");
+	}
+});
+
 /* ---------- Timeline UI ---------- */
 
 const STEPS = [
@@ -894,6 +933,47 @@ function handleMintButtonClick() {
 }
 
 mintBtn.addEventListener("click", handleMintButtonClick);
+
+// FIX (22 Jul 2026, per feedback): after a successful mint, starting
+// another one required a full page reload (re-picking the wallet
+// provider, re-running the holder check, etc.) even though nothing
+// about the connected session actually changed. This clears only the
+// per-mint state (form fields, files, cost estimate, timeline) and
+// shows the form again — the wallet stays connected exactly as
+// afterWalletConnected() already left it.
+function resetFormForNewMint() {
+	document.getElementById("nftName").value = "";
+	document.getElementById("nftDescription").value = "";
+	document.getElementById("royaltyPercent").value = "0";
+
+	imageFile = null;
+	imageInput.value = "";
+	imageDrop.textContent = "Click to choose an image or GIF";
+	imageDrop.classList.remove("has-file");
+
+	videoFile = null;
+	videoInput.value = "";
+	videoDrop.textContent = "Click to choose an MP4";
+	videoDrop.classList.remove("has-file");
+
+	attributesList.innerHTML = "";
+	renderPreview();
+
+	pendingContext = null;
+	mintPhase = "idle";
+	costSummary.style.display = "none";
+	timeline.innerHTML = "";
+
+	successBox.style.display = "none";
+	formCard.querySelectorAll(".field").forEach((el) => { el.style.display = ""; });
+	mintBtn.style.display = "";
+	mintBtn.textContent = "ESTIMATE COST";
+
+	clearError();
+	updateMintButtonState();
+}
+
+document.getElementById("mintAnotherBtn").addEventListener("click", resetFormForNewMint);
 
 </script>
 
