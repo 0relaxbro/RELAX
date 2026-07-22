@@ -315,6 +315,7 @@ estimate step and don't confirm funding.
 <div class="check">✓</div>
 <div style="margin-bottom:10px;">NFT minted successfully.</div>
 <a id="explorerLink" href="#" target="_blank" rel="noopener">View on Solana Explorer &rarr;</a>
+<div style="margin-top:6px;"><a id="metadataLink" href="#" target="_blank" rel="noopener" style="font-size:13px;">View metadata JSON &rarr;</a></div>
 <button id="mintAnotherBtn" class="mint-btn" style="margin-top:20px;">MINT ANOTHER</button>
 </div>
 
@@ -361,6 +362,7 @@ const timeline = document.getElementById("timeline");
 const mintBtn = document.getElementById("mintBtn");
 const successBox = document.getElementById("successBox");
 const explorerLink = document.getElementById("explorerLink");
+const metadataLink = document.getElementById("metadataLink");
 
 let isHolder = false;
 let imageFile = null;
@@ -918,6 +920,7 @@ async function handleConfirmAndMint() {
 
 		renderTimeline(8, 8);
 		explorerLink.href = "https://explorer.solana.com/tx/" + signature + "?cluster=" + SOLANA_CLUSTER;
+		metadataLink.href = uploadedMetadataUri;
 		successBox.style.display = "block";
 		formCard.querySelectorAll(".field, #costSummary, #timeline").forEach((el) => { el.style.display = "none"; });
 		mintBtn.style.display = "none";
