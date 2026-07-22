@@ -575,8 +575,19 @@ function addAttributeRow() {
 		'<input type="text" placeholder="Trait (e.g. Background)" class="attr-trait">' +
 		'<input type="text" placeholder="Value (e.g. Purple)" class="attr-value">' +
 		'<button type="button">&times;</button>';
-	row.querySelector("button").addEventListener("click", () => row.remove());
+	// FIX (found via review, 22 Jul 2026, ahead of live holder-attribute
+	// testing): none of these ever invalidated a cached estimate — a
+	// holder could hit ESTIMATE COST, then add/edit/remove an
+	// attribute, then CONFIRM & MINT, and the mint would silently use
+	// whatever attributes existed AT ESTIMATE TIME (pendingContext.attributes
+	// is only ever captured once, in handleEstimateCost). Every way this
+	// row's content can change now forces a fresh estimate, same as
+	// editing the name/description already does.
+	row.querySelector(".attr-trait").addEventListener("input", resetToIdlePhase);
+	row.querySelector(".attr-value").addEventListener("input", resetToIdlePhase);
+	row.querySelector("button").addEventListener("click", () => { row.remove(); resetToIdlePhase(); });
 	attributesList.appendChild(row);
+	resetToIdlePhase();
 }
 addAttributeBtn.addEventListener("click", addAttributeRow);
 
