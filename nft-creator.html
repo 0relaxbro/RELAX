@@ -833,54 +833,74 @@ async function handleConfirmAndMint() {
 	const walletProvider = conn.rawProvider;
 	const ctx = pendingContext;
 
-	// FIX (found via review, 21 Jul 2026): if mint fails partway
-	// through, the user needs to know exactly what already happened —
-	// storage fees are non-refundable and already-uploaded content is
-	// already permanent, regardless of whether the mint itself
-	// completes. Tracking each URI as it's produced so any later
-	// failure can report precisely how far things got.
-	let uploadedImageUri = null;
-	let uploadedVideoUri = null;
-	let uploadedMetadataUri = null;
+	// FIX (found live, 22 Jul 2026, via wallet-rejection testing): a
+	// rejection/failure at ANY step — even the very last one, Sign &
+	// send — used to mean the NEXT click of CONFIRM & MINT re-ran
+	// EVERYTHING from scratch: media re-uploaded, metadata rebuilt
+	// and re-uploaded, both re-PAID for through Irys, even though the
+	// previous attempt's uploads are already permanent and already
+	// spent. Harmless on devnet (worthless SOL); on mainnet this is
+	// real money lost every time someone hesitates on a wallet popup
+	// and retries. Fix: cache each URI on `ctx` (pendingContext)
+	// itself the moment it's produced, and check for an
+	// already-cached one before uploading again. This cache is
+	// naturally scoped to ONE pendingContext object — the moment the
+	// user edits the name/description/royalty/attributes/files,
+	// handleEstimateCost() replaces pendingContext with a brand-new
+	// object, so a resume never reuses uploads for content that's
+	// since changed.
+	let uploadedImageUri = ctx.uploadedImageUri || null;
+	let uploadedVideoUri = ctx.uploadedVideoUri || null;
+	let uploadedMetadataUri = ctx.uploadedMetadataUri || null;
 
 	try {
-		renderTimeline(1, 1);
-		// FIX (22 Jul 2026): fund media + metadata together, ONCE, up
-		// front (prefundTotal was computed with per-upload buffers in the
-		// estimate phase). Every upload below then draws from this loaded
-		// balance, so none of them triggers its own funding transaction —
-		// removing the second "İşlemi onayla" popup that used to appear
-		// before the metadata upload. If the wallet already has enough
-		// Irys balance loaded from a previous mint, ensureFunded is a
-		// no-op and NO funding popup appears at all.
-		await RelaxStorage.ensureFunded(walletProvider, ctx.prefundTotal);
+		const needsUpload = !uploadedImageUri || (ctx.videoBytes && !uploadedVideoUri) || !uploadedMetadataUri;
+		if (needsUpload) {
+			renderTimeline(1, 1);
+			// FIX (22 Jul 2026): fund media + metadata together, ONCE, up
+			// front (prefundTotal was computed with per-upload buffers in the
+			// estimate phase). Every upload below then draws from this loaded
+			// balance, so none of them triggers its own funding transaction —
+			// removing the second "İşlemi onayla" popup that used to appear
+			// before the metadata upload. If the wallet already has enough
+			// Irys balance loaded from a previous mint, ensureFunded is a
+			// no-op and NO funding popup appears at all. Skipped entirely on
+			// a resume once nothing is left to upload.
+			await RelaxStorage.ensureFunded(walletProvider, ctx.prefundTotal);
+		}
 
 		renderTimeline(2, 2);
-		uploadedImageUri = await RelaxStorage.uploadMedia(walletProvider, ctx.imageBytes, imageFile.type || "image/png");
-		if (ctx.videoBytes) {
+		if (!uploadedImageUri) {
+			uploadedImageUri = await RelaxStorage.uploadMedia(walletProvider, ctx.imageBytes, imageFile.type || "image/png");
+			ctx.uploadedImageUri = uploadedImageUri;
+		}
+		if (ctx.videoBytes && !uploadedVideoUri) {
 			uploadedVideoUri = await RelaxStorage.uploadMedia(walletProvider, ctx.videoBytes, ctx.allowedVideoFile.type || "video/mp4");
+			ctx.uploadedVideoUri = uploadedVideoUri;
 		}
 
 		renderTimeline(3, 3);
-		const metadataObject = RelaxMetadataBuilder.build({
-			name: ctx.name,
-			description: ctx.description,
-			imageUri: uploadedImageUri,
-			imageContentType: imageFile.type || "image/png",
-			animationUri: uploadedVideoUri || undefined,
-			animationContentType: uploadedVideoUri ? (ctx.allowedVideoFile.type || "video/mp4") : undefined,
-			attributes: ctx.attributes,
-			ownerAddress: conn.publicKey,
-			wasHolderAtMintTime: isHolder
-		});
-
 		renderTimeline(4, 4);
-		// Metadata storage was already funded as part of prefundTotal
-		// above, so this upload draws from loaded balance — no separate
-		// funding popup. (uploadMetadataJson still self-checks internally
-		// and would top up if somehow short, but with the upfront prefund
-		// it never needs to.)
-		uploadedMetadataUri = await RelaxStorage.uploadMetadataJson(walletProvider, metadataObject);
+		if (!uploadedMetadataUri) {
+			const metadataObject = RelaxMetadataBuilder.build({
+				name: ctx.name,
+				description: ctx.description,
+				imageUri: uploadedImageUri,
+				imageContentType: imageFile.type || "image/png",
+				animationUri: uploadedVideoUri || undefined,
+				animationContentType: uploadedVideoUri ? (ctx.allowedVideoFile.type || "video/mp4") : undefined,
+				attributes: ctx.attributes,
+				ownerAddress: conn.publicKey,
+				wasHolderAtMintTime: isHolder
+			});
+			// Metadata storage was already funded as part of prefundTotal
+			// above, so this upload draws from loaded balance — no separate
+			// funding popup. (uploadMetadataJson still self-checks internally
+			// and would top up if somehow short, but with the upfront prefund
+			// it never needs to.)
+			uploadedMetadataUri = await RelaxStorage.uploadMetadataJson(walletProvider, metadataObject);
+			ctx.uploadedMetadataUri = uploadedMetadataUri;
+		}
 
 		renderTimeline(5, 5);
 		const sellerFeeBasisPoints = Math.round(ctx.royaltyPercent * 100);
@@ -933,11 +953,11 @@ async function handleConfirmAndMint() {
 		// attempted" that could be misread as "nothing was spent".
 		let msg = err && err.message ? err.message : "Mint failed.";
 		if (uploadedMetadataUri) {
-			msg += " Storage was already spent through metadata upload (non-refundable). Your metadata remains at: " + uploadedMetadataUri;
+			msg += " Storage was already spent through metadata upload (non-refundable, at " + uploadedMetadataUri + "). Retrying will resume from here, not re-upload or re-charge.";
 		} else if (uploadedVideoUri) {
-			msg += " Storage was already spent through video upload (non-refundable): " + uploadedVideoUri;
+			msg += " Storage was already spent through video upload (non-refundable, at " + uploadedVideoUri + "). Retrying will resume from here, not re-upload or re-charge.";
 		} else if (uploadedImageUri) {
-			msg += " Storage was already spent through image upload (non-refundable): " + uploadedImageUri;
+			msg += " Storage was already spent through image upload (non-refundable, at " + uploadedImageUri + "). Retrying will resume from here, not re-upload or re-charge.";
 		}
 		showError(msg);
 	} finally {
