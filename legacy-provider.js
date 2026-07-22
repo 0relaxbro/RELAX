@@ -65,7 +65,7 @@ const RelaxLegacyProvider = (function () {
 	 * @param {number} params.sellerFeeBasisPoints - secondary sale royalty, 0-10000
 	 * @returns {Promise<{instructions: solanaWeb3.TransactionInstruction[], mint: solanaWeb3.PublicKey, metadataPda: solanaWeb3.PublicKey, masterEditionPda: solanaWeb3.PublicKey, associatedTokenAccount: solanaWeb3.PublicKey}>}
 	 */
-	async function buildMintInstructions({ connection, owner, mintKeypair, name, symbol, metadataUri, sellerFeeBasisPoints }) {
+	async function buildMintInstructions({ connection, owner, mintKeypair, name, symbol, metadataUri, sellerFeeBasisPoints, collectionMint }) {
 		const ownerPk = owner instanceof solanaWeb3.PublicKey ? owner : new solanaWeb3.PublicKey(owner);
 		const mintPk = mintKeypair.publicKey;
 
@@ -139,7 +139,19 @@ const RelaxLegacyProvider = (function () {
 					creators: [
 						{ address: RELAX_CREATOR_ADDRESS, verified: false, share: 0 },
 						{ address: ownerPk.toBase58(), verified: true, share: 100 }
-					]
+					],
+					// FIX (added 22 Jul 2026, part of the Verified Collection
+					// architecture): when a collection mint is supplied, this
+					// NFT's on-chain Collection struct is set (always
+					// unverified — see encodeCollection in instruction-builder.js)
+					// so a later, separate VerifyCollection instruction (signed
+					// by RELAX's dedicated, narrowly-scoped collection
+					// authority — never this same transaction, never this same
+					// key as anything else) can flip it to verified. Omitted
+					// entirely (stays undefined -> encoded as None) for any
+					// mint that doesn't pass one — this NEVER silently opts a
+					// mint into a collection it wasn't explicitly given.
+					collectionMint: collectionMint || undefined
 				},
 				isMutable: true
 			}),
@@ -160,5 +172,48 @@ const RelaxLegacyProvider = (function () {
 		return { instructions, mint: mintPk, metadataPda, masterEditionPda, associatedTokenAccount };
 	}
 
-	return { buildMintInstructions, RELAX_CREATOR_ADDRESS, MINT_ACCOUNT_SIZE };
+	/**
+	 * Builds the single VerifyCollection instruction that flips an
+	 * already-minted NFT's on-chain Collection struct from unverified
+	 * to verified — assuming that NFT was minted with `collectionMint`
+	 * passed to buildMintInstructions() above (otherwise its Metadata
+	 * account has no Collection struct at all to verify, and this
+	 * would fail on-chain with a missing-collection error).
+	 *
+	 * Deliberately returns a single INSTRUCTION, not a built/signed
+	 * transaction — the caller (RelaxNFT.verifyCollection(), then
+	 * whatever server-side flow actually holds the collection
+	 * authority key) is responsible for assembling it into a
+	 * transaction with the right fee payer and blockhash, and for
+	 * collecting BOTH required signatures (payer AND
+	 * collectionAuthority — see buildVerifyCollection's account list
+	 * in instruction-builder.js). This function has no opinion on who
+	 * signs what or when; it only knows how to build the one
+	 * instruction correctly.
+	 *
+	 * @param {Object} params
+	 * @param {solanaWeb3.PublicKey|string} params.nftMint - the mint of the NFT being verified (must already have an unverified Collection struct pointing at collectionMint)
+	 * @param {solanaWeb3.PublicKey|string} params.collectionMint - RELAX's own Collection NFT's mint
+	 * @param {solanaWeb3.PublicKey|string} params.collectionAuthority - the PUBLIC key of RELAX's dedicated, narrowly-scoped Verify signer (see the security note on buildVerifyCollection in instruction-builder.js) — this function never touches or needs the corresponding private key
+	 * @param {solanaWeb3.PublicKey|string} params.payer - whoever pays the tx fee; typically the NFT's own owner
+	 * @returns {Promise<solanaWeb3.TransactionInstruction>}
+	 */
+	async function buildVerifyCollectionInstruction({ nftMint, collectionMint, collectionAuthority, payer }) {
+		const [nftMetadataPda, collectionMetadataPda, collectionMasterEditionPda] = await Promise.all([
+			IB.findMetadataPda(nftMint),
+			IB.findMetadataPda(collectionMint),
+			IB.findMasterEditionPda(collectionMint)
+		]);
+
+		return IB.buildVerifyCollection({
+			metadata: nftMetadataPda,
+			collectionAuthority,
+			payer,
+			collectionMint,
+			collectionMetadata: collectionMetadataPda,
+			collectionMasterEdition: collectionMasterEditionPda
+		});
+	}
+
+	return { buildMintInstructions, buildVerifyCollectionInstruction, RELAX_CREATOR_ADDRESS, MINT_ACCOUNT_SIZE };
 })();

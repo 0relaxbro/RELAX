@@ -68,10 +68,14 @@ const RelaxInstructionBuilder = (function () {
 	//   DataV2:    name, symbol, uri, seller_fee_basis_points, creators, collection, uses
 	//   Creator:   address, verified, share   (NOT address/share/verified)
 	//   Collection: verified, key             (verified comes FIRST)
-	// RELAX never sets `collection` (no Certified Collection — see
-	// architecture decision) or `uses` (not a v1 feature) — both
-	// always encoded as None (0x00), which needs no knowledge of
-	// their internal layout at all.
+	// `uses` is always None (not a v1 feature). `collection` was
+	// always None too, per the original architecture decision against
+	// Certified Collections — REVISED 22 Jul 2026: that decision was
+	// specifically about not requiring RELAX to hold a signing key.
+	// It's now a deliberate, narrowly-scoped exception (see
+	// buildVerifyCollection below) — this field is what lets a minted
+	// NFT point at RELAX's own Collection NFT at all. Still defaults
+	// to None (backward compatible) when no collectionMint is given.
 	function encodeCreator(creator) {
 		return B.concatAll([
 			B.pubkey(creator.address),
@@ -80,14 +84,28 @@ const RelaxInstructionBuilder = (function () {
 		]);
 	}
 
-	function encodeDataV2({ name, symbol, uri, sellerFeeBasisPoints, creators }) {
+	function encodeCollection(collectionMint) {
+		// Collection struct is ALWAYS written unverified at mint time —
+		// `verified` can only legitimately become true via a real
+		// VerifyCollection instruction signed by the collection's own
+		// update authority (see buildVerifyCollection below). Writing
+		// `verified: true` here directly would be meaningless — nothing
+		// checks it at creation time, so it would just be a lie sitting
+		// in an account, not an actual verification.
+		return B.concatAll([
+			B.bool(false),
+			B.pubkey(collectionMint)
+		]);
+	}
+
+	function encodeDataV2({ name, symbol, uri, sellerFeeBasisPoints, creators, collectionMint }) {
 		return B.concatAll([
 			B.str(name),
 			B.str(symbol),
 			B.str(uri),
 			B.u16(sellerFeeBasisPoints),
 			B.option(creators && creators.length ? creators : null, (list) => B.vec(list, encodeCreator)),
-			B.option(null, () => new Uint8Array(0)), // collection — always None, see above
+			B.option(collectionMint || null, encodeCollection),
 			B.option(null, () => new Uint8Array(0))  // uses — always None, v1 doesn't use this
 		]);
 	}
@@ -245,6 +263,77 @@ const RelaxInstructionBuilder = (function () {
 		});
 	}
 
+	// ---- VerifyCollection ----
+	// Source: mpl-token-metadata 1.3.3 source (docs.rs, fetched 22 Jul
+	// 2026 — the actual `verify_collection()` builder function, not
+	// just its doc comment, since the two disagree slightly on account
+	// 1's writable flag and the CODE is ground truth). Legacy
+	// instruction (not the newer unified VerifyCollectionV1 — this
+	// project uses Legacy Token Metadata throughout, per the
+	// architecture decision in legacy-provider.js, so this matches
+	// that same generation of the program). Discriminator 18,
+	// cross-checked two ways: (1) mpl-token-metadata 1.2.0's
+	// `MetadataInstruction` enum lists VerifyCollection as the very
+	// next variant after CreateMasterEditionV3 with no explicit
+	// discriminant override, and this project's own
+	// buildCreateMasterEditionV3 above already uses 17 (byte-verified
+	// separately); Rust enums without explicit values number
+	// sequentially, so VerifyCollection = 18. (2) This matches
+	// widely-corroborated community documentation of the same value.
+	// No instruction args beyond the single discriminator byte — the
+	// verify is a permission check (does collection_authority actually
+	// control the collection?) and a straight overwrite of one boolean
+	// on the NFT's own Metadata account, not something with a payload.
+	//
+	// Accounts, in the exact order verify_collection() builds them:
+	//   0. metadata              [writable]           — the NFT's OWN Metadata account (already has an unverified Collection struct pointing at this collection, set at mint time — see legacy-provider.js/metadata-builder.js for how RELAX's future Collection Verify flow sets that struct)
+	//   1. collection_authority  [signer, writable]    — the Collection NFT's update authority (RELAX's dedicated, narrowly-scoped Verify key — see architecture note below)
+	//   2. payer                 [signer, writable]    — pays the tx fee; may be the same key as collection_authority
+	//   3. collection_mint       [readonly]            — mint of RELAX's Collection NFT
+	//   4. collection            [readonly]            — Metadata PDA of RELAX's Collection NFT
+	//   5. collection_master_edition_account [readonly] — Master Edition PDA of RELAX's Collection NFT
+	// A 7th, optional `collection_authority_record` account exists in
+	// the full builder signature for DELEGATED collection authorities
+	// (via ApproveCollectionAuthority) — deliberately omitted here:
+	// RELAX's Verify key is meant to sign directly as the collection's
+	// own update authority, not as a delegate, so there is no such
+	// record to pass.
+	//
+	// SECURITY ARCHITECTURE NOTE (decided 22 Jul 2026): this is the
+	// ONE place in the whole NFT Creator where RELAX holds a key that
+	// actively signs something — a deliberate, narrow exception to the
+	// "RELAX holds no key that matters here, ever" principle stated
+	// elsewhere in this project. The exception is scoped as tightly as
+	// the account list above allows: this collection_authority key
+	// should be a DEDICATED keypair (never reused from anywhere else
+	// in the project, same isolation principle as the RELAX Creator
+	// brand-identity wallet in legacy-provider.js) whose only real-world
+	// capability is signing THIS instruction for THIS one collection
+	// mint. It cannot move SOL, cannot mint, cannot touch any other
+	// NFT's mint/freeze authority, and never appears in any
+	// user-facing transaction except as this one read-only-in-effect
+	// signature. If ever compromised, the blast radius is "someone can
+	// mark arbitrary NFTs as verified members of RELAX's collection" —
+	// a reputational risk, not a funds-custody one — which is why this
+	// exception was judged acceptable where holding any
+	// funds-adjacent key was not.
+	function buildVerifyCollection({ metadata, collectionAuthority, payer, collectionMint, collectionMetadata, collectionMasterEdition }) {
+		const discriminator = B.u8(18);
+
+		return new solanaWeb3.TransactionInstruction({
+			programId: pk(TOKEN_METADATA_PROGRAM_ID),
+			keys: [
+				{ pubkey: pk(metadata), isSigner: false, isWritable: true },
+				{ pubkey: pk(collectionAuthority), isSigner: true, isWritable: true },
+				{ pubkey: pk(payer), isSigner: true, isWritable: true },
+				{ pubkey: pk(collectionMint), isSigner: false, isWritable: false },
+				{ pubkey: pk(collectionMetadata), isSigner: false, isWritable: false },
+				{ pubkey: pk(collectionMasterEdition), isSigner: false, isWritable: false }
+			],
+			data: discriminator
+		});
+	}
+
 	// ---- System Program: CreateAccount ----
 	// Used to allocate the raw mint account before InitializeMint2 runs
 	// on it. This one goes through solanaWeb3's own well-tested helper
@@ -267,6 +356,7 @@ const RelaxInstructionBuilder = (function () {
 		findMetadataPda, findMasterEditionPda, findAssociatedTokenAddress,
 		buildCreateMetadataAccountV3, buildCreateMasterEditionV3,
 		buildInitializeMint2, buildMintTo, buildCreateAssociatedTokenAccountIdempotent,
+		buildVerifyCollection,
 		buildCreateAccount
 	};
 })();

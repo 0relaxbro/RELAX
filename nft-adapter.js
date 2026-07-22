@@ -50,7 +50,7 @@ const RelaxNFT = (function () {
 	 * verified against Irys's current docs before production launch —
 	 * not assumed permanent by default.
 	 */
-	async function mint({ connection, owner, name, symbol, metadataUri, sellerFeeBasisPoints }) {
+	async function mint({ connection, owner, name, symbol, metadataUri, sellerFeeBasisPoints, collectionMint }) {
 		if (!name || !name.trim()) throw new Error("NFT name is required.");
 		if (!metadataUri || !metadataUri.trim()) throw new Error("metadataUri is required — upload metadata before minting.");
 
@@ -60,7 +60,8 @@ const RelaxNFT = (function () {
 			await activeProvider.buildMintInstructions({
 				connection, owner, mintKeypair, name: name.trim(),
 				symbol: symbol || "RELAX", metadataUri: metadataUri.trim(),
-				sellerFeeBasisPoints: sellerFeeBasisPoints || 0
+				sellerFeeBasisPoints: sellerFeeBasisPoints || 0,
+				collectionMint: collectionMint || undefined
 			});
 
 		const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
@@ -93,6 +94,48 @@ const RelaxNFT = (function () {
 		throw new Error("transfer() not yet implemented — SPL Token transfer of the NFT's token account; not needed for v1 mint flow.");
 	}
 
+	/**
+	 * Builds a complete, UNSIGNED transaction that verifies an
+	 * already-minted NFT as a member of RELAX's own Collection NFT.
+	 * Two signatures are required before this can land, neither of
+	 * which this function provides:
+	 *   1. `payer` — normally the NFT owner's own connected wallet.
+	 *   2. `collectionAuthority` — RELAX's dedicated, narrowly-scoped
+	 *      Verify signer. This adapter is only ever given that key's
+	 *      PUBLIC half; the actual signature is added later by
+	 *      whatever server-side flow holds the private key (never in
+	 *      this file, never in any client-side code).
+	 * The caller is responsible for the two-step signature collection
+	 * — this mirrors the exact non-custodial pattern already used for
+	 * minting: RELAX never sends a transaction on the user's behalf,
+	 * it only ever contributes its own half of a signature to a
+	 * transaction the user's own wallet also signs and submits.
+	 *
+	 * @param {Object} params
+	 * @param {solanaWeb3.Connection} params.connection
+	 * @param {solanaWeb3.PublicKey|string} params.nftMint
+	 * @param {solanaWeb3.PublicKey|string} params.collectionMint
+	 * @param {solanaWeb3.PublicKey|string} params.collectionAuthority - public key only
+	 * @param {solanaWeb3.PublicKey|string} params.payer
+	 * @returns {Promise<{transaction: solanaWeb3.Transaction}>}
+	 */
+	async function verifyCollection({ connection, nftMint, collectionMint, collectionAuthority, payer }) {
+		const instruction = await activeProvider.buildVerifyCollectionInstruction({
+			nftMint, collectionMint, collectionAuthority, payer
+		});
+
+		const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+		const payerPk = payer instanceof solanaWeb3.PublicKey ? payer : new solanaWeb3.PublicKey(payer);
+
+		const transaction = new solanaWeb3.Transaction({
+			feePayer: payerPk,
+			blockhash,
+			lastValidBlockHeight
+		}).add(instruction);
+
+		return { transaction };
+	}
+
 	// FIX (found via review, 22 Jul 2026): the Creator UI's own
 	// pre-mint SOL balance check needed the mint account's rent-exempt
 	// size, and was reaching directly into
@@ -108,5 +151,5 @@ const RelaxNFT = (function () {
 		return activeProvider.MINT_ACCOUNT_SIZE;
 	}
 
-	return { mint, getMetadata, transfer, getMintAccountSize };
+	return { mint, getMetadata, transfer, getMintAccountSize, verifyCollection };
 })();
