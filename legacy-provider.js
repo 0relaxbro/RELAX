@@ -61,7 +61,7 @@ const RelaxLegacyProvider = (function () {
 	 * @param {solanaWeb3.Keypair} params.mintKeypair - a freshly generated throwaway keypair for the new mint account (caller generates this, e.g. solanaWeb3.Keypair.generate())
 	 * @param {string} params.name - NFT name (max ~32 chars is the Token Metadata practical limit before account-size costs climb)
 	 * @param {string} params.symbol - defaults to "RELAX" if not given
-	 * @param {string} params.metadataUri - the Arweave/permanent URI where the off-chain JSON (name/description/image/relax{} namespace) is already uploaded — uploading itself happens BEFORE calling this, in the Creator UI, paid by the user's own wallet via Irys
+	 * @param {string} params.metadataUri - the Irys storage URI where the off-chain JSON (name/description/image/relax{} namespace) is already uploaded — uploading itself happens BEFORE calling this, in the Creator UI, paid by the user's own wallet via Irys. NOTE: while DEVNET_MODE is on (see irys-web-provider.js), this is Irys's devnet/test storage tier — NOT permanent, ~60-day retention, no real monetary value. On mainnet, this becomes a paid Irys storage URI whose persistence properties must be verified against Irys's current docs before relying on it for production launch — not assumed permanent by default.
 	 * @param {number} params.sellerFeeBasisPoints - secondary sale royalty, 0-10000
 	 * @returns {Promise<{instructions: solanaWeb3.TransactionInstruction[], mint: solanaWeb3.PublicKey, metadataPda: solanaWeb3.PublicKey, masterEditionPda: solanaWeb3.PublicKey, associatedTokenAccount: solanaWeb3.PublicKey}>}
 	 */

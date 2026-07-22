@@ -44,6 +44,19 @@
    ========================================================= */
 
 const RelaxIrysWebProvider = (function () {
+	// FIX (found via review, 22 Jul 2026): the [IRYS DIAG] logging added
+	// throughout this file during real devnet debugging (funding/402/
+	// signMessage/upload tracing) was extremely useful for finding the
+	// bugs it found, but left on permanently it just fills a normal
+	// user's console with internal wallet/storage step-by-step detail
+	// they never asked to see. Gated behind a single flag instead of
+	// deleted outright — flip to true again if a similar live-debugging
+	// need comes up rather than re-adding logs one at a time.
+	const DEBUG_IRYS = false;
+	function debug(...args) {
+		if (DEBUG_IRYS) console.log("[IRYS DIAG]", ...args);
+	}
+
 	// FIX (found live, 21 Jul 2026): the signMessage bug above caused
 	// an indefinite silent hang with no error at all — this timeout
 	// ensures that if something similar ever happens again (a
@@ -95,16 +108,16 @@ const RelaxIrysWebProvider = (function () {
 				}
 				const isInsufficientBalance = /not enough balance/i.test(msg);
 				if (isInsufficientBalance && onInsufficientBalance) {
-					console.log(
-						"[IRYS DIAG] uploadWithRetry: 402 insufficient balance, topping up before retry",
+					debug(
+						"uploadWithRetry: 402 insufficient balance, topping up before retry",
 						{ attempt, maxAttempts, message: msg }
 					);
 					await onInsufficientBalance(attempt);
 				} else {
 					const retryAfterMatch = msg.match(/retry after ([\d.]+)s/);
 					const waitSeconds = retryAfterMatch ? parseFloat(retryAfterMatch[1]) : attempt * 2;
-					console.log(
-						"[IRYS DIAG] uploadWithRetry: got 402, waiting then retrying",
+					debug(
+						"uploadWithRetry: got 402, waiting then retrying",
 						{ attempt, maxAttempts, waitSeconds, message: msg }
 					);
 					await new Promise((resolve) => setTimeout(resolve, waitSeconds * 1000));
@@ -115,13 +128,16 @@ const RelaxIrysWebProvider = (function () {
 	}
 
 
-	// *** DEVNET MODE — flip to false only after a full devnet mint
-	// has succeeded end-to-end, per SWAP_V2_MIGRATION_PLAN.md / NFT
-	// Creator's testing plan. While true, storage uploads run on
-	// Irys's own devnet/test tier (worthless SOL, ~60-day retention)
-	// instead of its real mainnet tier. ***
-	const DEVNET_MODE = true;
-	const DEVNET_RPC_URL = "https://card.0relaxbro.xyz/rpc-devnet"; // same devnet route the mint flow itself uses — one devnet config to keep in sync, not two
+	// FIX (found via review, 22 Jul 2026): this used to be a separate
+	// local const from nft-creator.html's own RPC_URL/SOLANA_CLUSTER —
+	// two files that happened to agree but nothing enforced it, and
+	// this exact split previously caused a real "mint on devnet,
+	// storage on mainnet" mismatch earlier in this project. Reading
+	// the same window.RELAX_NFT_CONFIG both files share means a future
+	// mainnet switch is one line in one place, not two consts in two
+	// files that both have to be remembered.
+	const DEVNET_MODE = window.RELAX_NFT_CONFIG.irysDevnet === true;
+	const DEVNET_RPC_URL = window.RELAX_NFT_CONFIG.rpcUrl;
 
 	let cachedUploader = null;
 	let cachedWalletAddress = null;
@@ -134,16 +150,15 @@ const RelaxIrysWebProvider = (function () {
 	// balance reconciliation. Cache is now keyed to the wallet address
 	// itself; a different address invalidates it and reconnects fresh.
 	//
-	// CAVEAT (flagged via review, 21 Jul 2026): `walletProvider` here
-	// is meant to be the raw injected provider (window.solana /
-	// window.solflare) — the same object RelaxHolder already uses for
-	// Swap. Irys's own official example passes a React wallet-adapter
-	// hook object instead, not a raw provider directly. Phantom's raw
-	// window.solana is very likely compatible (same de-facto standard
-	// shape), but Solflare compatibility specifically has NOT been
-	// verified yet — confirm on devnet with both wallets before
-	// trusting this for real uploads, same as the mint flow itself
-	// needs a devnet pass.
+	// CAVEAT (flagged via review, 21 Jul 2026, RESOLVED 22 Jul 2026):
+	// `walletProvider` here is meant to be the raw injected provider
+	// (window.solana / window.solflare) — the same object RelaxHolder
+	// already uses for Swap. Irys's own official example passes a
+	// React wallet-adapter hook object instead, not a raw provider
+	// directly. Phantom and Solflare raw-provider compatibility were
+	// both verified end-to-end on devnet on 22 Jul 2026 (full mint,
+	// including Irys funding/upload through this exact wrapper, on
+	// both wallets).
 	// FIX (found via real devnet testing + reading Irys's own source
 	// code directly, 21 Jul 2026 — the actual root cause behind the
 	// "stuck with no wallet popup, no error, endless getLatestBlockhash
@@ -166,24 +181,24 @@ const RelaxIrysWebProvider = (function () {
 			publicKey: rawProvider.publicKey,
 
 			async signTransaction(transaction) {
-				console.log("[IRYS DIAG] wrapper.signTransaction: called");
+				debug("wrapper.signTransaction: called");
 				const result = await rawProvider.signTransaction(transaction);
-				console.log("[IRYS DIAG] wrapper.signTransaction: returned");
+				debug("wrapper.signTransaction: returned");
 				return result;
 			},
 
 			async signAllTransactions(transactions) {
-				console.log("[IRYS DIAG] wrapper.signAllTransactions: called", { count: transactions.length });
+				debug("wrapper.signAllTransactions: called", { count: transactions.length });
 				if (typeof rawProvider.signAllTransactions === "function") {
 					const result = await rawProvider.signAllTransactions(transactions);
-					console.log("[IRYS DIAG] wrapper.signAllTransactions: returned (native)");
+					debug("wrapper.signAllTransactions: returned (native)");
 					return result;
 				}
 				const signed = [];
 				for (const transaction of transactions) {
 					signed.push(await rawProvider.signTransaction(transaction));
 				}
-				console.log("[IRYS DIAG] wrapper.signAllTransactions: returned (manual loop)");
+				debug("wrapper.signAllTransactions: returned (manual loop)");
 				return signed;
 			},
 
@@ -198,34 +213,34 @@ const RelaxIrysWebProvider = (function () {
 			// live symptom: funding succeeded, but upload hung
 			// indefinitely with no wallet popup and no console error).
 			async signMessage(message) {
-				console.log("[IRYS DIAG] wrapper.signMessage: called", { messageLength: message && message.length });
+				debug("wrapper.signMessage: called", { messageLength: message && message.length });
 				if (typeof rawProvider.signMessage !== "function") {
 					throw new Error("This wallet does not support message signing, which storage upload requires.");
 				}
 				const result = await rawProvider.signMessage(message, "utf8");
-				console.log("[IRYS DIAG] wrapper.signMessage: raw provider returned", { resultShape: result && Object.keys(result) });
+				debug("wrapper.signMessage: raw provider returned", { resultShape: result && Object.keys(result) });
 				if (result && result.signature) return result.signature;
 				if (result instanceof Uint8Array) return result;
 				throw new Error("Wallet returned an unsupported message signature format.");
 			},
 
 			async sendTransaction(transaction, connection, options = {}) {
-				console.log("[IRYS DIAG] wrapper.sendTransaction: called");
+				debug("wrapper.sendTransaction: called");
 				const signed = await rawProvider.signTransaction(transaction);
-				console.log("[IRYS DIAG] wrapper.sendTransaction: signed, now broadcasting");
+				debug("wrapper.sendTransaction: signed, now broadcasting");
 				const sig = await connection.sendRawTransaction(signed.serialize(), {
 					skipPreflight: options.skipPreflight ?? false,
 					preflightCommitment: options.preflightCommitment || "confirmed",
 					maxRetries: options.maxRetries
 				});
-				console.log("[IRYS DIAG] wrapper.sendTransaction: broadcast returned", { sig });
+				debug("wrapper.sendTransaction: broadcast returned", { sig });
 				return sig;
 			}
 		};
 	}
 
 	async function getUploader(walletProvider) {
-		console.log("[IRYS DIAG] getUploader: start");
+		debug("getUploader: start");
 		const walletAddress = walletProvider && walletProvider.publicKey ? walletProvider.publicKey.toString() : null;
 		if (!walletAddress) {
 			throw new Error("Connect a Solana wallet before using storage.");
@@ -259,11 +274,11 @@ const RelaxIrysWebProvider = (function () {
 		}
 
 		try {
-			console.log("[IRYS DIAG] getUploader: bundle loaded, calling WebUploader(WebSolana).withProvider()...withRpc()...devnet()");
+			debug("getUploader: bundle loaded, calling WebUploader(WebSolana).withProvider()...withRpc()...devnet()");
 			const uploader = DEVNET_MODE
 				? await WebUploader(WebSolana).withProvider(wrapProviderForIrys(walletProvider)).withRpc(DEVNET_RPC_URL).devnet()
 				: await WebUploader(WebSolana).withProvider(wrapProviderForIrys(walletProvider));
-			console.log("[IRYS DIAG] getUploader: uploader constructed successfully");
+			debug("getUploader: uploader constructed successfully");
 			cachedUploader = uploader;
 			cachedWalletAddress = cacheKey;
 			return uploader;
@@ -317,21 +332,21 @@ const RelaxIrysWebProvider = (function () {
 	// previous upload, no new funding transaction/signature is
 	// needed).
 	async function ensureFunded(walletProvider, requiredLamports) {
-		console.log("[IRYS DIAG] ensureFunded: start", { requiredLamports: requiredLamports.toString() });
+		debug("ensureFunded: start", { requiredLamports: requiredLamports.toString() });
 		const uploader = await getUploader(walletProvider);
-		console.log("[IRYS DIAG] ensureFunded: got uploader");
+		debug("ensureFunded: got uploader");
 		const required = BigInt(requiredLamports);
-		console.log("[IRYS DIAG] ensureFunded: calling getLoadedBalance()");
+		debug("ensureFunded: calling getLoadedBalance()");
 		const balance = BigInt((await uploader.getLoadedBalance()).toString());
-		console.log("[IRYS DIAG] ensureFunded: getLoadedBalance() returned", { balance: balance.toString() });
+		debug("ensureFunded: getLoadedBalance() returned", { balance: balance.toString() });
 		if (balance < required) {
-			console.log("[IRYS DIAG] ensureFunded: calling uploader.fund()", { amount: (required - balance).toString() });
+			debug("ensureFunded: calling uploader.fund()", { amount: (required - balance).toString() });
 			await uploader.fund(required - balance);
-			console.log("[IRYS DIAG] ensureFunded: uploader.fund() returned");
+			debug("ensureFunded: uploader.fund() returned");
 		} else {
-			console.log("[IRYS DIAG] ensureFunded: already funded, skipping fund()");
+			debug("ensureFunded: already funded, skipping fund()");
 		}
-		console.log("[IRYS DIAG] ensureFunded: done");
+		debug("ensureFunded: done");
 	}
 
 	// Uploads raw file bytes (image, gif, mp4 — anything). Returns a
@@ -340,14 +355,51 @@ const RelaxIrysWebProvider = (function () {
 	// itself right before uploading, so this never fails on
 	// insufficient balance even if a UI's own explicit "fund" step was
 	// skipped or the balance changed since that step ran.
+	// FIX (found via review, 22 Jul 2026): the migration plan called
+	// for confirming a freshly-uploaded URI is actually readable from
+	// the gateway before handing it off to the mint transaction, as a
+	// guard against gateway propagation lag right after upload. This
+	// is deliberately NON-BLOCKING: fetch()'s CORS behavior against
+	// Irys's gateway hasn't been independently confirmed, and a fetch
+	// failure caused by a CORS restriction (rather than the content
+	// genuinely being unreadable) is indistinguishable from here — a
+	// hard failure would risk blocking an otherwise-successful mint
+	// over an unverified assumption. So this only ever logs a warning
+	// (visible regardless of DEBUG_IRYS, since it's an actionable
+	// signal) and always lets the mint proceed either way.
+	async function verifyGatewayUriBestEffort(uri, maxAttempts) {
+		maxAttempts = maxAttempts || 3;
+		for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+			try {
+				const response = await fetch(uri, { method: "GET", cache: "no-store" });
+				if (response.ok) {
+					debug("verifyGatewayUriBestEffort: confirmed readable", { uri, attempt });
+					return;
+				}
+			} catch (err) {
+				// Could be genuine propagation lag, or could be a CORS
+				// restriction unrelated to whether the upload actually
+				// succeeded — either way, only retry-and-warn, never throw.
+			}
+			if (attempt < maxAttempts) {
+				await new Promise((resolve) => setTimeout(resolve, 2000));
+			}
+		}
+		console.warn(
+			"[IRYS] Uploaded data at " + uri + " could not be confirmed readable from the gateway after " +
+			maxAttempts + " attempts (may just be propagation delay, or a cross-origin fetch restriction on " +
+			"this check itself — not necessarily a failed upload). Proceeding anyway."
+		);
+	}
+
 	async function uploadFile(walletProvider, bytes, contentType) {
-		console.log("[IRYS DIAG] uploadFile: start", { byteLength: bytes.length, contentType });
+		debug("uploadFile: start", { byteLength: bytes.length, contentType });
 		const uploader = await getUploader(walletProvider);
-		console.log("[IRYS DIAG] uploadFile: got uploader, calling getPrice()");
+		debug("uploadFile: got uploader, calling getPrice()");
 		const price = await uploader.getPrice(bytes.length);
-		console.log("[IRYS DIAG] uploadFile: getPrice() returned", { price: price.toString() });
+		debug("uploadFile: getPrice() returned", { price: price.toString() });
 		await ensureFunded(walletProvider, withFundingBuffer(BigInt(price.toString())));
-		console.log("[IRYS DIAG] uploadFile: ensureFunded() returned, calling uploader.upload()");
+		debug("uploadFile: ensureFunded() returned, calling uploader.upload()");
 		const tags = [{ name: "Content-Type", value: contentType }];
 		// FIX (found live, traced via [IRYS BUNDLE DIAG] logs, 21 Jul
 		// 2026): Irys's uploadData() checks Buffer.isBuffer(data) to
@@ -367,8 +419,10 @@ const RelaxIrysWebProvider = (function () {
 				}
 			}
 		);
-		console.log("[IRYS DIAG] uploadFile: uploader.upload() returned", { receiptId: receipt.id });
-		return "https://gateway.irys.xyz/" + receipt.id;
+		debug("uploadFile: uploader.upload() returned", { receiptId: receipt.id });
+		const uri = "https://gateway.irys.xyz/" + receipt.id;
+		await verifyGatewayUriBestEffort(uri);
+		return uri;
 	}
 
 	// Uploads a JSON object (the off-chain NFT metadata document
@@ -396,7 +450,9 @@ const RelaxIrysWebProvider = (function () {
 				}
 			}
 		);
-		return "https://gateway.irys.xyz/" + receipt.id;
+		const uri = "https://gateway.irys.xyz/" + receipt.id;
+		await verifyGatewayUriBestEffort(uri);
+		return uri;
 	}
 
 	return { estimateUploadCostLamports, getLoadedBalance, ensureFunded, uploadFile, uploadJson };

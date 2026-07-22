@@ -1,5 +1,15 @@
 <!DOCTYPE html>
 <!--
+	Devnet-verified (22 Jul 2026): successful end-to-end mints confirmed
+	on Phantom and Solflare, including GIF/PNG/MP4 media, holder and
+	non-holder flows, custom attributes, and multiple royalty values —
+	see SWAP_V2_MIGRATION_PLAN.md / NFT Creator section for the full
+	test log. Devnet NFTs and Irys's devnet storage tier have no real
+	monetary value and may not be permanent — do not treat a devnet
+	mint as equivalent to a mainnet one until mainnet has been
+	separately verified.
+-->
+<!--
 	RELAX NFT Creator — v1
 	Legacy Token Metadata mint tool. Mint is fully non-custodial: the
 	connected wallet pays for and signs every instruction (mint account
@@ -10,11 +20,9 @@
 	  Adapter -> Provider -> InstructionBuilder -> Serializer (mint)
 	  Creator UI -> RelaxStorage -> RelaxIrysWebProvider (storage)
 	This file ONLY calls RelaxStorage.*, RelaxMetadataBuilder.build(),
-	and RelaxNFT.mint() — never the internal layers directly, so a
+	and RelaxNFT.* — never the internal layers directly, so a
 	future provider swap (Core, a different storage backend) never
 	requires touching this page.
-	NOT YET DEVNET-TESTED — see the mandatory test note at the bottom
-	of this file before any real (or even devnet) mint attempt.
 -->
 <html lang="en">
 <head>
@@ -241,18 +249,13 @@ here, ever.
 </p>
 
 <div class="devnet-banner">
-⚠ <b>DEVNET TEST MODE.</b> This page is wired to Solana devnet (worthless
-test SOL, get some free from a devnet faucet). It has NOT yet had a
-successful end-to-end mint. Do not point this at mainnet until a
-devnet mint has fully succeeded. (A prior version of this banner
-incorrectly implied devnet safety while the page was actually wired
-to mainnet — fixed 21 Jul 2026, see SWAP_V2_MIGRATION_PLAN.md.)
-</div>
-<div class="devnet-banner" style="border-color:rgba(255,95,135,.4);color:var(--danger);">
-⚠ Irys/storage uploads below have NOT been separately confirmed to
-run in devnet/testnet mode yet — verify this against Irys's current
-docs before funding anything real. If in doubt, stop after the cost
-estimate step and don't confirm funding.
+⚠ <b>DEVNET TEST MODE.</b> End-to-end minting has been verified on Solana
+devnet with Phantom and Solflare, including PNG, GIF, and MP4 media,
+holder and non-holder flows, custom attributes, and multiple royalty
+values (22 Jul 2026 — see SWAP_V2_MIGRATION_PLAN.md / NFT Creator
+section for the full test log). Devnet SOL has no real value, and
+Irys's devnet storage tier may be temporary — do not treat these test
+NFTs as permanent mainnet assets.
 </div>
 
 <div id="walletBox" class="wallet-box">
@@ -332,6 +335,41 @@ estimate step and don't confirm funding.
 
 </div>
 
+<script>
+// FIX (found via review, 22 Jul 2026 — refined further after a second
+// review pass same day): network/RPC config used to be defined
+// separately in this file (RPC_URL, SOLANA_CLUSTER) AND in
+// irys-web-provider.js (DEVNET_MODE, DEVNET_RPC_URL) — two places that
+// happened to agree, but nothing enforced that, and this exact kind of
+// split previously caused a real "mint on devnet, storage on mainnet"
+// mismatch bug earlier in this project. The first fix (a single flat
+// RELAX_NFT_CONFIG object) closed the two-files problem but still left
+// THREE fields (network/rpcUrl/explorerCluster) that all had to be
+// changed together for a mainnet switch — missing one silently
+// reintroduces the same class of mismatch. This version makes the
+// switch itself genuinely one line: NFT_NETWORK below is the only
+// thing that changes; everything else is derived from it.
+const NFT_NETWORK = "devnet"; // "devnet" | "mainnet-beta" — the only line to change for a mainnet switch
+
+const NFT_NETWORKS = {
+	devnet: {
+		rpcUrl: "https://card.0relaxbro.xyz/rpc-devnet",
+		explorerCluster: "devnet", // passed as ?cluster= on explorer.solana.com links
+		irysDevnet: true // Irys's devnet/test storage tier — worthless SOL, ~60-day retention, not permanent
+	},
+	"mainnet-beta": {
+		rpcUrl: "https://card.0relaxbro.xyz", // same worker, default (non-devnet) route — see worker.js's fallthrough to handleRpcProxy(request, env, "mainnet")
+		explorerCluster: "mainnet-beta", // Explorer accepts this explicitly; no special-casing needed
+		irysDevnet: false // Irys's real, paid mainnet storage tier — persistence properties should be verified against Irys's current docs before relying on this for production launch
+	}
+};
+
+window.RELAX_NFT_CONFIG = Object.freeze({
+	network: NFT_NETWORK,
+	...NFT_NETWORKS[NFT_NETWORK]
+});
+</script>
+
 <script src="https://unpkg.com/@solana/web3.js@1.95.3/lib/index.iife.min.js"></script>
 
 <script src="serializer.js"></script>
@@ -348,8 +386,8 @@ estimate step and don't confirm funding.
 
 <script>
 
-const RPC_URL = "https://card.0relaxbro.xyz/rpc-devnet";
-const SOLANA_CLUSTER = "devnet"; // used for the explorer link — keep in sync with RPC_URL above
+const RPC_URL = window.RELAX_NFT_CONFIG.rpcUrl;
+const SOLANA_CLUSTER = window.RELAX_NFT_CONFIG.explorerCluster;
 const connection = new solanaWeb3.Connection(RPC_URL, "confirmed");
 
 const walletBox = document.getElementById("walletBox");
@@ -916,7 +954,7 @@ async function handleEstimateCost() {
 		// deposit (paid directly in the mint transaction, never through
 		// Irys) and a buffer for both transactions' own network fees.
 		const ownerPk = new solanaWeb3.PublicKey(conn.publicKey);
-		const mintRentLamports = BigInt(await connection.getMinimumBalanceForRentExemption(RelaxLegacyProvider.MINT_ACCOUNT_SIZE));
+		const mintRentLamports = BigInt(await connection.getMinimumBalanceForRentExemption(RelaxNFT.getMintAccountSize()));
 		const TX_FEE_BUFFER_LAMPORTS = 20000n; // generous cover for both transactions' network + any priority fee
 		const totalNeededLamports = prefundTotal + mintRentLamports + TX_FEE_BUFFER_LAMPORTS;
 		const walletBalanceLamports = BigInt(await connection.getBalance(ownerPk));

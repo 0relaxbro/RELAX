@@ -33,17 +33,22 @@ const RelaxNFT = (function () {
 	 * @param {solanaWeb3.PublicKey|string} params.owner - connected wallet
 	 * @param {string} params.name
 	 * @param {string} [params.symbol] - defaults to "RELAX"
-	 * @param {string} params.metadataUri - already-uploaded Arweave/Irys URI (see note below)
+	 * @param {string} params.metadataUri - already-uploaded Irys storage URI (see note below)
 	 * @param {number} [params.sellerFeeBasisPoints] - defaults to 0
 	 * @returns {Promise<{transaction: solanaWeb3.Transaction, mintKeypair: solanaWeb3.Keypair, mint: solanaWeb3.PublicKey, metadataPda: solanaWeb3.PublicKey, masterEditionPda: solanaWeb3.PublicKey, associatedTokenAccount: solanaWeb3.PublicKey}>}
 	 *
 	 * NOTE on metadataUri: uploading the image + off-chain JSON
-	 * (name/description/image/relax{} namespace) to Arweave via Irys
-	 * happens BEFORE this function is called, paid directly by the
-	 * user's own wallet (per the "kullanıcı öder" decision, 21 Jul
-	 * 2026) — that upload step is a separate, not-yet-built piece of
-	 * the Creator UI, tracked separately from this mint-instruction
-	 * layer.
+	 * (name/description/image/relax{} namespace) via Irys happens
+	 * BEFORE this function is called, paid directly by the user's own
+	 * wallet (per the "kullanıcı öder" decision, 21 Jul 2026) — that
+	 * upload step is a separate part of the Creator UI (storage-adapter.js
+	 * / irys-web-provider.js), devnet-verified 22 Jul 2026, tracked
+	 * separately from this mint-instruction layer. While DEVNET_MODE
+	 * is on, the resulting URI is on Irys's devnet/test storage tier —
+	 * not permanent, no real monetary value. On mainnet, this becomes
+	 * a paid Irys storage URI whose persistence properties must be
+	 * verified against Irys's current docs before production launch —
+	 * not assumed permanent by default.
 	 */
 	async function mint({ connection, owner, name, symbol, metadataUri, sellerFeeBasisPoints }) {
 		if (!name || !name.trim()) throw new Error("NFT name is required.");
@@ -88,5 +93,20 @@ const RelaxNFT = (function () {
 		throw new Error("transfer() not yet implemented — SPL Token transfer of the NFT's token account; not needed for v1 mint flow.");
 	}
 
-	return { mint, getMetadata, transfer };
+	// FIX (found via review, 22 Jul 2026): the Creator UI's own
+	// pre-mint SOL balance check needed the mint account's rent-exempt
+	// size, and was reaching directly into
+	// `RelaxLegacyProvider.MINT_ACCOUNT_SIZE` to get it — a real
+	// violation of this file's own header rule ("the Creator UI must
+	// ONLY ever call RelaxNFT.*"). Functionally harmless today since
+	// there's only one provider, but it means the UI would silently
+	// stay wired to Legacy's size even after a future provider swap
+	// (e.g. to Core, which has no separate mint-account-size concept
+	// the same way). Exposing it through the adapter keeps that swap
+	// a one-file change, same as everything else this file guards.
+	function getMintAccountSize() {
+		return activeProvider.MINT_ACCOUNT_SIZE;
+	}
+
+	return { mint, getMetadata, transfer, getMintAccountSize };
 })();
