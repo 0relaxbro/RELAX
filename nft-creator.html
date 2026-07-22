@@ -328,6 +328,17 @@ NFTs as permanent mainnet assets.
 <div style="margin-bottom:10px;">NFT minted successfully.</div>
 <a id="explorerLink" href="#" target="_blank" rel="noopener">View on Solana Explorer &rarr;</a>
 <div style="margin-top:6px;"><a id="metadataLink" href="#" target="_blank" rel="noopener" style="font-size:13px;">View metadata JSON &rarr;</a></div>
+
+<div id="verifyCollectionSection" style="margin-top:20px; padding-top:20px; border-top:1px solid var(--border); display:none;">
+<div id="verifyCollectionIdle">
+<div class="hint" style="margin-bottom:10px;">Verify this NFT as an official member of the RELAX Collection — a $RELAX holder perk. Wallets/marketplaces show it as verified instead of "Unverified".</div>
+<button id="verifyCollectionBtn" class="mint-btn" style="background:transparent; border:1px solid var(--green); color:var(--green);">VERIFY WITH RELAX COLLECTION</button>
+</div>
+<div id="verifyCollectionWorking" style="display:none;" class="hint">Verifying…</div>
+<div id="verifyCollectionSuccess" style="display:none; color:var(--green);">✓ Verified as a member of the RELAX Collection.</div>
+<div id="verifyCollectionError" style="display:none; color:var(--danger);"></div>
+</div>
+
 <button id="mintAnotherBtn" class="mint-btn" style="margin-top:20px;">MINT ANOTHER</button>
 </div>
 
@@ -355,12 +366,27 @@ const NFT_NETWORKS = {
 	devnet: {
 		rpcUrl: "https://card.0relaxbro.xyz/rpc-devnet",
 		explorerCluster: "devnet", // passed as ?cluster= on explorer.solana.com links
-		irysDevnet: true // Irys's devnet/test storage tier — worthless SOL, ~60-day retention, not permanent
+		irysDevnet: true, // Irys's devnet/test storage tier — worthless SOL, ~60-day retention, not permanent
+		// Verified Collection (added 22 Jul 2026) — devnet TEST collection,
+		// minted 22 Jul 2026 with RELAX's own "relaxnft" wallet, purely to
+		// test the /verify-collection endpoint end-to-end. Not permanent,
+		// not the real collection — see mainnet-beta below for that.
+		collectionMint: "EJ14W1vSECKHZxXyHHxaUtizjtgVvN6nj25eLK6HH752",
+		collectionAuthority: "EpXhzMtQXm4wbzciCVioXr8Cr13QxpzLjQnHUV1HBdZg" // public key only — the matching private key lives ONLY as a Cloudflare secret, never here
 	},
 	"mainnet-beta": {
 		rpcUrl: "https://card.0relaxbro.xyz", // same worker, default (non-devnet) route — see worker.js's fallthrough to handleRpcProxy(request, env, "mainnet")
 		explorerCluster: "mainnet-beta", // Explorer accepts this explicitly; no special-casing needed
-		irysDevnet: false // Irys's real, paid mainnet storage tier — persistence properties should be verified against Irys's current docs before relying on this for production launch
+		irysDevnet: false, // Irys's real, paid mainnet storage tier — persistence properties should be verified against Irys's current docs before relying on this for production launch
+		// TODO before mainnet launch: mint a fresh Collection NFT on
+		// mainnet with real SOL (same one-time, code-free step through
+		// this Creator UI), then fill these in with its real mint
+		// address and the mainnet Verify key's public key. Left null
+		// deliberately — the Verify Collection UI stays hidden entirely
+		// until both are set, same fail-closed pattern as the worker
+		// itself uses for RELAX_COLLECTION_MINT_ADDRESS.
+		collectionMint: null,
+		collectionAuthority: null
 	}
 };
 
@@ -412,12 +438,25 @@ const mintBtn = document.getElementById("mintBtn");
 const successBox = document.getElementById("successBox");
 const explorerLink = document.getElementById("explorerLink");
 const metadataLink = document.getElementById("metadataLink");
+const verifyCollectionSection = document.getElementById("verifyCollectionSection");
+const verifyCollectionIdle = document.getElementById("verifyCollectionIdle");
+const verifyCollectionBtn = document.getElementById("verifyCollectionBtn");
+const verifyCollectionWorking = document.getElementById("verifyCollectionWorking");
+const verifyCollectionSuccess = document.getElementById("verifyCollectionSuccess");
+const verifyCollectionError = document.getElementById("verifyCollectionError");
 
 let isHolder = false;
 let imageFile = null;
 let videoFile = null;
 let isMinting = false;
 let mintPhase = "idle"; // idle -> estimated -> minting
+// Verified Collection (added 22 Jul 2026) — the mint pubkey of
+// whatever NFT was just successfully minted, so the optional "Verify
+// with RELAX Collection" step in the success box knows which NFT to
+// verify. Reset (see resetVerifyCollectionUi/resetFormForNewMint)
+// whenever a new mint starts, so a stale mint can never accidentally
+// get verified after "Mint Another".
+let lastMintedNftMint = null;
 
 function showError(msg) {
 	errorBox.textContent = msg;
@@ -1033,6 +1072,97 @@ async function pollMintConfirmation(conn, signature, lastValidBlockHeight, timeo
 	}
 }
 
+// FIX/FEATURE (added 22 Jul 2026): Verify with RELAX Collection — a
+// $RELAX holder perk (see SWAP_V2_MIGRATION_PLAN.md decision). Mirrors
+// the exact non-custodial two-signature pattern documented on
+// RelaxNFT.verifyCollection() in nft-adapter.js: this page's wallet
+// signs as payer, RELAX's worker (never this page) adds its own
+// collection_authority signature, and THIS PAGE — never the worker —
+// submits the final transaction. Every check the worker performs
+// (transaction shape, holder status, content) can reject the request;
+// this UI just surfaces whatever it says plainly, it enforces nothing
+// itself (client-side checks like `isHolder` below are UX-only, not
+// the actual security boundary — see worker.js's own re-check).
+
+function resetVerifyCollectionUi() {
+	const config = window.RELAX_NFT_CONFIG;
+	const canOfferVerify = isHolder && !!config.collectionMint && !!config.collectionAuthority;
+	verifyCollectionSection.style.display = canOfferVerify ? "block" : "none";
+	verifyCollectionIdle.style.display = "block";
+	verifyCollectionWorking.style.display = "none";
+	verifyCollectionSuccess.style.display = "none";
+	verifyCollectionError.style.display = "none";
+}
+
+function bytesToBase64(bytes) {
+	let binary = "";
+	for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+	return btoa(binary);
+}
+
+function base64ToBytes(b64) {
+	const binary = atob(b64);
+	const bytes = new Uint8Array(binary.length);
+	for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+	return bytes;
+}
+
+async function handleVerifyCollectionClick() {
+	if (!lastMintedNftMint) return;
+
+	verifyCollectionIdle.style.display = "none";
+	verifyCollectionError.style.display = "none";
+	verifyCollectionWorking.style.display = "block";
+
+	try {
+		const conn = RelaxHolder.getConnection();
+		const walletProvider = conn.rawProvider;
+		const config = window.RELAX_NFT_CONFIG;
+
+		const { transaction } = await RelaxNFT.verifyCollection({
+			connection: connection,
+			nftMint: lastMintedNftMint,
+			collectionMint: config.collectionMint,
+			collectionAuthority: config.collectionAuthority,
+			payer: conn.publicKey
+		});
+		// Same reason as the mint flow above: not part of the wire
+		// format, must be captured from the transaction we built,
+		// before it goes anywhere.
+		const verifyLastValidBlockHeight = transaction.lastValidBlockHeight;
+
+		const partiallySignedTx = await walletProvider.signTransaction(transaction);
+		const serializedBase64 = bytesToBase64(partiallySignedTx.serialize({ requireAllSignatures: false }));
+
+		const verifyEndpoint = new URL(config.rpcUrl).origin + "/verify-collection";
+		const response = await fetch(verifyEndpoint, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ transaction: serializedBase64, network: config.network })
+		});
+		const result = await response.json();
+		if (!response.ok) {
+			const serverMessage = result && result.error && result.error.message;
+			throw new Error(serverMessage || "Verification request was rejected (status " + response.status + ").");
+		}
+
+		const fullySignedTx = solanaWeb3.Transaction.from(base64ToBytes(result.transaction));
+		const rawTx = fullySignedTx.serialize();
+		const signature = await connection.sendRawTransaction(rawTx, { skipPreflight: false });
+		await pollMintConfirmation(connection, signature, verifyLastValidBlockHeight);
+
+		verifyCollectionWorking.style.display = "none";
+		verifyCollectionSuccess.style.display = "block";
+	} catch (err) {
+		verifyCollectionWorking.style.display = "none";
+		verifyCollectionIdle.style.display = "block";
+		verifyCollectionError.textContent = err && err.message ? err.message : "Verification failed.";
+		verifyCollectionError.style.display = "block";
+	}
+}
+
+verifyCollectionBtn.addEventListener("click", handleVerifyCollectionClick);
+
 async function handleConfirmAndMint() {
 	clearError();
 	successBox.style.display = "none";
@@ -1115,7 +1245,7 @@ async function handleConfirmAndMint() {
 
 		renderTimeline(5, 5);
 		const sellerFeeBasisPoints = Math.round(ctx.royaltyPercent * 100);
-		const { transaction } = await RelaxNFT.mint({
+		const { transaction, mint } = await RelaxNFT.mint({
 			connection: connection,
 			owner: conn.publicKey,
 			name: ctx.name,
@@ -1152,6 +1282,8 @@ async function handleConfirmAndMint() {
 		renderTimeline(8, 8);
 		explorerLink.href = "https://explorer.solana.com/tx/" + signature + "?cluster=" + SOLANA_CLUSTER;
 		metadataLink.href = uploadedMetadataUri;
+		lastMintedNftMint = mint;
+		resetVerifyCollectionUi();
 		successBox.style.display = "block";
 		formCard.querySelectorAll(".field, #costSummary, #timeline").forEach((el) => { el.style.display = "none"; });
 		mintBtn.style.display = "none";
@@ -1196,6 +1328,8 @@ mintBtn.addEventListener("click", handleMintButtonClick);
 // shows the form again — the wallet stays connected exactly as
 // afterWalletConnected() already left it.
 function resetFormForNewMint() {
+	lastMintedNftMint = null;
+	verifyCollectionSection.style.display = "none";
 	document.getElementById("nftName").value = "";
 	document.getElementById("nftDescription").value = "";
 	document.getElementById("royaltyPercent").value = "0";
