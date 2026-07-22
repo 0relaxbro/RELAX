@@ -277,7 +277,7 @@ estimate step and don't confirm funding.
 <label>Image / GIF</label>
 <div class="file-drop" id="imageDrop">Click to choose an image or GIF</div>
 <input type="file" id="imageInput" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none;">
-<div class="hint">PNG, JPG, WebP, or GIF. This becomes the NFT's cover image either way. There's no enforced NFT resolution standard, but most wallets/marketplaces display media in a square (1:1) box and crop to fit (confirmed live in Phantom) — e.g. 1500×1500 shows edge-to-edge everywhere. Other ratios still work fine, just expect the edges to get cut off depending on where it's viewed.</div>
+<div class="hint">PNG, JPG, WebP, or GIF. This becomes the NFT's cover image either way. There's no enforced NFT resolution standard, but most wallets/marketplaces display media in a square (1:1) box and crop to fit — e.g. 1500×1500 shows edge-to-edge everywhere. Other ratios still work fine, just expect the edges to get cut off depending on where it's viewed.</div>
 <div class="hint aspect-warning" id="imageAspectWarning" style="display:none;"></div>
 </div>
 
@@ -293,7 +293,7 @@ estimate step and don't confirm funding.
 <label>Video (MP4) <span class="holder-only-tag">HOLDER</span></label>
 <div class="file-drop" id="videoDrop">Click to choose an MP4</div>
 <input type="file" id="videoInput" accept="video/mp4" style="display:none;">
-<div class="hint">Optional. The image above becomes the required cover for this video. Same guidance as the cover image: most wallets/marketplaces show media in a square (1:1) box and crop to fit (confirmed live in Phantom) — a 16:9 clip will have its left/right edges cut off there.</div>
+<div class="hint">Optional. The image above becomes the required cover for this video. Same guidance as the cover image: most wallets/marketplaces show media in a square (1:1) box and crop to fit — a 16:9 clip will have its left/right edges cut off there.</div>
 <div class="hint aspect-warning" id="videoAspectWarning" style="display:none;"></div>
 </div>
 
@@ -593,7 +593,7 @@ function reportAspectRatio(warningEl, width, height) {
 	const orientation = ratio > 1 ? "landscape" : "portrait";
 	warningEl.textContent =
 		"This file is " + width + "×" + height + " (" + ratio.toFixed(2) + ":1 " + orientation +
-		"), not square — most wallets and marketplaces display media in a square box and will crop it to fit (confirmed live in Phantom), so edges of this file are likely to get cut off. " +
+		"), not square — most wallets and marketplaces display media in a square box and will crop it to fit, so edges of this file are likely to get cut off. " +
 		"Square (1:1) media, e.g. 1500×1500, displays most consistently. This won't stop you from minting.";
 	warningEl.style.display = "block";
 }
@@ -619,7 +619,7 @@ function reportImageAspectRatio(width, height, file) {
 	const textLine = document.createElement("div");
 	textLine.textContent =
 		"This file is " + width + "×" + height + " (" + ratio.toFixed(2) + ":1 " + orientation +
-		"), not square — most wallets and marketplaces display media in a square box and will crop it to fit (confirmed live in Phantom), so edges of this file are likely to get cut off. " +
+		"), not square — most wallets and marketplaces display media in a square box and will crop it to fit, so edges of this file are likely to get cut off. " +
 		"Square (1:1) media, e.g. 1500×1500, displays most consistently. This won't stop you from minting.";
 	imageAspectWarning.appendChild(textLine);
 
