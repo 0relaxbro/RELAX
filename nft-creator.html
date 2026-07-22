@@ -121,6 +121,7 @@ font-size:14px;
 }
 .field textarea{ resize:vertical; min-height:70px; }
 .field .hint{ font-size:11px; color:var(--muted); margin-top:6px; }
+.field .hint.aspect-warning{ color:var(--warn); }
 
 /* Native number input spin arrows default to a white background in
    most browsers, which clashes hard with the dark theme — same fix
@@ -168,6 +169,12 @@ color:var(--danger); border-radius:8px; padding:0 12px; cursor:pointer;
 .add-attribute-btn{
 font-size:12px; color:var(--green); background:none; border:none; cursor:pointer; padding:6px 0;
 }
+
+.crop-square-btn{
+font-size:12px; color:var(--green); background:none; border:1px solid var(--green); border-radius:6px;
+cursor:pointer; padding:5px 10px; margin-top:6px;
+}
+.crop-square-btn:hover{ background:rgba(52,211,153,.08); }
 
 .preview-box{
 border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-bottom:16px;
@@ -270,7 +277,8 @@ estimate step and don't confirm funding.
 <label>Image / GIF</label>
 <div class="file-drop" id="imageDrop">Click to choose an image or GIF</div>
 <input type="file" id="imageInput" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none;">
-<div class="hint">PNG, JPG, WebP, or GIF. This becomes the NFT's cover image either way.</div>
+<div class="hint">PNG, JPG, WebP, or GIF. This becomes the NFT's cover image either way. There's no enforced NFT resolution standard, but most wallets/marketplaces display media in a square (1:1) box and crop to fit (confirmed live in Phantom) — e.g. 1500×1500 shows edge-to-edge everywhere. Other ratios still work fine, just expect the edges to get cut off depending on where it's viewed.</div>
+<div class="hint aspect-warning" id="imageAspectWarning" style="display:none;"></div>
 </div>
 
 <div class="field">
@@ -285,7 +293,8 @@ estimate step and don't confirm funding.
 <label>Video (MP4) <span class="holder-only-tag">HOLDER</span></label>
 <div class="file-drop" id="videoDrop">Click to choose an MP4</div>
 <input type="file" id="videoInput" accept="video/mp4" style="display:none;">
-<div class="hint">Optional. The image above becomes the required cover for this video.</div>
+<div class="hint">Optional. The image above becomes the required cover for this video. Same guidance as the cover image: most wallets/marketplaces show media in a square (1:1) box and crop to fit (confirmed live in Phantom) — a 16:9 clip will have its left/right edges cut off there.</div>
+<div class="hint aspect-warning" id="videoAspectWarning" style="display:none;"></div>
 </div>
 
 <div class="field">
@@ -349,8 +358,10 @@ const formCard = document.getElementById("formCard");
 const holderSection = document.getElementById("holderSection");
 const imageDrop = document.getElementById("imageDrop");
 const imageInput = document.getElementById("imageInput");
+const imageAspectWarning = document.getElementById("imageAspectWarning");
 const videoDrop = document.getElementById("videoDrop");
 const videoInput = document.getElementById("videoInput");
+const videoAspectWarning = document.getElementById("videoAspectWarning");
 const previewBox = document.getElementById("previewBox");
 const attributesList = document.getElementById("attributesList");
 const addAttributeBtn = document.getElementById("addAttributeBtn");
@@ -533,6 +544,7 @@ imageInput.addEventListener("change", () => {
 	imageFile = file;
 	imageDrop.textContent = imageFile.name;
 	imageDrop.classList.add("has-file");
+	checkImageAspectRatio(file);
 	renderPreview();
 	updateMintButtonState();
 	resetToIdlePhase();
@@ -553,10 +565,139 @@ videoInput.addEventListener("change", () => {
 	videoFile = file;
 	videoDrop.textContent = videoFile.name;
 	videoDrop.classList.add("has-file");
+	checkVideoAspectRatio(file);
 	renderPreview();
 	updateMintButtonState();
 	resetToIdlePhase();
 });
+
+// FIX (added 22 Jul 2026, per feedback): there's no enforced NFT
+// resolution standard (Metaplex metadata doesn't dictate media
+// dimensions), but most wallets/marketplaces render gallery/grid
+// previews in a SQUARE box — exactly what this page's own preview-box
+// does (aspect-ratio:1). A non-square file isn't wrong, it just may
+// display with padding (letterboxed) or get cropped depending on
+// where it's viewed, and the person picking a file has no way to know
+// that ahead of time otherwise. Measures the actual file (not
+// filename/mime — real pixel dimensions) and shows a plain-language,
+// non-blocking heads-up if it's meaningfully off-square. This never
+// prevents upload/mint — it's informational only.
+function reportAspectRatio(warningEl, width, height) {
+	if (!width || !height) { warningEl.style.display = "none"; return; }
+	const ratio = width / height;
+	// Within ~8% of square counts as "close enough" — not worth a warning.
+	if (Math.abs(ratio - 1) <= 0.08) {
+		warningEl.style.display = "none";
+		return;
+	}
+	const orientation = ratio > 1 ? "landscape" : "portrait";
+	warningEl.textContent =
+		"This file is " + width + "×" + height + " (" + ratio.toFixed(2) + ":1 " + orientation +
+		"), not square — most wallets and marketplaces display media in a square box and will crop it to fit (confirmed live in Phantom), so edges of this file are likely to get cut off. " +
+		"Square (1:1) media, e.g. 1500×1500, displays most consistently. This won't stop you from minting.";
+	warningEl.style.display = "block";
+}
+
+// FIX (added 22 Jul 2026, per feedback): the plain-text warning alone
+// still left the person to go crop the image themselves elsewhere.
+// For anything except GIF, a client-side center-crop to square is
+// trivial and instant (canvas, no upload/server round-trip needed) —
+// so offer it directly as a button right where the warning already
+// is. GIF is deliberately excluded: canvas only ever captures ONE
+// still frame of a GIF, so "cropping" it here would silently turn an
+// animated GIF into a static image — a much worse surprise than the
+// padding/cropping this warning is about in the first place.
+function reportImageAspectRatio(width, height, file) {
+	imageAspectWarning.innerHTML = "";
+	if (!width || !height) { imageAspectWarning.style.display = "none"; return; }
+	const ratio = width / height;
+	if (Math.abs(ratio - 1) <= 0.08) {
+		imageAspectWarning.style.display = "none";
+		return;
+	}
+	const orientation = ratio > 1 ? "landscape" : "portrait";
+	const textLine = document.createElement("div");
+	textLine.textContent =
+		"This file is " + width + "×" + height + " (" + ratio.toFixed(2) + ":1 " + orientation +
+		"), not square — most wallets and marketplaces display media in a square box and will crop it to fit (confirmed live in Phantom), so edges of this file are likely to get cut off. " +
+		"Square (1:1) media, e.g. 1500×1500, displays most consistently. This won't stop you from minting.";
+	imageAspectWarning.appendChild(textLine);
+
+	if (file.type === "image/gif") {
+		const note = document.createElement("div");
+		note.style.marginTop = "4px";
+		note.textContent = "Auto-crop isn't offered for GIFs — it would only capture one still frame and silently lose the animation. Crop it in an external editor first if you want a square version.";
+		imageAspectWarning.appendChild(note);
+	} else {
+		const cropBtn = document.createElement("button");
+		cropBtn.type = "button";
+		cropBtn.className = "crop-square-btn";
+		cropBtn.textContent = "Crop to square";
+		cropBtn.addEventListener("click", () => cropImageToSquare(file));
+		imageAspectWarning.appendChild(cropBtn);
+	}
+	imageAspectWarning.style.display = "block";
+}
+
+// Center-crops to a square (takes the smaller of width/height as the
+// crop size, cuts equally off the longer side's two ends) and swaps
+// the cropped result in as `imageFile` — same as if the person had
+// picked this file from the start. Re-runs the same aspect check
+// afterward (will now correctly show no warning) and invalidates any
+// stale cost estimate, exactly like choosing a different file would.
+async function cropImageToSquare(file) {
+	try {
+		const bitmap = await createImageBitmap(file);
+		const size = Math.min(bitmap.width, bitmap.height);
+		const sx = (bitmap.width - size) / 2;
+		const sy = (bitmap.height - size) / 2;
+		const canvas = document.createElement("canvas");
+		canvas.width = size;
+		canvas.height = size;
+		canvas.getContext("2d").drawImage(bitmap, sx, sy, size, size, 0, 0, size, size);
+		const mimeType = (file.type === "image/webp" || file.type === "image/png") ? file.type : "image/jpeg";
+		const ext = mimeType.split("/")[1];
+		const blob = await new Promise((resolve) => canvas.toBlob(resolve, mimeType, 0.92));
+		if (!blob) throw new Error("Canvas couldn't produce the cropped image.");
+		const croppedFile = new File([blob], file.name.replace(/\.[^.]+$/, "") + "-square." + ext, { type: mimeType });
+
+		imageFile = croppedFile;
+		imageInput.value = "";
+		imageDrop.textContent = croppedFile.name;
+		imageDrop.classList.add("has-file");
+		reportImageAspectRatio(size, size, croppedFile);
+		renderPreview();
+		updateMintButtonState();
+		resetToIdlePhase();
+	} catch (err) {
+		showError("Couldn't crop image: " + (err && err.message ? err.message : String(err)));
+	}
+}
+
+function checkImageAspectRatio(file) {
+	imageAspectWarning.style.display = "none";
+	const img = new Image();
+	const url = URL.createObjectURL(file);
+	img.onload = () => {
+		URL.revokeObjectURL(url);
+		reportImageAspectRatio(img.naturalWidth, img.naturalHeight, file);
+	};
+	img.onerror = () => URL.revokeObjectURL(url);
+	img.src = url;
+}
+
+function checkVideoAspectRatio(file) {
+	videoAspectWarning.style.display = "none";
+	const video = document.createElement("video");
+	const url = URL.createObjectURL(file);
+	video.preload = "metadata";
+	video.onloadedmetadata = () => {
+		URL.revokeObjectURL(url);
+		reportAspectRatio(videoAspectWarning, video.videoWidth, video.videoHeight);
+	};
+	video.onerror = () => URL.revokeObjectURL(url);
+	video.src = url;
+}
 
 function renderPreview() {
 	if (videoFile) {
@@ -760,6 +901,38 @@ async function handleEstimateCost() {
 		const numUploads = 1 + (videoBytes ? 1 : 0) + 1;
 		const rawStorageTotal = totalMediaCost + metadataCost;
 		const prefundTotal = rawStorageTotal + (rawStorageTotal / 5n) + BigInt(5000 * numUploads);
+
+		// FIX (found live, 22 Jul 2026, via insufficient-balance testing):
+		// previously the ONLY insufficient-balance check was the wallet's
+		// own simulation, surfaced only after the user had already gone
+		// through Estimate + clicked CONFIRM & MINT — leaving them stuck
+		// looking at Phantom's own "Bu işlem için yeterli SOL'unuz yok"
+		// warning with nothing from us explaining it, having to notice
+		// and click İptal/Cancel themselves. Checking the connected
+		// wallet's actual on-chain balance here means a short wallet is
+		// caught at ESTIMATE COST — before any wallet popup ever opens —
+		// with a clear, specific message. This covers the real total
+		// cost, not just Irys storage: the mint account's rent-exempt
+		// deposit (paid directly in the mint transaction, never through
+		// Irys) and a buffer for both transactions' own network fees.
+		const ownerPk = new solanaWeb3.PublicKey(conn.publicKey);
+		const mintRentLamports = BigInt(await connection.getMinimumBalanceForRentExemption(RelaxLegacyProvider.MINT_ACCOUNT_SIZE));
+		const TX_FEE_BUFFER_LAMPORTS = 20000n; // generous cover for both transactions' network + any priority fee
+		const totalNeededLamports = prefundTotal + mintRentLamports + TX_FEE_BUFFER_LAMPORTS;
+		const walletBalanceLamports = BigInt(await connection.getBalance(ownerPk));
+		if (walletBalanceLamports < totalNeededLamports) {
+			const haveSol = (Number(walletBalanceLamports) / 1e9).toFixed(6);
+			const needSol = (Number(totalNeededLamports) / 1e9).toFixed(6);
+			const shortSol = (Number(totalNeededLamports - walletBalanceLamports) / 1e9).toFixed(6);
+			const topUpHint = SOLANA_CLUSTER === "devnet"
+				? "Get free devnet SOL from a faucet and try again."
+				: "Add more SOL to your wallet and try again.";
+			throw new Error(
+				"Insufficient SOL balance. This mint needs about " + needSol +
+				" SOL total (storage + mint account rent + network fees) — your wallet has " +
+				haveSol + " SOL, about " + shortSol + " SOL short. " + topUpHint
+			);
+		}
 
 		costSummary.style.display = "block";
 		costMedia.textContent = (Number(totalMediaCost) / 1e9).toFixed(6) + " SOL";
@@ -993,11 +1166,14 @@ function resetFormForNewMint() {
 	imageInput.value = "";
 	imageDrop.textContent = "Click to choose an image or GIF";
 	imageDrop.classList.remove("has-file");
+	imageAspectWarning.style.display = "none";
+	imageAspectWarning.innerHTML = "";
 
 	videoFile = null;
 	videoInput.value = "";
 	videoDrop.textContent = "Click to choose an MP4";
 	videoDrop.classList.remove("has-file");
+	videoAspectWarning.style.display = "none";
 
 	attributesList.innerHTML = "";
 	renderPreview();
