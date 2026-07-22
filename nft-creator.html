@@ -664,14 +664,50 @@ async function handleEstimateCost() {
 		const videoCost = videoBytes ? await RelaxStorage.estimateCost(walletProvider, videoBytes) : 0n;
 		const totalMediaCost = imageCost + videoCost;
 
+		// FIX (22 Jul 2026): estimate the metadata cost NOW too, using a
+		// representative metadata object (real form fields, dummy URIs of
+		// the exact length a real Irys gateway URI has: 25-char prefix +
+		// 43-char base58 id). Irys gateway URIs are fixed-length, so this
+		// sizes the final JSON accurately. This lets us fund media +
+		// metadata together in a SINGLE funding transaction below, instead
+		// of one for media then a second one for metadata — cutting one
+		// wallet approval out of every mint. Also lets us show a real
+		// "Metadata storage" number instead of "calculated after…".
+		const DUMMY_IRYS_URI = "https://gateway.irys.xyz/" + "1".repeat(43);
+		const representativeMetadata = RelaxMetadataBuilder.build({
+			name: document.getElementById("nftName").value,
+			description: document.getElementById("nftDescription").value,
+			imageUri: DUMMY_IRYS_URI,
+			imageContentType: imageFile.type || "image/png",
+			animationUri: allowedVideoFile ? DUMMY_IRYS_URI : undefined,
+			animationContentType: allowedVideoFile ? (allowedVideoFile.type || "video/mp4") : undefined,
+			attributes: isHolder ? collectAttributes() : [],
+			ownerAddress: conn.publicKey,
+			wasHolderAtMintTime: isHolder
+		});
+		const representativeMetadataBytes = new TextEncoder().encode(JSON.stringify(representativeMetadata));
+		const metadataCost = await RelaxStorage.estimateCost(walletProvider, representativeMetadataBytes);
+
+		// Number of separate Irys uploads this mint will do (image +
+		// optional video + metadata). Each upload's own internal funding
+		// check adds a per-item buffer of price/5 + 5000 (see
+		// irys-web-provider.js withFundingBuffer). Pre-funding the summed
+		// buffered total up front guarantees every one of those internal
+		// checks finds enough loaded balance and never triggers its own
+		// (extra popup) top-up. Any unused remainder just stays as Irys
+		// loaded balance for the next mint — nothing is lost.
+		const numUploads = 1 + (videoBytes ? 1 : 0) + 1;
+		const rawStorageTotal = totalMediaCost + metadataCost;
+		const prefundTotal = rawStorageTotal + (rawStorageTotal / 5n) + BigInt(5000 * numUploads);
+
 		costSummary.style.display = "block";
 		costMedia.textContent = (Number(totalMediaCost) / 1e9).toFixed(6) + " SOL";
-		costMetadata.textContent = "calculated after media upload";
+		costMetadata.textContent = (Number(metadataCost) / 1e9).toFixed(6) + " SOL";
 		costMint.textContent = "shown in your wallet before you approve";
 
 		pendingContext = {
 			imageBytes, videoBytes, allowedVideoFile,
-			totalMediaCost, royaltyPercent,
+			totalMediaCost, metadataCost, prefundTotal, royaltyPercent,
 			name: document.getElementById("nftName").value,
 			description: document.getElementById("nftDescription").value,
 			attributes: isHolder ? collectAttributes() : []
@@ -748,7 +784,15 @@ async function handleConfirmAndMint() {
 
 	try {
 		renderTimeline(1, 1);
-		await RelaxStorage.ensureFunded(walletProvider, ctx.totalMediaCost);
+		// FIX (22 Jul 2026): fund media + metadata together, ONCE, up
+		// front (prefundTotal was computed with per-upload buffers in the
+		// estimate phase). Every upload below then draws from this loaded
+		// balance, so none of them triggers its own funding transaction —
+		// removing the second "İşlemi onayla" popup that used to appear
+		// before the metadata upload. If the wallet already has enough
+		// Irys balance loaded from a previous mint, ensureFunded is a
+		// no-op and NO funding popup appears at all.
+		await RelaxStorage.ensureFunded(walletProvider, ctx.prefundTotal);
 
 		renderTimeline(2, 2);
 		uploadedImageUri = await RelaxStorage.uploadMedia(walletProvider, ctx.imageBytes, imageFile.type || "image/png");
@@ -770,10 +814,11 @@ async function handleConfirmAndMint() {
 		});
 
 		renderTimeline(4, 4);
-		const metadataBytes = new TextEncoder().encode(JSON.stringify(metadataObject));
-		const metadataCost = await RelaxStorage.estimateCost(walletProvider, metadataBytes);
-		costMetadata.textContent = (Number(metadataCost) / 1e9).toFixed(6) + " SOL";
-		await RelaxStorage.ensureFunded(walletProvider, metadataCost);
+		// Metadata storage was already funded as part of prefundTotal
+		// above, so this upload draws from loaded balance — no separate
+		// funding popup. (uploadMetadataJson still self-checks internally
+		// and would top up if somehow short, but with the upfront prefund
+		// it never needs to.)
 		uploadedMetadataUri = await RelaxStorage.uploadMetadataJson(walletProvider, metadataObject);
 
 		renderTimeline(5, 5);
