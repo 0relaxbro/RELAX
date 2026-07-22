@@ -686,6 +686,45 @@ async function handleEstimateCost() {
 	}
 }
 
+// HTTP-only confirmation (no WebSocket). Polls signature status and,
+// when the transaction's blockhash expires (current block height passes
+// lastValidBlockHeight), does one final status check before declaring
+// it expired — so a tx that landed in the very last valid block isn't
+// falsely reported as failed.
+async function pollMintConfirmation(conn, signature, lastValidBlockHeight, timeoutMs) {
+	timeoutMs = timeoutMs || 90000;
+	const started = Date.now();
+	while (true) {
+		const statuses = await conn.getSignatureStatuses([signature]);
+		const st = statuses && statuses.value && statuses.value[0];
+		if (st) {
+			if (st.err) {
+				throw new Error("Transaction failed on-chain: " + JSON.stringify(st.err) + " (signature " + signature + ")");
+			}
+			if (st.confirmationStatus === "confirmed" || st.confirmationStatus === "finalized") {
+				return st;
+			}
+		}
+		if (typeof lastValidBlockHeight === "number") {
+			const height = await conn.getBlockHeight("confirmed");
+			if (height > lastValidBlockHeight) {
+				// Blockhash window passed — one last check in case it
+				// landed right at the edge before giving up.
+				const final = await conn.getSignatureStatuses([signature]);
+				const fst = final && final.value && final.value[0];
+				if (fst && !fst.err && (fst.confirmationStatus === "confirmed" || fst.confirmationStatus === "finalized")) {
+					return fst;
+				}
+				throw new Error("Transaction expired before confirming. Check " + signature + " on Solana Explorer before retrying — it likely never landed.");
+			}
+		}
+		if (Date.now() - started > timeoutMs) {
+			throw new Error("Confirmation timed out after " + Math.round(timeoutMs / 1000) + "s. The transaction may still land — check " + signature + " on Solana Explorer before retrying.");
+		}
+		await new Promise((r) => setTimeout(r, 2000));
+	}
+}
+
 async function handleConfirmAndMint() {
 	clearError();
 	successBox.style.display = "none";
@@ -747,6 +786,10 @@ async function handleConfirmAndMint() {
 			metadataUri: uploadedMetadataUri,
 			sellerFeeBasisPoints: sellerFeeBasisPoints
 		});
+		// lastValidBlockHeight is NOT part of the serialized wire format,
+		// so it can't be read back off the wallet-returned signedTx — read
+		// it from the transaction WE built, before signing.
+		const mintLastValidBlockHeight = transaction.lastValidBlockHeight;
 
 		renderTimeline(6, 6);
 		const signedTx = await walletProvider.signTransaction(transaction);
@@ -754,23 +797,20 @@ async function handleConfirmAndMint() {
 		const signature = await connection.sendRawTransaction(rawTx, { skipPreflight: false });
 
 		renderTimeline(7, 7);
-		// FIX (found via review, 21 Jul 2026): confirming by signature
-		// alone can hang ambiguously if the blockhash expires before
-		// landing. The transaction already carries its own blockhash
-		// (set when RelaxNFT.mint() built it) — using the
-		// blockhash-aware confirmation form gives a definitive
-		// "expired" instead of an indefinite wait. Falls back to a
-		// signature-only confirm if, for any reason, the transaction
-		// object doesn't expose these (older web3.js versions vary).
-		if (signedTx.recentBlockhash && typeof signedTx.lastValidBlockHeight === "number") {
-			await connection.confirmTransaction({
-				signature: signature,
-				blockhash: signedTx.recentBlockhash,
-				lastValidBlockHeight: signedTx.lastValidBlockHeight
-			}, "confirmed");
-		} else {
-			await connection.confirmTransaction(signature, "confirmed");
-		}
+		// FIX (found live via devnet testing, 22 Jul 2026): web3.js's
+		// connection.confirmTransaction() opens a WebSocket subscription
+		// (signatureSubscribe) under the hood, deriving wss:// from the
+		// HTTP RPC URL. Our worker RPC proxy only serves POST — it has no
+		// WebSocket endpoint — so that subscription fails endlessly
+		// ("WebSocket connection to wss://.../rpc-devnet failed") and the
+		// confirm step hangs forever even though the transaction already
+		// landed. Poll over plain HTTP instead (getSignatureStatuses +
+		// getBlockHeight, both already in the worker's allowlist), the
+		// same pattern the Swap Hybrid branch's confirmRouterSignature()
+		// uses. Removing confirmTransaction also removes the ONLY thing on
+		// this page that ever tried to open a WebSocket, so the ws errors
+		// disappear entirely.
+		await pollMintConfirmation(connection, signature, mintLastValidBlockHeight);
 
 		renderTimeline(8, 8);
 		explorerLink.href = "https://explorer.solana.com/tx/" + signature + "?cluster=" + SOLANA_CLUSTER;
