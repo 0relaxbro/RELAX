@@ -563,6 +563,15 @@ function renderPreview() {
 	} else if (imageFile) {
 		const url = URL.createObjectURL(imageFile);
 		previewBox.innerHTML = '<img src="' + url + '" alt="preview">';
+	} else {
+		// FIX (found live, 22 Jul 2026, via MINT ANOTHER testing): this
+		// function only ever set previewBox.innerHTML inside the two
+		// branches above — with neither file selected (exactly the state
+		// resetFormForNewMint() puts things back into), it never
+		// executed at all, leaving whatever video/image was on screen
+		// from the just-completed mint still showing. Restore the same
+		// placeholder markup the page starts with.
+		previewBox.innerHTML = '<span class="placeholder">Upload an image to preview</span>';
 	}
 }
 
