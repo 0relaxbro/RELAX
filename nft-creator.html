@@ -264,6 +264,26 @@ NFTs as permanent mainnet assets.
 
 <div id="errorBox" class="error-box"></div>
 
+<!-- FIX/FEATURE (added 22 Jul 2026): the post-mint "Verify with RELAX
+     Collection" button only ever appears for the NFT you JUST minted —
+     someone who minted before becoming a $RELAX holder (or who just
+     wants to verify an older mint) had no way back in. This standalone
+     panel does the exact same verify flow against ANY mint address
+     they own, independent of the mint form below. Hidden entirely
+     (same as the post-mint one) until both the config's collectionMint
+     AND the connected wallet's holder status are confirmed. -->
+<div id="verifyExistingSection" class="card" style="display:none; margin-bottom:20px;">
+<div style="font-weight:600; margin-bottom:6px;">Verify an existing NFT</div>
+<div class="hint" style="margin-bottom:12px;">Already minted a RELAX NFT before becoming a $RELAX holder? Verify it as an official Collection member here — same perk, any past mint of yours.</div>
+<input type="text" id="verifyExistingMintInput" placeholder="NFT mint address" style="width:100%; box-sizing:border-box; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:12px 14px; color:var(--text); font-size:13px; margin-bottom:10px;">
+<div id="verifyExistingIdle">
+<button id="verifyExistingBtn" class="mint-btn" style="background:transparent; border:1px solid var(--green); color:var(--green);">VERIFY THIS NFT</button>
+</div>
+<div id="verifyExistingWorking" style="display:none;" class="hint">Verifying…</div>
+<div id="verifyExistingSuccess" style="display:none; color:var(--green);">✓ Verified as a member of the RELAX Collection.</div>
+<div id="verifyExistingError" style="display:none; color:var(--danger); font-size:13px; margin-top:8px;"></div>
+</div>
+
 <div id="formCard" class="card">
 
 <div class="field">
@@ -444,6 +464,13 @@ const verifyCollectionBtn = document.getElementById("verifyCollectionBtn");
 const verifyCollectionWorking = document.getElementById("verifyCollectionWorking");
 const verifyCollectionSuccess = document.getElementById("verifyCollectionSuccess");
 const verifyCollectionError = document.getElementById("verifyCollectionError");
+const verifyExistingSection = document.getElementById("verifyExistingSection");
+const verifyExistingMintInput = document.getElementById("verifyExistingMintInput");
+const verifyExistingIdle = document.getElementById("verifyExistingIdle");
+const verifyExistingBtn = document.getElementById("verifyExistingBtn");
+const verifyExistingWorking = document.getElementById("verifyExistingWorking");
+const verifyExistingSuccess = document.getElementById("verifyExistingSuccess");
+const verifyExistingError = document.getElementById("verifyExistingError");
 
 let isHolder = false;
 let imageFile = null;
@@ -485,6 +512,7 @@ async function afterWalletConnected(publicKeyStr) {
 	videoDrop.textContent = "Click to choose an MP4";
 	videoDrop.classList.remove("has-file");
 	renderPreview();
+	resetVerifyExistingUi();
 
 	walletBox.innerHTML =
 		'<div class="wallet-connected-row"><span>Connected: <span class="addr">' +
@@ -512,6 +540,7 @@ async function afterWalletConnected(publicKeyStr) {
 		isHolder = false;
 	}
 
+	resetVerifyExistingUi();
 	updateMintButtonState();
 }
 
@@ -1094,6 +1123,19 @@ function resetVerifyCollectionUi() {
 	verifyCollectionError.style.display = "none";
 }
 
+// Same gating logic as resetVerifyCollectionUi above, for the
+// standalone "verify an existing NFT" panel — shown independent of
+// whether the person is in the middle of minting anything right now.
+function resetVerifyExistingUi() {
+	const config = window.RELAX_NFT_CONFIG;
+	const canOfferVerify = isHolder && !!config.collectionMint && !!config.collectionAuthority;
+	verifyExistingSection.style.display = canOfferVerify ? "block" : "none";
+	verifyExistingIdle.style.display = "block";
+	verifyExistingWorking.style.display = "none";
+	verifyExistingSuccess.style.display = "none";
+	verifyExistingError.style.display = "none";
+}
+
 function bytesToBase64(bytes) {
 	let binary = "";
 	for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
@@ -1107,12 +1149,15 @@ function base64ToBytes(b64) {
 	return bytes;
 }
 
-async function handleVerifyCollectionClick() {
-	if (!lastMintedNftMint) return;
-
-	verifyCollectionIdle.style.display = "none";
-	verifyCollectionError.style.display = "none";
-	verifyCollectionWorking.style.display = "block";
+// Shared by both entry points (the post-mint button, which already
+// knows the mint it just created, and the standalone panel, which
+// takes an arbitrary mint address the person types in). `nftMint` can
+// be a PublicKey or a base58 string — both are accepted everywhere
+// downstream (see instruction-builder.js's pk() helper).
+async function verifyNftAsCollectionMember(nftMint, ui) {
+	ui.idle.style.display = "none";
+	ui.error.style.display = "none";
+	ui.working.style.display = "block";
 
 	try {
 		const conn = RelaxHolder.getConnection();
@@ -1121,7 +1166,7 @@ async function handleVerifyCollectionClick() {
 
 		const { transaction } = await RelaxNFT.verifyCollection({
 			connection: connection,
-			nftMint: lastMintedNftMint,
+			nftMint: nftMint,
 			collectionMint: config.collectionMint,
 			collectionAuthority: config.collectionAuthority,
 			payer: conn.publicKey
@@ -1151,17 +1196,44 @@ async function handleVerifyCollectionClick() {
 		const signature = await connection.sendRawTransaction(rawTx, { skipPreflight: false });
 		await pollMintConfirmation(connection, signature, verifyLastValidBlockHeight);
 
-		verifyCollectionWorking.style.display = "none";
-		verifyCollectionSuccess.style.display = "block";
+		ui.working.style.display = "none";
+		ui.success.style.display = "block";
 	} catch (err) {
-		verifyCollectionWorking.style.display = "none";
-		verifyCollectionIdle.style.display = "block";
-		verifyCollectionError.textContent = err && err.message ? err.message : "Verification failed.";
-		verifyCollectionError.style.display = "block";
+		ui.working.style.display = "none";
+		ui.idle.style.display = "block";
+		ui.error.textContent = err && err.message ? err.message : "Verification failed.";
+		ui.error.style.display = "block";
 	}
 }
 
-verifyCollectionBtn.addEventListener("click", handleVerifyCollectionClick);
+verifyCollectionBtn.addEventListener("click", () => {
+	if (!lastMintedNftMint) return;
+	verifyNftAsCollectionMember(lastMintedNftMint, {
+		idle: verifyCollectionIdle, working: verifyCollectionWorking,
+		success: verifyCollectionSuccess, error: verifyCollectionError
+	});
+});
+
+verifyExistingBtn.addEventListener("click", () => {
+	const rawInput = verifyExistingMintInput.value.trim();
+	if (!rawInput) {
+		verifyExistingError.textContent = "Enter the NFT's mint address first.";
+		verifyExistingError.style.display = "block";
+		return;
+	}
+	let mintPubkey;
+	try {
+		mintPubkey = new solanaWeb3.PublicKey(rawInput);
+	} catch (err) {
+		verifyExistingError.textContent = "That doesn't look like a valid Solana address.";
+		verifyExistingError.style.display = "block";
+		return;
+	}
+	verifyNftAsCollectionMember(mintPubkey, {
+		idle: verifyExistingIdle, working: verifyExistingWorking,
+		success: verifyExistingSuccess, error: verifyExistingError
+	});
+});
 
 async function handleConfirmAndMint() {
 	clearError();
