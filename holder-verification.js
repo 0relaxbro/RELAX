@@ -288,9 +288,42 @@ const RelaxHolder = (function () {
 	 * 0% for everyone — it's reserved for future perks on other tools,
 	 * e.g. NFT Creator / RELAX Market fee waivers.)
 	 */
+	// FIX (added 22 Jul 2026, testing convenience): actually holding
+	// $20+ of $RELAX in every wallet used for testing holder-gated
+	// features (NFT Creator's GIF/video/attributes, and later
+	// Collection Verify) is impractical during active development.
+	// This allowlist lets specific, KNOWN dev/test wallets bypass the
+	// real balance check entirely — they're always treated as
+	// holders, no RPC call needed. This is a DEV CONVENIENCE, not a
+	// security boundary: holderVerified is already documented
+	// elsewhere (metadata-builder.js) as cosmetic, not proof, for
+	// exactly this reason — nothing that actually needs real
+	// assurance should ever trust this flag alone. Keep this list
+	// short and intentional; it's visible in this file's own source
+	// (this is a public GitHub Pages site) so treat it as public
+	// information, never as a secret.
+	const DEV_HOLDER_ALLOWLIST = [
+		"8qU4Mdbdf5qU8gSwDcQM2Yd2yBTvzSX2AWnTtRuojgLp", // RELAX DEV
+		"9Ar5Y3aRBp4DE5HCXXubDhA3AjUabz9zyqwCpkn7j4gT", // RELAX LAB
+		"2cXdymQQL5wKixkGnZJVhSDGhfNUuiV5Lb5MJxYmBNu7", // RELAX NFT (relaxnft, RELAX_CREATOR_ADDRESS)
+		"FnzAtvKHc1BSfrFyEN4BC2LWvc3UXtQxwPxD15wSvJFu", // NFT Test
+		"3z9V8E2pMQmpALkkR3tdp3tvVJ6foTGoGkZT7vJUoj14"  // Solflare test
+	];
+
 	async function checkHolderStatus() {
 		if (!activeConnection) {
 			throw new Error("Wallet not connected.");
+		}
+
+		if (DEV_HOLDER_ALLOWLIST.includes(activeConnection.publicKey)) {
+			return {
+				isHolder: true,
+				usdValue: null,
+				tokenAmount: null,
+				priceUsd: null,
+				threshold: HOLDER_USD_THRESHOLD,
+				devAllowlisted: true
+			};
 		}
 
 		const [tokenAmount, priceUsd] = await Promise.all([
