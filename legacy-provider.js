@@ -136,10 +136,27 @@ const RelaxLegacyProvider = (function () {
 					symbol: symbol || "RELAX",
 					uri: metadataUri,
 					sellerFeeBasisPoints: sellerFeeBasisPoints || 0,
-					creators: [
-						{ address: RELAX_CREATOR_ADDRESS, verified: false, share: 0 },
-						{ address: ownerPk.toBase58(), verified: true, share: 100 }
-					],
+					// FIX (found live, 22 Jul 2026): Token Metadata's own
+					// "no duplicate creator addresses" check rejects this
+					// instruction outright (custom program error 0x3c) if
+					// RELAX_CREATOR_ADDRESS and the minting owner happen
+					// to be the SAME address — exactly the case when
+					// RELAX mints something with its own wallet (e.g.
+					// RELAX's own Collection NFT). Never surfaced before
+					// because every prior test mint used a different
+					// (Phantom/Solflare test) wallet as owner.
+					// Deduplicated here: when owner IS the RELAX creator
+					// address, list it just once (verified: true, share:
+					// 100 — the real signer's own entry), skipping the
+					// separate always-unverified RELAX entry since it
+					// would be a literal duplicate, not a distinct
+					// co-creator.
+					creators: ownerPk.toBase58() === RELAX_CREATOR_ADDRESS
+						? [{ address: ownerPk.toBase58(), verified: true, share: 100 }]
+						: [
+							{ address: RELAX_CREATOR_ADDRESS, verified: false, share: 0 },
+							{ address: ownerPk.toBase58(), verified: true, share: 100 }
+						],
 					// FIX (added 22 Jul 2026, part of the Verified Collection
 					// architecture): when a collection mint is supplied, this
 					// NFT's on-chain Collection struct is set (always
