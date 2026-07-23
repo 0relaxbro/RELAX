@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex">
 <title>RELAX — Collection Launch Admin</title>
 <style>
-:root { --bg:#050713; --panel:#0B0E1F; --border:#1E2340; --text:#F5F7FF; --muted:#929BB5; --accent:#5B7CFF; --ok:#14F195; --err:#FF5C5C; --warn:#F5A623; }
+:root { --bg:#050713; --panel:#0B0E1F; --border:#1E2340; --text:#F5F7FF; --muted:#929BB5; --accent:#5B7CFF; --ok:#14F195; --err:#FF5C5C; --warn:#F5A623; color-scheme: dark; }
 *{box-sizing:border-box;}
 body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:flex;}
 .sidebar{width:260px;flex-shrink:0;border-right:1px solid var(--border);padding:20px 12px;position:sticky;top:0;height:100vh;overflow-y:auto;}
@@ -1056,6 +1056,19 @@ const STEPS = [
 ];
 
 let currentStep = 0;
+
+// UI fix: number inputs across every step (royalty, items available,
+// name/uri length, mint limit, allocation, start offset...) all
+// showed the same annoying bug — typing over a default value like "0"
+// inserted rather than replaced (e.g. typing "10" over a "0" produced
+// "010"), because the browser doesn't select existing text on focus
+// by default. One delegated listener fixes it everywhere at once,
+// including inputs rendered later by steps that don't exist yet.
+document.addEventListener("focusin", (e) => {
+	if (e.target.tagName === "INPUT" && e.target.type === "number") {
+		e.target.select();
+	}
+});
 const completedSteps = new Set();
 
 function renderNav() {
