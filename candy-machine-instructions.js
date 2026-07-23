@@ -146,14 +146,16 @@ const RelaxCandyMachine = (function () {
 	 * InitializeV2 — creates and initializes a new CandyMachine
 	 * account. IMPORTANT: per docs.rs, the CandyMachine account must
 	 * already exist on-chain, pre-sized, before this instruction runs
-	 * (a separate SystemProgram.createAccount call — sizing math is
-	 * still open, see migration plan's "batch sizing" section). This
-	 * function only builds the InitializeV2 instruction itself.
+	 * (a separate SystemProgram.createAccount call using
+	 * getSpaceForCandy() below to size it correctly).
 	 *
-	 * Account order sourced from mpl-candy-machine/programs/
-	 * candy-machine-core README (InitializeV2 section), cross-checked
-	 * against two independent fetches of the same README returning
-	 * identical prose/order both times.
+	 * Account order sourced from mpl-candy-machine-core's own
+	 * bundled README.md (docs.rs source view, "initialize_v2"
+	 * section) — the authoritative, exact table, not prose
+	 * paraphrase. Corrected 23 Jul 2026: earlier draft of this
+	 * function was missing rule_set, collection_delegate_record, and
+	 * sysvar_instructions — all required even for plain NFTs (not
+	 * just pNFTs), per that table.
 	 *
 	 * @param {object} params
 	 * @param {string|PublicKey} params.candyMachine - the pre-created, pre-sized account
@@ -163,32 +165,43 @@ const RelaxCandyMachine = (function () {
 	 * @param {string|PublicKey} params.collectionMint
 	 * @param {string|PublicKey} params.collectionMasterEdition
 	 * @param {string|PublicKey} params.collectionUpdateAuthority
+	 * @param {string|PublicKey} params.collectionDelegateRecord - Metadata collection delegate PDA for the collection (must be approved beforehand — see migration plan's "verification is automatic" section)
 	 * @param {object} params.candyMachineData - see encodeCandyMachineData
+	 * @param {number} [params.tokenStandard=0] - 0 = NFT, 4 = pNFT. RELAX's badge collection uses plain NFT (0).
 	 * @returns {Promise<TransactionInstruction>}
 	 */
 	async function buildInitializeV2Instruction(params) {
 		const authorityPda = await findCandyMachineAuthorityPda(params.candyMachine);
+		const sysvarInstructions = new solanaWeb3.PublicKey("Sysvar1nstructions1111111111111111111111111");
 
 		const keys = [
 			{ pubkey: new solanaWeb3.PublicKey(params.candyMachine), isSigner: false, isWritable: true },
-			{ pubkey: authorityPda, isSigner: false, isWritable: false },
-			{ pubkey: new solanaWeb3.PublicKey(params.authority), isSigner: true, isWritable: false },
+			{ pubkey: authorityPda, isSigner: false, isWritable: true },
+			{ pubkey: new solanaWeb3.PublicKey(params.authority), isSigner: false, isWritable: false },
 			{ pubkey: new solanaWeb3.PublicKey(params.payer), isSigner: true, isWritable: true },
+			// rule_set: optional, only relevant for pNFT (tokenStandard=4).
+			// RELAX's badge collection is plain NFT, so this program ID
+			// itself is passed as a "no rule set" placeholder — Anchor's
+			// positional-optional-account convention (v0.26) requires
+			// SOME account here, not an omission, when a later required
+			// account follows it. Confirm against real devnet behavior.
+			{ pubkey: new solanaWeb3.PublicKey(CANDY_MACHINE_CORE_PROGRAM_ID), isSigner: false, isWritable: false },
 			{ pubkey: new solanaWeb3.PublicKey(params.collectionMetadata), isSigner: false, isWritable: false },
 			{ pubkey: new solanaWeb3.PublicKey(params.collectionMint), isSigner: false, isWritable: false },
 			{ pubkey: new solanaWeb3.PublicKey(params.collectionMasterEdition), isSigner: false, isWritable: false },
-			{ pubkey: new solanaWeb3.PublicKey(params.collectionUpdateAuthority), isSigner: true, isWritable: false },
+			{ pubkey: new solanaWeb3.PublicKey(params.collectionUpdateAuthority), isSigner: true, isWritable: true },
+			{ pubkey: new solanaWeb3.PublicKey(params.collectionDelegateRecord), isSigner: false, isWritable: true },
 			{ pubkey: new solanaWeb3.PublicKey(TOKEN_METADATA_PROGRAM_ID), isSigner: false, isWritable: false },
-			{ pubkey: new solanaWeb3.PublicKey(SYSTEM_PROGRAM_ID), isSigner: false, isWritable: false }
-			// NOTE: pNFT collections need two more accounts here
-			// (Token Authorization Rules program + account) — omitted
-			// for RELAX's badge collection, which uses plain NonFungible,
-			// not ProgrammableNonFungible. Revisit if that ever changes.
+			{ pubkey: new solanaWeb3.PublicKey(SYSTEM_PROGRAM_ID), isSigner: false, isWritable: false },
+			{ pubkey: sysvarInstructions, isSigner: false, isWritable: false }
+			// authorization_rules_program / authorization_rules: pNFT-only,
+			// omitted for RELAX's plain-NFT badge collection.
 		];
 
 		const data = concatAll([
 			DISCRIMINATOR.initializeV2,
-			encodeCandyMachineData(params.candyMachineData)
+			encodeCandyMachineData(params.candyMachineData),
+			u8(params.tokenStandard !== undefined ? params.tokenStandard : 0)
 		]);
 
 		return new solanaWeb3.TransactionInstruction({
@@ -196,6 +209,63 @@ const RelaxCandyMachine = (function () {
 			keys,
 			data
 		});
+	}
+
+	/**
+	 * Computes the exact byte size a CandyMachine account needs,
+	 * before it's created via SystemProgram.createAccount. Formula
+	 * derived field-by-field from mpl-candy-machine-core's own
+	 * bundled README.md byte-offset table (23 Jul 2026 research) —
+	 * not an estimate.
+	 *
+	 * @param {object} candyMachineData - same shape as encodeCandyMachineData expects
+	 * @returns {number} total bytes to allocate for the account
+	 */
+	function getSpaceForCandy(candyMachineData) {
+		const creatorsCount = (candyMachineData.creators || []).length;
+
+		let hiddenSectionOffset = 153 // discriminator through is_mutable, fixed header
+			+ 4 + (creatorsCount * 34); // creators: vec length prefix + 34 bytes each
+
+		if (candyMachineData.configLineSettings) {
+			hiddenSectionOffset += 1 + 249; // option flag + full ConfigLineSettings size
+		} else {
+			hiddenSectionOffset += 1; // option flag only (None)
+		}
+
+		if (candyMachineData.hiddenSettings) {
+			hiddenSectionOffset += 1 + 272; // option flag + full HiddenSettings size
+		} else {
+			hiddenSectionOffset += 1; // option flag only (None)
+		}
+
+		if (candyMachineData.hiddenSettings) {
+			// Hidden settings mode: no config-line hidden section at all.
+			return hiddenSectionOffset;
+		}
+
+		const settings = candyMachineData.configLineSettings;
+		if (!settings) {
+			throw new Error("getSpaceForCandy: must provide either configLineSettings or hiddenSettings");
+		}
+
+		const itemsAvailable = Number(candyMachineData.itemsAvailable);
+		const configLineSize = settings.nameLength + settings.uriLength;
+
+		let total = hiddenSectionOffset
+			+ 4                                          // item count
+			+ (itemsAvailable * configLineSize)           // config lines
+			+ Math.ceil(itemsAvailable / 8);              // byte mask
+
+		if (!settings.isSequential) {
+			total += itemsAvailable * 4; // mint indices array
+		}
+
+		total += 1; // rule set flag (always present, pNFT or not)
+		// rule set itself (32 bytes) omitted — RELAX's badge collection
+		// is plain NFT, no rule set.
+
+		return total;
 	}
 
 	/**
@@ -237,6 +307,7 @@ const RelaxCandyMachine = (function () {
 		findCandyMachineAuthorityPda,
 		encodeCandyMachineData,
 		encodeConfigLine,
+		getSpaceForCandy,
 		buildInitializeV2Instruction,
 		buildAddConfigLinesInstruction
 	};
