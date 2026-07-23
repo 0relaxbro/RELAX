@@ -92,12 +92,18 @@ diffs it against the form — stop guessing which side is wrong.</p>
 		<option value="base58" selected>base58 address string (matches Metaplex's JS SDK)</option>
 		<option value="bytes">raw 32 pubkey bytes</option>
 	</select>
+	<label>Merkle hash scheme (must also match the on-chain guard — two candidates found in research, unconfirmed which one Candy Guard actually uses)</label>
+	<select id="hashSchemeInput">
+		<option value="prefixed" selected>0x00/0x01 domain-separated (Solana's own spec)</option>
+		<option value="unprefixed">no prefix — OpenZeppelin MerkleProof.sol style</option>
+	</select>
 	<p class="hint">Metaplex's own SDK builds the tree from base58 address
 	<em>strings</em> (its <code>getMerkleProof</code> takes a base58 string),
 	so that is the default. If <code>route</code> comes back with
-	AddressNotFoundInAllowedList, the on-chain guard hashes raw bytes instead
-	— switch this, then re-run Step 3 (the root is baked into the guard, so a
-	new guard is needed) and Step 4.</p>
+	AddressNotFoundInAllowedList, try changing ONE of these two selectors
+	at a time (not both at once, or you won't know which one fixed it),
+	then re-run Step 3 (the root is baked into the guard, so a new guard
+	is needed) and Step 4.</p>
 	<button id="dryRunGuardBtn" class="secondary" disabled>Dry run (size + PDAs, no transaction)</button>
 	<button id="initGuardBtn" disabled>Create + Initialize + Wrap</button>
 	<pre id="initGuardOutput">(not run yet)</pre>
@@ -233,10 +239,23 @@ const RelaxKeccak = (function () {
 })();
 
 /* ---------------------------------------------------------
-   Merkle tree, matching Candy Guard's own verify() exactly:
-   sorted pair, prefixed with a 0x01 domain-separation byte, hashed
-   with keccak256. A single-leaf tree's root IS its leaf hash and its
-   proof is empty — which is what this first end-to-end test uses.
+   Merkle tree. TWO possible Candy Guard-compatible schemes exist in
+   the wild and this codebase could not definitively confirm which
+   one from documentation alone — both are now selectable (Step 3's
+   new "Merkle hash scheme" dropdown) instead of guessing again:
+
+     "prefixed"   — Solana's own spec (solana-foundation/specs,
+                    core/merkle-tree.md): leaf pre-image = 0x00 + data,
+                    internal node pre-image = 0x01 + two 32-byte hashes.
+     "unprefixed" — the OpenZeppelin MerkleProof.sol scheme (Metaplex's
+                    own gumdrop program is a direct port of this):
+                    leaf = caller-provided hash as-is, internal node =
+                    keccak256(sorted_pair) with NO prefix byte at all.
+
+   getMerkleRoot/getMerkleProof/hashPair/hashLeaf all take an explicit
+   `scheme` argument (default "prefixed") so Steps 3 and 4 always agree
+   on which one they're using — see allowListEntries()'s companion
+   scheme selector.
    --------------------------------------------------------- */
 const RelaxMerkle = (function () {
 	const { keccak256 } = RelaxKeccak;
@@ -247,8 +266,14 @@ const RelaxMerkle = (function () {
 		}
 		return a.length - b.length;
 	}
-	function hashPair(a, b) {
+	function hashPair(a, b, scheme) {
 		const [left, right] = compare(a, b) <= 0 ? [a, b] : [b, a];
+		if (scheme === "unprefixed") {
+			const merged = new Uint8Array(left.length + right.length);
+			merged.set(left, 0);
+			merged.set(right, left.length);
+			return keccak256(merged);
+		}
 		const merged = new Uint8Array(1 + left.length + right.length);
 		merged[0] = 0x01;
 		merged.set(left, 1);
@@ -258,42 +283,34 @@ const RelaxMerkle = (function () {
 	function toLeafBytes(item) {
 		return typeof item === "string" ? new TextEncoder().encode(item) : item;
 	}
-	// FIX (23 Jul 2026, AddressNotFoundInAllowedList in BOTH base58 and
-	// raw-bytes leaf-encoding modes): leaves were hashed directly with
-	// no prefix. Solana's own Merkle tree spec (solana-foundation/specs,
-	// core/merkle-tree.md) requires leaf pre-images to start with a
-	// 0x00 byte (intermediate nodes use 0x01, which this file already
-	// had right) — the standard second-preimage-attack defense, and
-	// exactly what Candy Guard's on-chain AllowList guard expects.
-	// Neither encoding mode could have worked without this; it wasn't
-	// a base58-vs-bytes question at all.
-	function hashLeaf(bytes) {
+	function hashLeaf(bytes, scheme) {
+		if (scheme === "unprefixed") return keccak256(bytes);
 		const prefixed = new Uint8Array(1 + bytes.length);
 		prefixed[0] = 0x00;
 		prefixed.set(bytes, 1);
 		return keccak256(prefixed);
 	}
 	/** Full tree, level 0 = root, last level = leaves. */
-	function getMerkleTree(items) {
-		let level = items.map(i => hashLeaf(toLeafBytes(i)));
+	function getMerkleTree(items, scheme = "prefixed") {
+		let level = items.map(i => hashLeaf(toLeafBytes(i), scheme));
 		const levels = [level];
 		while (level.length > 1) {
 			const next = [];
 			for (let i = 0; i < level.length; i += 2) {
-				next.push(i + 1 < level.length ? hashPair(level[i], level[i + 1]) : level[i]);
+				next.push(i + 1 < level.length ? hashPair(level[i], level[i + 1], scheme) : level[i]);
 			}
 			levels.unshift(next);
 			level = next;
 		}
 		return levels;
 	}
-	function getMerkleRoot(items) {
-		return getMerkleTree(items)[0][0];
+	function getMerkleRoot(items, scheme = "prefixed") {
+		return getMerkleTree(items, scheme)[0][0];
 	}
 	/** Sibling hashes from leaf up to (not including) the root. */
-	function getMerkleProof(items, target) {
-		const levels = getMerkleTree(items);
-		const targetLeaf = hashLeaf(toLeafBytes(target));
+	function getMerkleProof(items, target, scheme = "prefixed") {
+		const levels = getMerkleTree(items, scheme);
+		const targetLeaf = hashLeaf(toLeafBytes(target), scheme);
 		let index = levels[levels.length - 1].findIndex(l => compare(l, targetLeaf) === 0);
 		if (index < 0) throw new Error("Target is not in the allow list.");
 		const proof = [];
@@ -1403,6 +1420,10 @@ function allowListEntries() {
 		: entries;
 }
 
+function hashScheme() {
+	return document.getElementById("hashSchemeInput").value;
+}
+
 const WAVE1_MINT_LIMIT_ID = 1; // shared by Step 3 (guard config) and Step 4 (counter PDA seed) — they MUST match
 
 function buildWave1GuardData(merkleRoot) {
@@ -1440,7 +1461,7 @@ async function runInitGuard() {
 		// concern (needs a small Merkle-tree helper) — this proves the
 		// AllowList guard's wiring end-to-end first, which is the
 		// actual open question right now.
-		const merkleRoot = RelaxMerkle.getMerkleRoot(allowListEntries());
+		const merkleRoot = RelaxMerkle.getMerkleRoot(allowListEntries(), hashScheme());
 		output.textContent = "Single-leaf AllowList root (= sha256 of your wallet): " +
 			Array.from(merkleRoot).map(b => b.toString(16).padStart(2, "0")).join("") +
 			"\nBuilding Candy Guard...";
@@ -1504,7 +1525,7 @@ async function runDryRunGuard() {
 	try {
 		const entries = allowListEntries();
 		const isDefaultSingleLeaf = document.getElementById("allowListWalletsInput").value.trim().length === 0;
-		const merkleRoot = RelaxMerkle.getMerkleRoot(entries);
+		const merkleRoot = RelaxMerkle.getMerkleRoot(entries, hashScheme());
 		const candyGuardData = buildWave1GuardData(merkleRoot);
 		const encoded = RelaxCandyGuard.encodeCandyGuardData(candyGuardData);
 		output.textContent = "DRY RUN OK — nothing sent\n" +
@@ -1656,8 +1677,8 @@ async function runMint() {
 		// (base58 string or raw bytes) as every other entry.
 		const mode = document.getElementById("leafEncodingInput").value;
 		const myEntry = mode === "bytes" ? walletPubkey.toBytes() : walletPubkey.toString();
-		const merkleRoot = RelaxMerkle.getMerkleRoot(allowListEntries());
-		const proof = RelaxMerkle.getMerkleProof(allowListEntries(), myEntry);
+		const merkleRoot = RelaxMerkle.getMerkleRoot(allowListEntries(), hashScheme());
+		const proof = RelaxMerkle.getMerkleProof(allowListEntries(), myEntry, hashScheme());
 		const routeData = RelaxCandyGuard.encodeMerkleProof(proof);
 
 		const nftMintKeypair = solanaWeb3.Keypair.generate();
