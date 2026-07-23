@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>RELAX — Candy Machine Devnet Test (internal, not for public use)</title>
+<style>
+body{margin:0;min-height:100vh;background:#050713;color:#F5F7FF;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',monospace;padding:24px;max-width:760px;margin:0 auto;}
+h1{font-size:18px;margin:0 0 4px;}
+.warn{color:#F5A623;font-size:13px;margin:0 0 24px;}
+.card{background:#0B0E1F;border:1px solid #1E2340;border-radius:10px;padding:20px;margin-bottom:16px;}
+button{background:#5B7CFF;color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:14px;cursor:pointer;margin-right:8px;}
+button:disabled{opacity:.4;cursor:not-allowed;}
+input{background:#050713;border:1px solid #1E2340;color:#F5F7FF;border-radius:6px;padding:8px;width:100%;box-sizing:border-box;margin:4px 0 12px;font-family:monospace;font-size:13px;}
+label{font-size:12px;color:#929BB5;}
+pre{background:#000;border-radius:6px;padding:12px;font-size:12px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;}
+.ok{color:#14F195;}
+.err{color:#FF5C5C;}
+</style>
+</head>
+<body>
+
+<h1>🍬 Candy Machine — Devnet Test Harness</h1>
+<p class="warn">Internal tool. Not linked from the site, not for public use.
+Devnet only — hardcoded, no mainnet path. Confirms InitializeV2 +
+AddConfigLines actually work and validates the batch-size math from
+SWAP_V2_MIGRATION_PLAN.md against a real transaction.</p>
+
+<div class="card">
+	<div id="walletStatus">Not connected.</div>
+	<button id="connectBtn">Connect Wallet</button>
+</div>
+
+<div class="card">
+	<h3 style="margin-top:0;">Step 1 — Create + Initialize Candy Machine</h3>
+	<label>Collection mint (existing devnet test collection)</label>
+	<input type="text" id="collectionMintInput" value="EJ14W1vSECKHZxXyHHxaUtizjtgVvN6nj25eLK6HH752">
+	<label>Items available (test size — keep small)</label>
+	<input type="text" id="itemsAvailableInput" value="20">
+	<label>Name length / URI length (bytes reserved per config line)</label>
+	<input type="text" id="nameLengthInput" value="20">
+	<input type="text" id="uriLengthInput" value="70">
+	<button id="initBtn" disabled>Create + InitializeV2</button>
+	<pre id="initOutput">(not run yet)</pre>
+</div>
+
+<div class="card">
+	<h3 style="margin-top:0;">Step 2 — AddConfigLines (test batch)</h3>
+	<label>Candy Machine pubkey (auto-filled after Step 1)</label>
+	<input type="text" id="candyMachinePubkeyInput" value="">
+	<label>How many test lines to add (validates the ~11/tx estimate)</label>
+	<input type="text" id="testLineCountInput" value="11">
+	<button id="addLinesBtn" disabled>Send AddConfigLines</button>
+	<pre id="addLinesOutput">(not run yet)</pre>
+</div>
+
+<script src="https://unpkg.com/@solana/web3.js@1.95.3/lib/index.iife.min.js"></script>
+<script src="serializer.js"></script>
+<script src="instruction-builder.js"></script>
+<script src="candy-machine-instructions.js"></script>
+<script>
+
+const RPC_URL = "https://api.0relaxbro.xyz/rpc-devnet";
+const connection = new solanaWeb3.Connection(RPC_URL, "confirmed");
+
+let walletPubkey = null;
+let walletProvider = null;
+let lastCandyMachineKeypair = null; // kept in memory only, this session — test tool, not a real key-management flow
+
+const walletStatus = document.getElementById("walletStatus");
+const connectBtn = document.getElementById("connectBtn");
+const initBtn = document.getElementById("initBtn");
+const addLinesBtn = document.getElementById("addLinesBtn");
+
+async function connectWallet() {
+	if (!window.solana || !window.solana.isPhantom) {
+		walletStatus.innerHTML = '<span class="err">Phantom not found. Install it and reload.</span>';
+		return;
+	}
+	try {
+		const resp = await window.solana.connect();
+		walletPubkey = resp.publicKey;
+		walletProvider = window.solana;
+		walletStatus.innerHTML = 'Connected: <span class="ok">' + walletPubkey.toString() + '</span>';
+		initBtn.disabled = false;
+		addLinesBtn.disabled = false;
+	} catch (err) {
+		walletStatus.innerHTML = '<span class="err">' + (err.message || "Connection failed.") + '</span>';
+	}
+}
+connectBtn.addEventListener("click", connectWallet);
+
+// Poll for confirmation the same low-dependency way the rest of the
+// project already does (HTTP polling, no WebSocket) — see
+// nft-creator.html's pollMintConfirmation for the pattern this mirrors.
+async function pollConfirmation(signature, lastValidBlockHeight) {
+	const start = Date.now();
+	while (Date.now() - start < 60000) {
+		const statuses = await connection.getSignatureStatuses([signature]);
+		const status = statuses && statuses.value && statuses.value[0];
+		if (status) {
+			if (status.err) throw new Error("Transaction failed on-chain: " + JSON.stringify(status.err));
+			if (status.confirmationStatus === "confirmed" || status.confirmationStatus === "finalized") {
+				return true;
+			}
+		}
+		const currentHeight = await connection.getBlockHeight();
+		if (currentHeight > lastValidBlockHeight) {
+			// one final check before declaring expired, same pattern as nft-creator.html
+			const finalCheck = await connection.getSignatureStatuses([signature]);
+			const finalStatus = finalCheck && finalCheck.value && finalCheck.value[0];
+			if (finalStatus && !finalStatus.err) return true;
+			throw new Error("Transaction expired (blockhash no longer valid) before confirmation.");
+		}
+		await new Promise((r) => setTimeout(r, 1500));
+	}
+	throw new Error("Confirmation timed out after 60s.");
+}
+
+async function runInitialize() {
+	const output = document.getElementById("initOutput");
+	initBtn.disabled = true;
+	output.textContent = "Working...";
+	try {
+		const collectionMint = document.getElementById("collectionMintInput").value.trim();
+		const itemsAvailable = parseInt(document.getElementById("itemsAvailableInput").value, 10);
+		const nameLength = parseInt(document.getElementById("nameLengthInput").value, 10);
+		const uriLength = parseInt(document.getElementById("uriLengthInput").value, 10);
+
+		const candyMachineData = {
+			itemsAvailable,
+			symbol: "RELAXTEST",
+			sellerFeeBasisPoints: 0,
+			maxSupply: 0,
+			isMutable: true,
+			creators: [{ address: walletPubkey.toString(), verified: false, percentageShare: 100 }],
+			configLineSettings: {
+				prefixName: "",
+				nameLength,
+				prefixUri: "",
+				uriLength,
+				isSequential: false
+			},
+			hiddenSettings: null
+		};
+
+		const space = RelaxCandyMachine.getSpaceForCandy(candyMachineData);
+		const rentLamports = await connection.getMinimumBalanceForRentExemption(space);
+		output.textContent = "Computed space: " + space + " bytes, rent: " + (rentLamports / 1e9).toFixed(6) + " SOL\nBuilding transaction...";
+
+		const candyMachineKeypair = solanaWeb3.Keypair.generate();
+		lastCandyMachineKeypair = candyMachineKeypair;
+
+		const createAccountIx = solanaWeb3.SystemProgram.createAccount({
+			fromPubkey: walletPubkey,
+			newAccountPubkey: candyMachineKeypair.publicKey,
+			lamports: rentLamports,
+			space,
+			programId: new solanaWeb3.PublicKey(RelaxCandyMachine.CANDY_MACHINE_CORE_PROGRAM_ID)
+		});
+
+		// NOTE (23 Jul 2026): the metadata/master-edition/delegate-record
+		// accounts for the collection below assume the standard Token
+		// Metadata PDAs derived from collectionMint — reusing the exact
+		// same derivation the NFT Creator layer already has. The
+		// collection_delegate_record must already be an APPROVED
+		// delegate for this Candy Machine's authority PDA (a one-time
+		// prerequisite, see migration plan's "verification is automatic"
+		// section) — if this instruction fails with an authority/
+		// delegate-related program error, that's very likely why; this
+		// harness does not yet perform that approval step itself.
+		const collectionMetadata = await RelaxInstructionBuilder.findMetadataPda(collectionMint);
+		const collectionMasterEdition = await RelaxInstructionBuilder.findMasterEditionPda(collectionMint);
+
+		const initIx = await RelaxCandyMachine.buildInitializeV2Instruction({
+			candyMachine: candyMachineKeypair.publicKey,
+			authority: walletPubkey,
+			payer: walletPubkey,
+			collectionMetadata,
+			collectionMint,
+			collectionMasterEdition,
+			collectionUpdateAuthority: walletPubkey,
+			collectionDelegateRecord: walletPubkey, // PLACEHOLDER — see note above, real PDA needed once delegate approval step exists
+			candyMachineData,
+			tokenStandard: 0
+		});
+
+		const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+		const tx = new solanaWeb3.Transaction();
+		tx.recentBlockhash = blockhash;
+		tx.feePayer = walletPubkey;
+		tx.add(createAccountIx, initIx);
+		tx.partialSign(candyMachineKeypair);
+
+		const signedTx = await walletProvider.signTransaction(tx);
+		const signature = await connection.sendRawTransaction(signedTx.serialize(), { skipPreflight: false });
+		output.textContent += "\nSent: " + signature + "\nWaiting for confirmation...";
+
+		await pollConfirmation(signature, lastValidBlockHeight);
+
+		output.innerHTML = '<span class="ok">SUCCESS</span>\nCandy Machine: ' + candyMachineKeypair.publicKey.toString() +
+			'\nSignature: ' + signature +
+			'\nSpace: ' + space + ' bytes / Rent: ' + (rentLamports / 1e9).toFixed(6) + ' SOL';
+
+		document.getElementById("candyMachinePubkeyInput").value = candyMachineKeypair.publicKey.toString();
+	} catch (err) {
+		output.innerHTML = '<span class="err">FAILED: ' + (err.message || String(err)) + '</span>';
+		console.error(err);
+	} finally {
+		initBtn.disabled = false;
+	}
+}
+initBtn.addEventListener("click", runInitialize);
+
+async function runAddConfigLines() {
+	const output = document.getElementById("addLinesOutput");
+	addLinesBtn.disabled = true;
+	output.textContent = "Working...";
+	try {
+		const candyMachinePubkey = document.getElementById("candyMachinePubkeyInput").value.trim();
+		const lineCount = parseInt(document.getElementById("testLineCountInput").value, 10);
+
+		const lines = [];
+		for (let i = 0; i < lineCount; i++) {
+			lines.push({ name: "RELAX Test #" + i, uri: "https://gateway.irys.xyz/testtesttesttesttesttesttesttesttesttest" + i });
+		}
+
+		const ix = RelaxCandyMachine.buildAddConfigLinesInstruction({
+			candyMachine: candyMachinePubkey,
+			authority: walletPubkey,
+			startIndex: 0,
+			lines
+		});
+
+		const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+		const tx = new solanaWeb3.Transaction();
+		tx.recentBlockhash = blockhash;
+		tx.feePayer = walletPubkey;
+		tx.add(ix);
+
+		// Report the actual serialized size vs Solana's ~1232 byte limit —
+		// this is the real, direct confirmation of the batch-size math,
+		// not just the formula estimate.
+		const serializedForSizeCheck = tx.serialize({ requireAllSignatures: false, verifySignatures: false });
+		output.textContent = "Transaction size with " + lineCount + " lines: " + serializedForSizeCheck.length + " bytes (limit ~1232)\nSending...";
+
+		const signedTx = await walletProvider.signTransaction(tx);
+		const signature = await connection.sendRawTransaction(signedTx.serialize(), { skipPreflight: false });
+		output.textContent += "\nSent: " + signature + "\nWaiting for confirmation...";
+
+		await pollConfirmation(signature, lastValidBlockHeight);
+
+		output.innerHTML = '<span class="ok">SUCCESS</span>\n' + lineCount + ' lines added.\nSignature: ' + signature +
+			'\nSerialized tx size: ' + serializedForSizeCheck.length + ' bytes';
+	} catch (err) {
+		output.innerHTML = '<span class="err">FAILED: ' + (err.message || String(err)) + '</span>';
+		console.error(err);
+	} finally {
+		addLinesBtn.disabled = false;
+	}
+}
+addLinesBtn.addEventListener("click", runAddConfigLines);
+
+</script>
+</body>
+</html>
