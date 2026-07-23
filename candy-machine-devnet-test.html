@@ -94,8 +94,8 @@ diffs it against the form — stop guessing which side is wrong.</p>
 	</select>
 	<label>Merkle hash scheme (must also match the on-chain guard — two candidates found in research, unconfirmed which one Candy Guard actually uses)</label>
 	<select id="hashSchemeInput">
-		<option value="prefixed" selected>0x00/0x01 domain-separated (Solana's own spec)</option>
-		<option value="unprefixed">no prefix — OpenZeppelin MerkleProof.sol style</option>
+		<option value="prefixed">0x00/0x01 domain-separated (Solana's own spec)</option>
+		<option value="unprefixed" selected>no prefix — OpenZeppelin MerkleProof.sol style — CONFIRMED correct, 23 Jul 2026 devnet mint</option>
 	</select>
 	<p class="hint">Metaplex's own SDK builds the tree from base58 address
 	<em>strings</em> (its <code>getMerkleProof</code> takes a base58 string),
@@ -291,7 +291,7 @@ const RelaxMerkle = (function () {
 		return keccak256(prefixed);
 	}
 	/** Full tree, level 0 = root, last level = leaves. */
-	function getMerkleTree(items, scheme = "prefixed") {
+	function getMerkleTree(items, scheme = "unprefixed") {
 		let level = items.map(i => hashLeaf(toLeafBytes(i), scheme));
 		const levels = [level];
 		while (level.length > 1) {
@@ -304,11 +304,11 @@ const RelaxMerkle = (function () {
 		}
 		return levels;
 	}
-	function getMerkleRoot(items, scheme = "prefixed") {
+	function getMerkleRoot(items, scheme = "unprefixed") {
 		return getMerkleTree(items, scheme)[0][0];
 	}
 	/** Sibling hashes from leaf up to (not including) the root. */
-	function getMerkleProof(items, target, scheme = "prefixed") {
+	function getMerkleProof(items, target, scheme = "unprefixed") {
 		const levels = getMerkleTree(items, scheme);
 		const targetLeaf = hashLeaf(toLeafBytes(target), scheme);
 		let index = levels[levels.length - 1].findIndex(l => compare(l, targetLeaf) === 0);
