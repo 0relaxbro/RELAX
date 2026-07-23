@@ -80,6 +80,13 @@ diffs it against the form — stop guessing which side is wrong.</p>
 	from Step 1 so minting only works through the guard from here on.</p>
 	<label>Candy Machine pubkey (auto-filled after Step 1)</label>
 	<input type="text" id="guardCandyMachineInput" value="">
+	<label>Whitelist wallet addresses, one per line (leave empty to test with just the connected wallet — a single-leaf tree)</label>
+	<textarea id="allowListWalletsInput" rows="6" style="width:100%;box-sizing:border-box;background:#050713;border:1px solid #1E2340;color:#F5F7FF;border-radius:6px;padding:8px;font-family:monospace;font-size:13px;margin:4px 0 12px;" placeholder="8xRNKCFqHdvp8MBbNask6kXqGE1NqXEysjtpE1k8NxKe&#10;AmNbYNnPnwqnDCeKngyKsd432rM71Zj3hWAvxvhdBkyW&#10;..."></textarea>
+	<p class="hint">The connected wallet must be one of these lines (or the
+	list left empty) for Step 4 to find a valid proof for it. Every real
+	winner's wallet goes here, one address per line, exactly as copied
+	from their own wallet — extra whitespace is trimmed automatically,
+	blank lines are ignored.</p>
 	<label>AllowList leaf encoding (must match the on-chain guard; Steps 3 and 4 both read this)</label>
 	<select id="leafEncodingInput">
 		<option value="base58" selected>base58 address string (matches Metaplex's JS SDK)</option>
@@ -1361,7 +1368,24 @@ let lastGuardBase = null; // the "base" keypair used as the Guard PDA's seed, ke
  */
 function allowListEntries() {
 	const mode = document.getElementById("leafEncodingInput").value;
-	return [mode === "bytes" ? walletPubkey.toBytes() : walletPubkey.toString()];
+	const raw = document.getElementById("allowListWalletsInput").value;
+	const lines = raw.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+
+	// Empty textarea = the original single-leaf test (just the connected
+	// wallet) — kept as the default so the simplest first test still
+	// works with zero setup.
+	const entries = lines.length > 0 ? lines : [walletPubkey.toString()];
+
+	// Validate every line up front — a bad address here would otherwise
+	// surface confusingly deep inside keccak256/PublicKey construction.
+	for (const entry of entries) {
+		try { new solanaWeb3.PublicKey(entry); }
+		catch { throw new Error('Not a valid Solana address: "' + entry + '"'); }
+	}
+
+	return mode === "bytes"
+		? entries.map(e => new solanaWeb3.PublicKey(e).toBytes())
+		: entries;
 }
 
 const WAVE1_MINT_LIMIT_ID = 1; // shared by Step 3 (guard config) and Step 4 (counter PDA seed) — they MUST match
@@ -1463,12 +1487,16 @@ initGuardBtn.addEventListener("click", runInitGuard);
 async function runDryRunGuard() {
 	const output = document.getElementById("initGuardOutput");
 	try {
-		const merkleRoot = RelaxMerkle.getMerkleRoot(allowListEntries());
+		const entries = allowListEntries();
+		const isDefaultSingleLeaf = document.getElementById("allowListWalletsInput").value.trim().length === 0;
+		const merkleRoot = RelaxMerkle.getMerkleRoot(entries);
 		const candyGuardData = buildWave1GuardData(merkleRoot);
 		const encoded = RelaxCandyGuard.encodeCandyGuardData(candyGuardData);
 		output.textContent = "DRY RUN OK — nothing sent\n" +
+			"Whitelist entries: " + entries.length +
+			(isDefaultSingleLeaf ? " (default — just the connected wallet, textarea is empty)" : "") + "\n" +
 			"Encoded CandyGuardData size: " + encoded.length + " bytes\n" +
-			"Merkle root (single-leaf, your wallet): " +
+			"Merkle root: " +
 			Array.from(merkleRoot).map(b => b.toString(16).padStart(2, "0")).join("");
 	} catch (err) {
 		output.innerHTML = '<span class="err">' + describeError(err) + '</span>';
@@ -1604,8 +1632,17 @@ async function runMint() {
 		//      allowList (8) before mintLimit (9) — because the program
 		//      consumes remaining accounts sequentially as it evaluates
 		//      each enabled guard.
+		// FIX (23 Jul 2026, real multi-wallet whitelist added): the proof
+		// target used to be allowListEntries()[0], which only happened
+		// to be correct in the single-leaf test (where the one entry
+		// WAS the connected wallet). With a real multi-wallet list, the
+		// target must be the connected wallet's own entry specifically
+		// — wherever it sits in the list — encoded the same way
+		// (base58 string or raw bytes) as every other entry.
+		const mode = document.getElementById("leafEncodingInput").value;
+		const myEntry = mode === "bytes" ? walletPubkey.toBytes() : walletPubkey.toString();
 		const merkleRoot = RelaxMerkle.getMerkleRoot(allowListEntries());
-		const proof = RelaxMerkle.getMerkleProof(allowListEntries(), allowListEntries()[0]);
+		const proof = RelaxMerkle.getMerkleProof(allowListEntries(), myEntry);
 		const routeData = RelaxCandyGuard.encodeMerkleProof(proof);
 
 		const nftMintKeypair = solanaWeb3.Keypair.generate();
@@ -1738,7 +1775,7 @@ async function runMint() {
 		tx.partialSign(nftMintKeypair);
 
 		output.textContent = "Merkle root:  " + RelaxKeccak.toHex(merkleRoot) +
-			"\nProof nodes:  " + proof.length + " (single-leaf tree → 0 is correct)" +
+			"\nProof nodes:  " + proof.length + (proof.length === 0 ? " (single-leaf tree → 0 is correct)" : "") +
 			"\nProof PDA:    " + allowListProofPda.toString() +
 			"\nMintLimit PDA:" + mintLimitCounterPda.toString() +
 			"\nBuilt route + mint_v2. Sending...";
