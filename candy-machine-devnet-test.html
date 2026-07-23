@@ -1645,12 +1645,20 @@ async function runMint() {
 		// Anchor/Borsh — the Token program's own manual pack format):
 		// [tag=20][decimals u8][mint_authority: 32 bytes]
 		// [freeze_authority COption: 1 byte (0=None/1=Some) + 32 bytes
-		// only if Some]. Decimals=0, no freeze authority — a standard,
-		// fixed-supply-of-1 NFT mint.
+		// only if Some].
+		//
+		// FIX (23 Jul 2026, recurring — "Cannot create NFT with no
+		// Freeze Authority" / 0x82): this line reverted to
+		// freeze_authority=None in a later build that forked from
+		// before this fix was applied. Token Metadata's
+		// CreateMasterEditionV3 CPI requires the mint to HAVE a freeze
+		// authority at creation time (the Master Edition PDA takes it
+		// over via CPI during mint_v2 itself) — same wallet as mint
+		// authority is the standard convention.
 		const initMintData = new Uint8Array([
 			20, 0,
 			...walletPubkey.toBytes(),
-			0 // freeze_authority = None
+			1, ...walletPubkey.toBytes() // freeze_authority = Some(walletPubkey)
 		]);
 		const initMintIx = new solanaWeb3.TransactionInstruction({
 			programId: splTokenProgram,
