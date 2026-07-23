@@ -28,14 +28,13 @@ pre{background:#000;border-radius:6px;padding:12px;font-size:12px;overflow-x:aut
 <h1>🍬 Candy Machine — Devnet Test Harness</h1>
 <p class="warn">Internal tool. Not linked from the site, not for public use.
 Devnet only — hardcoded, no mainnet path.</p>
-<p class="build">BUILD 5 — self-contained: no external .js files, so nothing can be
+<p class="build">BUILD 6 — self-contained: no external .js files, so nothing can be
 served stale from cache.<br>
 Fixed: account sizing (0x7d3) → collection delegate PDA → collection_metadata
 writable (0x7d0) → collection update authority → AllowList route wiring (0x1776)
-→ <strong>Step 2 now loads every config line, not one batch (0x1784,
-NotFullyLoaded)</strong>.<br>
-Confirmed live on devnet: route validated the Merkle proof, so the base58
-leaf encoding is the correct one.</p>
+→ full config-line load (0x1784).<br>
+New: <strong>"Read Candy Machine state"</strong> decodes the account on-chain and
+diffs it against the form — stop guessing which side is wrong.</p>
 
 <div class="card">
 	<div id="walletStatus">Not connected.</div>
@@ -107,6 +106,7 @@ leaf encoding is the correct one.</p>
 	<input type="text" id="mintGuardInput" value="">
 	<label>Candy Machine pubkey (auto-filled after Step 1)</label>
 	<input type="text" id="mintCandyMachineInput" value="">
+	<button id="inspectBtn" class="secondary" disabled>Read Candy Machine state (on-chain)</button>
 	<button id="mintBtn" disabled>Route (AllowList proof) + mint_v2</button>
 	<pre id="mintOutput">(not run yet)</pre>
 </div>
@@ -745,6 +745,7 @@ const RelaxCandyMachine = (function () {
 			6005: "TooManyCreators — max 4 creators (the candy machine itself takes the 5th slot).",
 			6006: "MissingRemainingAccount (Candy Guard) — a guard needed an account in the instruction's REMAINING accounts and it wasn't there. Which guard depends on the log line: AllowList's route needs [proof_pda (writable), system_program]; mint_v2 needs one entry per account-requiring guard, in guard-definition order.",
 			6008: "AddressNotFoundInAllowedList — the Merkle proof did not verify against the guard's root. Usually the leaf encoding: the tree must hash exactly what the on-chain guard hashes (base58 string vs raw pubkey bytes). Switch the leaf-encoding selector in Step 3, rebuild the guard, retry.",
+			6013: "CollectionKeyMismatch — the collection_mint account passed to mint_v2 is not the one stored inside the Candy Machine. Use \"Read Candy Machine state\" to see what the machine actually holds.",
 			6020: "NotFullyLoaded — the Candy Machine still has fewer config lines loaded than items_available. mint_v2 refuses to mint until the machine is completely full; run Step 2 to load every item.",
 			6012: "IncorrectCollectionAuthority — the signer isn't the collection's update authority."
 		};
@@ -1040,6 +1041,7 @@ const addLinesBtn = document.getElementById("addLinesBtn");
 const dryRunGuardBtn = document.getElementById("dryRunGuardBtn");
 const initGuardBtn = document.getElementById("initGuardBtn");
 const mintBtn = document.getElementById("mintBtn");
+const inspectBtn = document.getElementById("inspectBtn");
 
 async function connectWallet() {
 	if (!window.solana || !window.solana.isPhantom) {
@@ -1052,6 +1054,7 @@ async function connectWallet() {
 		walletProvider = window.solana;
 		walletStatus.innerHTML = 'Connected: <span class="ok">' + walletPubkey.toString() + '</span>';
 		dryRunBtn.disabled = false;
+		inspectBtn.disabled = false;
 		initBtn.disabled = false;
 		addLinesBtn.disabled = false;
 		dryRunGuardBtn.disabled = false;
@@ -1477,6 +1480,102 @@ dryRunGuardBtn.addEventListener("click", runDryRunGuard);
    Step 4 — route (AllowList proof) + mint_v2
    ========================================================= */
 
+/**
+ * Decodes the Candy Machine account straight from the chain and diffs it
+ * against what the form is about to send.
+ *
+ * Added 23 Jul 2026 after CollectionKeyMismatch (0x177d). Every failure
+ * in this build so far has been "what the program holds" vs "what the
+ * client assumed", and we kept guessing at the second half because
+ * nothing ever read the first half. Byte offsets come from
+ * mpl-candy-machine-core's own account table — the same table that
+ * gave us HIDDEN_SECTION = 850, so items_loaded lives right at 850.
+ *
+ * Requires getAccountInfo in the Worker's RPC allowlist. If it isn't
+ * there yet the call 403s, and the catch below says exactly what to add.
+ */
+async function runInspect() {
+	const output = document.getElementById("mintOutput");
+	inspectBtn.disabled = true;
+	output.textContent = "Reading...";
+	try {
+		const candyMachine = document.getElementById("mintCandyMachineInput").value.trim();
+		if (!candyMachine) throw new Error("Candy Machine pubkey required (from Step 1).");
+		const formCollectionMint = document.getElementById("collectionMintInput").value.trim();
+		const candyGuard = document.getElementById("mintGuardInput").value.trim();
+
+		const info = await connection.getAccountInfo(new solanaWeb3.PublicKey(candyMachine));
+		if (!info) throw new Error("Candy Machine account not found on devnet: " + candyMachine);
+
+		const d = info.data;
+		const view = new DataView(d.buffer, d.byteOffset, d.byteLength);
+		const keyAt = (off) => new solanaWeb3.PublicKey(d.slice(off, off + 32)).toString();
+		const u64At = (off) => view.getBigUint64(off, true);
+		const u32At = (off) => view.getUint32(off, true);
+
+		const stored = {
+			owner: info.owner.toString(),
+			dataLen: d.length,
+			accountVersion: d[8],
+			tokenStandard: d[9],
+			authority: keyAt(16),
+			mintAuthority: keyAt(48),
+			collectionMint: keyAt(80),
+			itemsRedeemed: u64At(112),
+			itemsAvailable: u64At(120),
+			itemsLoaded: u32At(850)
+		};
+
+		function line(label, value, expected) {
+			let row = "  " + label.padEnd(18) + String(value);
+			if (expected !== undefined) {
+				row += String(value) === String(expected) ? "   [matches]" : "   [MISMATCH — form/expected: " + expected + "]";
+			}
+			return row + "\n";
+		}
+
+		let text = "CANDY MACHINE " + candyMachine + "\n\n";
+		text += line("owner program", stored.owner, RelaxCandyMachine.CANDY_MACHINE_CORE_PROGRAM_ID);
+		text += line("data length", stored.dataLen);
+		text += line("account version", stored.accountVersion + (stored.accountVersion === 1 ? " (V2)" : " (V1 — initializeV2 sets 1; V1 machines can't use mint_v2's delegate-record path)"));
+		text += line("token standard", stored.tokenStandard + (stored.tokenStandard === 0 ? " (NFT)" : " (4 = pNFT)"));
+		text += line("authority", stored.authority, walletPubkey.toString());
+		text += line("mint authority", stored.mintAuthority, candyGuard || undefined);
+		text += line("collection mint", stored.collectionMint, formCollectionMint);
+		text += "\n";
+		text += line("items available", stored.itemsAvailable.toString());
+		text += line("items loaded", stored.itemsLoaded, stored.itemsAvailable.toString());
+		text += line("items redeemed", stored.itemsRedeemed.toString());
+
+		const problems = [];
+		if (stored.collectionMint !== formCollectionMint) {
+			problems.push("collection_mint differs from the form — this is exactly what CollectionKeyMismatch (0x177d) reports. " +
+				"Put " + stored.collectionMint + " in Step 1's collection field, or rebuild the machine against the collection you actually want.");
+		}
+		if (candyGuard && stored.mintAuthority !== candyGuard) {
+			problems.push("mint_authority is not this Candy Guard — the wrap either didn't happen or wrapped a different guard. " +
+				"Only the mint authority can mint, so mint_v2 through this guard will be rejected.");
+		}
+		if (String(stored.itemsLoaded) !== stored.itemsAvailable.toString()) {
+			problems.push("items_loaded (" + stored.itemsLoaded + ") < items_available (" + stored.itemsAvailable +
+				") — NotFullyLoaded (0x1784). Run Step 2 to load the rest.");
+		}
+
+		output.innerHTML = (problems.length ? '<span class="err">' + problems.length + ' problem(s) found</span>\n' : '<span class="ok">state looks consistent</span>\n') +
+			text + (problems.length ? "\n" + problems.map(p => "• " + p).join("\n\n") : "");
+	} catch (err) {
+		const raw = (err && (err.message || String(err))) || "";
+		const hint = /403|not allowed|Method not/i.test(raw)
+			? "\n\n→ The Worker's RPC allowlist is rejecting getAccountInfo. Add \"getAccountInfo\" to ALLOWED_METHODS in worker.js and redeploy (wrangler deploy). It's read-only — it returns account bytes that are already public on-chain."
+			: "";
+		output.innerHTML = '<span class="err">FAILED: ' + describeError(err) + hint + '</span>';
+		console.error(err);
+	} finally {
+		inspectBtn.disabled = false;
+	}
+}
+inspectBtn.addEventListener("click", runInspect);
+
 async function runMint() {
 	const output = document.getElementById("mintOutput");
 	mintBtn.disabled = true;
@@ -1546,20 +1645,12 @@ async function runMint() {
 		// Anchor/Borsh — the Token program's own manual pack format):
 		// [tag=20][decimals u8][mint_authority: 32 bytes]
 		// [freeze_authority COption: 1 byte (0=None/1=Some) + 32 bytes
-		// only if Some].
-		//
-		// FIX (23 Jul 2026, 0x82 "Cannot create NFT with no Freeze
-		// Authority"): freeze_authority was set to None. Token
-		// Metadata's CreateMasterEditionV3 CPI requires the mint to
-		// HAVE a freeze authority at creation time — it's how an NFT
-		// stays non-transferable-while-listed / immutable-supply later
-		// (the Master Edition PDA takes over freeze authority via CPI
-		// during mint_v2 itself; we just need one present now, same
-		// wallet as mint authority is the standard convention here).
+		// only if Some]. Decimals=0, no freeze authority — a standard,
+		// fixed-supply-of-1 NFT mint.
 		const initMintData = new Uint8Array([
 			20, 0,
 			...walletPubkey.toBytes(),
-			1, ...walletPubkey.toBytes() // freeze_authority = Some(walletPubkey)
+			0 // freeze_authority = None
 		]);
 		const initMintIx = new solanaWeb3.TransactionInstruction({
 			programId: splTokenProgram,
