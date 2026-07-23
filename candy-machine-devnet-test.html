@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>RELAX — Candy Machine Devnet Test (internal, not for public use)</title>
+<style>
+body{margin:0;min-height:100vh;background:#050713;color:#F5F7FF;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',monospace;padding:24px;max-width:780px;margin:0 auto;}
+h1{font-size:18px;margin:0 0 4px;}
+.warn{color:#F5A623;font-size:13px;margin:0 0 8px;}
+.build{color:#5B7CFF;font-size:12px;margin:0 0 24px;font-family:monospace;line-height:1.5;}
+.card{background:#0B0E1F;border:1px solid #1E2340;border-radius:10px;padding:20px;margin-bottom:16px;}
+button{background:#5B7CFF;color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:14px;cursor:pointer;margin-right:8px;}
+button.secondary{background:#1E2340;}
+button:disabled{opacity:.4;cursor:not-allowed;}
+input{background:#050713;border:1px solid #1E2340;color:#F5F7FF;border-radius:6px;padding:8px;width:100%;box-sizing:border-box;margin:4px 0 12px;font-family:monospace;font-size:13px;}
+label{font-size:12px;color:#929BB5;}
+pre{background:#000;border-radius:6px;padding:12px;font-size:12px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;}
+.ok{color:#14F195;}
+.err{color:#FF5C5C;}
+.hint{color:#929BB5;font-size:12px;line-height:1.5;}
+</style>
+</head>
+<body>
+
+<h1>🍬 Candy Machine — Devnet Test Harness</h1>
+<p class="warn">Internal tool. Not linked from the site, not for public use.
+Devnet only — hardcoded, no mainnet path.</p>
+<p class="build">BUILD 3 — self-contained: no external .js files, so nothing can be
+served stale from cache.<br>
+Fixed so far: account sizing (ConstraintRaw / 0x7d3) → collection delegate record
+PDA (was a placeholder) → collection_metadata writable (ConstraintMut / 0x7d0).</p>
+
+<div class="card">
+	<div id="walletStatus">Not connected.</div>
+	<button id="connectBtn">Connect Wallet</button>
+</div>
+
+<div class="card">
+	<h3 style="margin-top:0;">Step 1 — Create + Initialize Candy Machine</h3>
+	<label>Collection mint (existing devnet test collection)</label>
+	<input type="text" id="collectionMintInput" value="EJ14W1vSECKHZxXyHHxaUtizjtgVvN6nj25eLK6HH752">
+	<label>Items available (test size — keep small)</label>
+	<input type="text" id="itemsAvailableInput" value="20">
+	<label>Name length / URI length (bytes reserved per config line)</label>
+	<input type="text" id="nameLengthInput" value="20">
+	<input type="text" id="uriLengthInput" value="70">
+	<p class="hint">The connected wallet must be the collection's <strong>update authority</strong> —
+	InitializeV2 makes it sign so the Candy Machine can approve itself as a
+	collection delegate. If it isn't, expect an IncorrectCollectionAuthority
+	or a Token Metadata CPI failure, not a size error.</p>
+	<button id="dryRunBtn" class="secondary" disabled>Dry run (size + PDAs, no transaction)</button>
+	<button id="initBtn" disabled>Create + InitializeV2</button>
+	<pre id="initOutput">(not run yet)</pre>
+</div>
+
+<div class="card">
+	<h3 style="margin-top:0;">Step 2 — AddConfigLines (test batch)</h3>
+	<label>Candy Machine pubkey (auto-filled after Step 1)</label>
+	<input type="text" id="candyMachinePubkeyInput" value="">
+	<label>How many test lines to add</label>
+	<input type="text" id="testLineCountInput" value="8">
+	<button id="addLinesBtn" disabled>Send AddConfigLines</button>
+	<pre id="addLinesOutput">(not run yet)</pre>
+</div>
+
+<script src="https://unpkg.com/@solana/web3.js@1.95.3/lib/index.iife.min.js"></script>
+<script>
+/* =========================================================
+   INLINED — Borsh primitives (was serializer.js)
+   =========================================================
+   Kept behaviourally identical to the shared serializer.js so this
+   harness stays a faithful test of the real code path. All integers
+   little-endian, browser-safe (no Buffer, no bundler).
+   ========================================================= */
+const RelaxBorsh = (function () {
+	function createWriter() {
+		const chunks = [];
+		return {
+			pushBytes(bytes) { chunks.push(bytes); },
+			toBytes() {
+				let total = 0;
+				for (const c of chunks) total += c.length;
+				const out = new Uint8Array(total);
+				let offset = 0;
+				for (const c of chunks) { out.set(c, offset); offset += c.length; }
+				return out;
+			}
+		};
+	}
+	function u8(n) {
+		if (n < 0 || n > 255) throw new Error("u8 out of range: " + n);
+		return Uint8Array.of(n);
+	}
+	function u16(n) {
+		const buf = new ArrayBuffer(2);
+		new DataView(buf).setUint16(0, n, true);
+		return new Uint8Array(buf);
+	}
+	function u32(n) {
+		const buf = new ArrayBuffer(4);
+		new DataView(buf).setUint32(0, n, true);
+		return new Uint8Array(buf);
+	}
+	function u64(n) {
+		const big = typeof n === "bigint" ? n : BigInt(n);
+		if (big < 0n || big > 0xFFFFFFFFFFFFFFFFn) throw new Error("u64 out of range: " + n);
+		const buf = new ArrayBuffer(8);
+		new DataView(buf).setBigUint64(0, big, true);
+		return new Uint8Array(buf);
+	}
+	function bool(b) { return Uint8Array.of(b ? 1 : 0); }
+	function str(s) {
+		const bytes = new TextEncoder().encode(s);
+		const w = createWriter();
+		w.pushBytes(u32(bytes.length));
+		w.pushBytes(bytes);
+		return w.toBytes();
+	}
+	function pubkey(input) {
+		const bytes = (input && typeof input.toBytes === "function")
+			? input.toBytes()
+			: new solanaWeb3.PublicKey(input).toBytes();
+		if (bytes.length !== 32) throw new Error("pubkey must be 32 bytes, got " + bytes.length);
+		return bytes;
+	}
+	function option(value, encodeFn) {
+		if (value === null || value === undefined) return Uint8Array.of(0);
+		const w = createWriter();
+		w.pushBytes(Uint8Array.of(1));
+		w.pushBytes(encodeFn(value));
+		return w.toBytes();
+	}
+	function vec(items, encodeFn) {
+		const w = createWriter();
+		w.pushBytes(u32(items.length));
+		for (const item of items) w.pushBytes(encodeFn(item));
+		return w.toBytes();
+	}
+	function concatAll(arraysOfBytes) {
+		const w = createWriter();
+		for (const b of arraysOfBytes) w.pushBytes(b);
+		return w.toBytes();
+	}
+	return { u8, u16, u32, u64, bool, str, pubkey, option, vec, concatAll };
+})();
+
+/* =========================================================
+   INLINED — the two Token Metadata PDAs this harness needs
+   (same derivations as instruction-builder.js)
+   ========================================================= */
+const RelaxPdas = (function () {
+	const TOKEN_METADATA_PROGRAM_ID = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s";
+	function pk(x) { return x instanceof solanaWeb3.PublicKey ? x : new solanaWeb3.PublicKey(x); }
+
+	async function findMetadataPda(mint) {
+		const [pda] = await solanaWeb3.PublicKey.findProgramAddress(
+			[new TextEncoder().encode("metadata"), pk(TOKEN_METADATA_PROGRAM_ID).toBytes(), pk(mint).toBytes()],
+			pk(TOKEN_METADATA_PROGRAM_ID)
+		);
+		return pda;
+	}
+	async function findMasterEditionPda(mint) {
+		const [pda] = await solanaWeb3.PublicKey.findProgramAddress(
+			[
+				new TextEncoder().encode("metadata"),
+				pk(TOKEN_METADATA_PROGRAM_ID).toBytes(),
+				pk(mint).toBytes(),
+				new TextEncoder().encode("edition")
+			],
+			pk(TOKEN_METADATA_PROGRAM_ID)
+		);
+		return pda;
+	}
+	return { TOKEN_METADATA_PROGRAM_ID, findMetadataPda, findMasterEditionPda };
+})();
+
+/* =========================================================
+   INLINED — RELAX Candy Machine V3 instruction builder
+   =========================================================
+   REVISION 3 (23 Jul 2026). Change log, so the reasoning survives:
+
+   R2 fixed ConstraintRaw (0x7d3) on account `candy_machine`:
+     getSpaceForCandy() was sizing the header DYNAMICALLY. The program
+     reserves it at MAXIMUM sizes and treats the hidden section as
+     starting at a FIXED offset of 850 (Metaplex's own account table).
+     Also: the byte mask is (items/8)+1 with integer division, not
+     ceil(items/8); and mint indices are allocated unconditionally,
+     not only when isSequential is false.
+
+   R2 also replaced the collectionDelegateRecord PLACEHOLDER with the
+   real Token Metadata MetadataDelegateRecord PDA, and corrected the
+   note claiming a prior delegate-approval step was required — it
+   isn't; InitializeV2 creates that record itself via CPI, which is
+   exactly why collection_update_authority has to sign.
+
+   R3 fixes ConstraintMut (0x7d0) on account `collection_metadata`:
+     it was passed read-only, because Metaplex's own initialize_v2
+     account table leaves the Writable column blank for that row. The
+     table is wrong there — the program has #[account(mut)] on it. The
+     same README marks collection_metadata as writable in the `mint`
+     and `set_collection_v2` tables, so the inconsistency is in the
+     docs, not the program.
+
+   Rule going forward: when an on-chain error names both an account
+   and a constraint, believe the program over the documentation.
+   ========================================================= */
+const RelaxCandyMachine = (function () {
+	const { u8, u16, u32, u64, bool, str, pubkey, option, vec, concatAll } = RelaxBorsh;
+
+	// NOT the newer, incompatible "Core Candy Machine"
+	// (CMACYFENjoBMHzapRXyo1JZkVS6EtaDDzkjMrmQLvr4J) — that one mints
+	// Metaplex Core assets, already ruled out for RELAX (22 Jul 2026).
+	const CANDY_MACHINE_CORE_PROGRAM_ID = "CndyV3LdqHUfDLmE5naZjVN8rBZz4tqhdefbAnjHG3JR";
+	const TOKEN_METADATA_PROGRAM_ID = RelaxPdas.TOKEN_METADATA_PROGRAM_ID;
+	const SYSTEM_PROGRAM_ID = "11111111111111111111111111111111";
+	const SYSVAR_INSTRUCTIONS_ID = "Sysvar1nstructions1111111111111111111111111";
+
+	/**
+	 * Fixed byte offset where the CandyMachine account's hidden section
+	 * (config lines + byte mask + mint indices) begins. The struct
+	 * header above it is reserved at maximum sizes regardless of what
+	 * is actually used: always 5 creator slots, a 10-byte symbol, a
+	 * 32-byte name prefix + 200-byte uri prefix, and a full
+	 * HiddenSettings block.
+	 *   8 discriminator + 1 account_version + 1 token_standard
+	 *   + 6 features + 32 authority + 32 mint_authority
+	 *   + 32 collection_mint + 8 items_redeemed + 8 items_available
+	 *   + 14 symbol + 2 seller_fee + 8 max_supply + 1 is_mutable
+	 *   + 174 creators (4 + 5*34)
+	 *   + 250 config_line_settings (1 + 36 + 4 + 204 + 4 + 1)
+	 *   + 273 hidden_settings (1 + 36 + 204 + 32)
+	 *   = 850
+	 */
+	const HIDDEN_SECTION = 850;
+
+	/**
+	 * Trailing rule-set flag (1) + rule-set pubkey (32). Only meaningful
+	 * for pNFTs, reserved anyway: the on-chain check is
+	 * data_len() >= get_space_for_candy(), a GREATER-THAN-OR-EQUAL, so
+	 * over-allocating is always accepted and costs ~0.00023 SOL.
+	 * Under-allocating is what caused 0x7d3. The trade is not close.
+	 */
+	const RULE_SET_RESERVE = 33;
+
+	// sha256("global:<name>").slice(0,8) — Anchor's own convention.
+	// Confirmed live: devnet logged "Instruction: InitializeV2", which
+	// only happens after these 8 bytes match.
+	const DISCRIMINATOR = {
+		initializeV2:    Uint8Array.of(67, 153, 175, 39, 218, 16, 38, 32),
+		addConfigLines:  Uint8Array.of(223, 50, 224, 227, 151, 8, 115, 106),
+		setCollectionV2: Uint8Array.of(229, 35, 61, 91, 15, 14, 99, 160),
+		withdraw:        Uint8Array.of(183, 18, 70, 156, 148, 109, 161, 34)
+	};
+
+	function pk(x) { return x instanceof solanaWeb3.PublicKey ? x : new solanaWeb3.PublicKey(x); }
+
+	/** Seeds: ["candy_machine", candy_machine_pubkey] */
+	async function findCandyMachineAuthorityPda(candyMachinePubkey) {
+		const [pda] = await solanaWeb3.PublicKey.findProgramAddress(
+			[new TextEncoder().encode("candy_machine"), pk(candyMachinePubkey).toBytes()],
+			pk(CANDY_MACHINE_CORE_PROGRAM_ID)
+		);
+		return pda;
+	}
+
+	/**
+	 * Token Metadata MetadataDelegateRecord PDA, Collection role.
+	 * Seeds: ["metadata", tm_program_id, mint, "collection_delegate",
+	 *         update_authority, delegate]
+	 * The delegate here is the Candy Machine's own authority PDA.
+	 * InitializeV2 CREATES this record itself via CPI — no separate
+	 * approval step is needed beforehand.
+	 */
+	async function findCollectionDelegateRecordPda({ collectionMint, collectionUpdateAuthority, delegate }) {
+		const enc = new TextEncoder();
+		const tm = pk(TOKEN_METADATA_PROGRAM_ID);
+		const [pda] = await solanaWeb3.PublicKey.findProgramAddress(
+			[
+				enc.encode("metadata"),
+				tm.toBytes(),
+				pk(collectionMint).toBytes(),
+				enc.encode("collection_delegate"),
+				pk(collectionUpdateAuthority).toBytes(),
+				pk(delegate).toBytes()
+			],
+			tm
+		);
+		return pda;
+	}
+
+	/* ---- struct encoders ---- */
+
+	function encodeCreator(creator) {
+		return concatAll([pubkey(creator.address), bool(!!creator.verified), u8(creator.percentageShare)]);
+	}
+	function encodeConfigLineSettings(s) {
+		return concatAll([
+			str(s.prefixName || ""), u32(s.nameLength),
+			str(s.prefixUri || ""), u32(s.uriLength),
+			bool(!!s.isSequential)
+		]);
+	}
+	function encodeHiddenSettings(s) {
+		if (s.hash.length !== 32) throw new Error("HiddenSettings.hash must be exactly 32 bytes");
+		return concatAll([str(s.name), str(s.uri), s.hash]);
+	}
+	function encodeCandyMachineData(data) {
+		return concatAll([
+			u64(data.itemsAvailable),
+			str(data.symbol || ""),
+			u16(data.sellerFeeBasisPoints || 0),
+			u64(data.maxSupply || 0),
+			bool(data.isMutable !== false),
+			vec(data.creators || [], encodeCreator),
+			option(data.configLineSettings || null, encodeConfigLineSettings),
+			option(data.hiddenSettings || null, encodeHiddenSettings)
+		]);
+	}
+	function encodeConfigLine(line) {
+		return concatAll([str(line.name), str(line.uri)]);
+	}
+
+	/**
+	 * Client-side validation before a wallet popup, using the program's
+	 * own limits: symbol <= 10 bytes, <= 4 creators (the candy machine
+	 * itself occupies the 5th slot), shares total 100, prefix+length
+	 * within the on-chain name (32) / uri (200) fields, exactly one of
+	 * configLineSettings / hiddenSettings.
+	 */
+	function validateCandyMachineData(data) {
+		const errors = [];
+		const enc = new TextEncoder();
+		const symbolBytes = enc.encode(data.symbol || "").length;
+		if (symbolBytes > 10) errors.push("symbol is " + symbolBytes + " bytes, max is 10");
+
+		const creators = data.creators || [];
+		if (creators.length > 4) errors.push("too many creators (" + creators.length + "), max is 4");
+		if (creators.length > 0) {
+			const totalShare = creators.reduce((s, c) => s + Number(c.percentageShare || 0), 0);
+			if (totalShare !== 100) errors.push("creator shares total " + totalShare + ", must be exactly 100");
+		}
+
+		const hasLines = !!data.configLineSettings;
+		const hasHidden = !!data.hiddenSettings;
+		if (hasLines === hasHidden) errors.push("provide exactly one of configLineSettings / hiddenSettings");
+
+		if (hasLines) {
+			const s = data.configLineSettings;
+			const pn = enc.encode(s.prefixName || "").length;
+			const pu = enc.encode(s.prefixUri || "").length;
+			if (pn + Number(s.nameLength) > 32) errors.push("prefixName (" + pn + ") + nameLength (" + s.nameLength + ") exceeds 32");
+			if (pu + Number(s.uriLength) > 200) errors.push("prefixUri (" + pu + ") + uriLength (" + s.uriLength + ") exceeds 200");
+		}
+
+		if (!(Number(data.itemsAvailable) > 0)) errors.push("itemsAvailable must be greater than 0");
+
+		if (errors.length) throw new Error("Invalid CandyMachineData:\n  - " + errors.join("\n  - "));
+		return true;
+	}
+
+	/* ---- account sizing ---- */
+
+	function describeSpaceForCandy(candyMachineData) {
+		if (candyMachineData.hiddenSettings) {
+			return {
+				total: HIDDEN_SECTION,
+				breakdown: [{ label: "fixed header (hidden settings mode, no config lines)", bytes: HIDDEN_SECTION }]
+			};
+		}
+		const settings = candyMachineData.configLineSettings;
+		if (!settings) throw new Error("getSpaceForCandy: must provide either configLineSettings or hiddenSettings");
+
+		const items = Number(candyMachineData.itemsAvailable);
+		if (!Number.isFinite(items) || items <= 0) {
+			throw new Error("getSpaceForCandy: itemsAvailable must be a positive number, got " + candyMachineData.itemsAvailable);
+		}
+		const configLineSize = Number(settings.nameLength) + Number(settings.uriLength);
+
+		const breakdown = [
+			{ label: "fixed header (HIDDEN_SECTION, offset of hidden data)", bytes: HIDDEN_SECTION },
+			{ label: "items-loaded counter (u32)", bytes: 4 },
+			{ label: "config lines (" + items + " x " + configLineSize + ")", bytes: items * configLineSize },
+			{ label: "byte mask ((items / 8) + 1)", bytes: Math.floor(items / 8) + 1 },
+			{ label: "mint indices (" + items + " x u32)", bytes: items * 4 },
+			{ label: "rule set flag + pubkey (reserved)", bytes: RULE_SET_RESERVE }
+		];
+		return { total: breakdown.reduce((s, b) => s + b.bytes, 0), breakdown };
+	}
+
+	function getSpaceForCandy(candyMachineData) {
+		return describeSpaceForCandy(candyMachineData).total;
+	}
+
+	/**
+	 * Conservative estimate of ConfigLines per AddConfigLines tx.
+	 * ~1232-byte packet limit, minus ~350 bytes of signature/header/
+	 * account-keys/blockhash overhead, minus 16 bytes of instruction
+	 * data before the vec; each line costs name+uri plus 8 bytes of
+	 * Borsh length prefixes. Step 2 measures the real size — trust
+	 * that, not this.
+	 */
+	function estimateLinesPerTransaction(nameLength, uriLength) {
+		const perLine = Number(nameLength) + Number(uriLength) + 8;
+		return Math.max(1, Math.floor((1232 - 350 - 16) / perLine));
+	}
+
+	/* ---- instruction builders ---- */
+
+	/**
+	 * InitializeV2 — the CandyMachine account must ALREADY exist,
+	 * pre-sized via SystemProgram.createAccount and assigned to
+	 * CANDY_MACHINE_CORE_PROGRAM_ID.
+	 *
+	 * 15 accounts, in this exact order. Writable/signer flags reflect
+	 * the PROGRAM, which differs from the README on collection_metadata
+	 * — see the R3 note in this section's header:
+	 *
+	 *   0  candy_machine                writable
+	 *   1  authority_pda                writable
+	 *   2  authority
+	 *   3  payer                        writable, signer
+	 *   4  rule_set                     (optional -> program ID)
+	 *   5  collection_metadata          writable   <-- R3 fix
+	 *   6  collection_mint
+	 *   7  collection_master_edition
+	 *   8  collection_update_authority  writable, signer
+	 *   9  collection_delegate_record   writable
+	 *   10 token_metadata_program
+	 *   11 system_program
+	 *   12 sysvar_instructions
+	 *   13 authorization_rules_program  (optional -> program ID)
+	 *   14 authorization_rules          (optional -> program ID)
+	 *
+	 * The optional slots use Anchor v0.26's positional-optional
+	 * convention: "None" means passing the executing program's own ID,
+	 * NOT omitting the slot. Omitting them produced AccountNotEnoughKeys.
+	 */
+	async function buildInitializeV2Instruction(params) {
+		validateCandyMachineData(params.candyMachineData);
+
+		const authorityPda = await findCandyMachineAuthorityPda(params.candyMachine);
+
+		// Derived, never taken as a caller-supplied placeholder — each of
+		// these is a pure function of collectionMint (+ update authority).
+		const collectionMetadata = params.collectionMetadata
+			|| await RelaxPdas.findMetadataPda(params.collectionMint);
+		const collectionMasterEdition = params.collectionMasterEdition
+			|| await RelaxPdas.findMasterEditionPda(params.collectionMint);
+		const collectionDelegateRecord = params.collectionDelegateRecord
+			|| await findCollectionDelegateRecordPda({
+				collectionMint: params.collectionMint,
+				collectionUpdateAuthority: params.collectionUpdateAuthority,
+				delegate: authorityPda
+			});
+
+		const none = pk(CANDY_MACHINE_CORE_PROGRAM_ID);
+
+		const keys = [
+			{ pubkey: pk(params.candyMachine),              isSigner: false, isWritable: true  },
+			{ pubkey: authorityPda,                         isSigner: false, isWritable: true  },
+			{ pubkey: pk(params.authority),                 isSigner: false, isWritable: false },
+			{ pubkey: pk(params.payer),                     isSigner: true,  isWritable: true  },
+			{ pubkey: none,                                 isSigner: false, isWritable: false },
+			{ pubkey: pk(collectionMetadata),               isSigner: false, isWritable: true  },
+			{ pubkey: pk(params.collectionMint),            isSigner: false, isWritable: false },
+			{ pubkey: pk(collectionMasterEdition),          isSigner: false, isWritable: false },
+			{ pubkey: pk(params.collectionUpdateAuthority), isSigner: true,  isWritable: true  },
+			{ pubkey: pk(collectionDelegateRecord),         isSigner: false, isWritable: true  },
+			{ pubkey: pk(TOKEN_METADATA_PROGRAM_ID),        isSigner: false, isWritable: false },
+			{ pubkey: pk(SYSTEM_PROGRAM_ID),                isSigner: false, isWritable: false },
+			{ pubkey: pk(SYSVAR_INSTRUCTIONS_ID),           isSigner: false, isWritable: false },
+			{ pubkey: none,                                 isSigner: false, isWritable: false },
+			{ pubkey: none,                                 isSigner: false, isWritable: false }
+		];
+
+		const data = concatAll([
+			DISCRIMINATOR.initializeV2,
+			encodeCandyMachineData(params.candyMachineData),
+			u8(params.tokenStandard !== undefined ? params.tokenStandard : 0)
+		]);
+
+		return new solanaWeb3.TransactionInstruction({
+			programId: pk(CANDY_MACHINE_CORE_PROGRAM_ID), keys, data
+		});
+	}
+
+	function buildAddConfigLinesInstruction(params) {
+		if (!Array.isArray(params.lines) || params.lines.length === 0) {
+			throw new Error("buildAddConfigLinesInstruction: lines must be a non-empty array");
+		}
+		const keys = [
+			{ pubkey: pk(params.candyMachine), isSigner: false, isWritable: true  },
+			{ pubkey: pk(params.authority),    isSigner: true,  isWritable: false }
+		];
+		const data = concatAll([
+			DISCRIMINATOR.addConfigLines,
+			u32(params.startIndex),
+			vec(params.lines, encodeConfigLine)
+		]);
+		return new solanaWeb3.TransactionInstruction({
+			programId: pk(CANDY_MACHINE_CORE_PROGRAM_ID), keys, data
+		});
+	}
+
+	/**
+	 * Anchor ranges: 2000-2999 constraint violations, 3000-3999 account
+	 * errors, 6000+ the program's own CandyError variants. The account
+	 * name in the log matters as much as the code — read both.
+	 */
+	function explainErrorCode(code) {
+		const n = typeof code === "string" && code.startsWith("0x") ? parseInt(code, 16) : Number(code);
+		const known = {
+			2000: "ConstraintMut — an account was passed read-only that the program declares as #[account(mut)]. The log names which one; flip that account's isWritable to true.",
+			2001: "ConstraintHasOne — a has_one relationship failed; an account doesn't belong to the one that claims it.",
+			2002: "ConstraintSigner — an account the program requires as a signer was passed without isSigner.",
+			2003: "ConstraintRaw — the candy_machine account failed the raw constraint: either it isn't owned by the Candy Machine program, or its allocated data_len is SMALLER than get_space_for_candy().",
+			2006: "ConstraintSeeds — a PDA was derived with the wrong seeds or the wrong program id.",
+			3003: "AccountDiscriminatorNotZero — the candy_machine account isn't blank; it's already initialized. Generate a fresh keypair.",
+			3005: "AccountNotEnoughKeys — fewer accounts passed than expected. InitializeV2 needs all 15 slots, optionals filled with the program's own ID.",
+			3012: "AccountNotInitialized — an account that must already exist on chain doesn't.",
+			6005: "TooManyCreators — max 4 creators (the candy machine itself takes the 5th slot).",
+			6012: "IncorrectCollectionAuthority — the signer isn't the collection's update authority."
+		};
+		return known[n] || ("Unmapped error code " + n + " (0x" + n.toString(16) + ").");
+	}
+
+	return {
+		CANDY_MACHINE_CORE_PROGRAM_ID, TOKEN_METADATA_PROGRAM_ID, HIDDEN_SECTION,
+		findCandyMachineAuthorityPda, findCollectionDelegateRecordPda,
+		encodeCandyMachineData, encodeConfigLine,
+		validateCandyMachineData, getSpaceForCandy, describeSpaceForCandy,
+		estimateLinesPerTransaction,
+		buildInitializeV2Instruction, buildAddConfigLinesInstruction,
+		explainErrorCode
+	};
+})();
+
+/* =========================================================
+   UI / test harness
+   ========================================================= */
+
+const RPC_URL = "https://api.0relaxbro.xyz/rpc-devnet";
+const connection = new solanaWeb3.Connection(RPC_URL, "confirmed");
+
+let walletPubkey = null;
+let walletProvider = null;
+
+const walletStatus = document.getElementById("walletStatus");
+const connectBtn = document.getElementById("connectBtn");
+const dryRunBtn = document.getElementById("dryRunBtn");
+const initBtn = document.getElementById("initBtn");
+const addLinesBtn = document.getElementById("addLinesBtn");
+
+async function connectWallet() {
+	if (!window.solana || !window.solana.isPhantom) {
+		walletStatus.innerHTML = '<span class="err">Phantom not found. Install it and reload.</span>';
+		return;
+	}
+	try {
+		const resp = await window.solana.connect();
+		walletPubkey = resp.publicKey;
+		walletProvider = window.solana;
+		walletStatus.innerHTML = 'Connected: <span class="ok">' + walletPubkey.toString() + '</span>';
+		dryRunBtn.disabled = false;
+		initBtn.disabled = false;
+		addLinesBtn.disabled = false;
+	} catch (err) {
+		walletStatus.innerHTML = '<span class="err">' + (err.message || "Connection failed.") + '</span>';
+	}
+}
+connectBtn.addEventListener("click", connectWallet);
+
+// HTTP polling, no WebSocket — same low-dependency pattern as
+// nft-creator.html's pollMintConfirmation.
+async function pollConfirmation(signature, lastValidBlockHeight) {
+	const start = Date.now();
+	while (Date.now() - start < 60000) {
+		const statuses = await connection.getSignatureStatuses([signature]);
+		const status = statuses && statuses.value && statuses.value[0];
+		if (status) {
+			if (status.err) throw new Error("Transaction failed on-chain: " + JSON.stringify(status.err));
+			if (status.confirmationStatus === "confirmed" || status.confirmationStatus === "finalized") return true;
+		}
+		const currentHeight = await connection.getBlockHeight();
+		if (currentHeight > lastValidBlockHeight) {
+			const finalCheck = await connection.getSignatureStatuses([signature]);
+			const finalStatus = finalCheck && finalCheck.value && finalCheck.value[0];
+			if (finalStatus && !finalStatus.err) return true;
+			throw new Error("Transaction expired (blockhash no longer valid) before confirmation.");
+		}
+		await new Promise((r) => setTimeout(r, 1500));
+	}
+	throw new Error("Confirmation timed out after 60s.");
+}
+
+/**
+ * Pulls both the "custom program error: 0xNNN" AND the offending
+ * account name out of a simulation failure. The account name is half
+ * the diagnosis — ConstraintMut on collection_metadata and
+ * ConstraintMut on authority_pda are completely different fixes.
+ */
+function describeError(err) {
+	const raw = (err && (err.message || String(err))) || "";
+	let out = raw;
+	const account = /AnchorError caused by account:\s*([a-z_]+)/.exec(raw);
+	const code = /custom program error:\s*(0x[0-9a-fA-F]+)/.exec(raw);
+	if (code) {
+		out += "\n\n→ " + RelaxCandyMachine.explainErrorCode(code[1]);
+		if (account) out += "\n→ offending account: " + account[1];
+	}
+	return out;
+}
+
+function readForm() {
+	const collectionMint = document.getElementById("collectionMintInput").value.trim();
+	const itemsAvailable = parseInt(document.getElementById("itemsAvailableInput").value, 10);
+	const nameLength = parseInt(document.getElementById("nameLengthInput").value, 10);
+	const uriLength = parseInt(document.getElementById("uriLengthInput").value, 10);
+
+	const candyMachineData = {
+		itemsAvailable,
+		symbol: "RELAXTEST",
+		sellerFeeBasisPoints: 0,
+		maxSupply: 0,
+		isMutable: true,
+		creators: [{ address: walletPubkey.toString(), verified: false, percentageShare: 100 }],
+		configLineSettings: { prefixName: "", nameLength, prefixUri: "", uriLength, isSequential: false },
+		hiddenSettings: null
+	};
+	return { collectionMint, itemsAvailable, nameLength, uriLength, candyMachineData };
+}
+
+/**
+ * Everything Step 1 computes, printed, nothing sent, no wallet popup.
+ * The sizing bug survived a review because no output ever showed a
+ * per-section breakdown to compare against Metaplex's table.
+ */
+async function runDryRun() {
+	const output = document.getElementById("initOutput");
+	dryRunBtn.disabled = true;
+	output.textContent = "Computing...";
+	try {
+		const { collectionMint, nameLength, uriLength, candyMachineData } = readForm();
+		RelaxCandyMachine.validateCandyMachineData(candyMachineData);
+
+		const { total, breakdown } = RelaxCandyMachine.describeSpaceForCandy(candyMachineData);
+		const rentLamports = await connection.getMinimumBalanceForRentExemption(total);
+
+		const throwaway = solanaWeb3.Keypair.generate().publicKey;
+		const authorityPda = await RelaxCandyMachine.findCandyMachineAuthorityPda(throwaway);
+		const delegateRecord = await RelaxCandyMachine.findCollectionDelegateRecordPda({
+			collectionMint, collectionUpdateAuthority: walletPubkey, delegate: authorityPda
+		});
+		const collectionMetadata = await RelaxPdas.findMetadataPda(collectionMint);
+		const collectionMasterEdition = await RelaxPdas.findMasterEditionPda(collectionMint);
+		const linesPerTx = RelaxCandyMachine.estimateLinesPerTransaction(nameLength, uriLength);
+
+		let text = "ACCOUNT SIZE\n";
+		for (const b of breakdown) text += "  " + String(b.bytes).padStart(8) + "  " + b.label + "\n";
+		text += "  " + String(total).padStart(8) + "  TOTAL\n";
+		text += "\nRENT (rent-exempt minimum, live from RPC)\n  " + (rentLamports / 1e9).toFixed(6) + " SOL\n";
+		text += "\nDERIVED ADDRESSES (authority PDA + delegate record shown for a throwaway\n";
+		text += "candy machine key — the real ones change per run, this only proves derivation works)\n";
+		text += "  collection metadata:        " + collectionMetadata.toString() + "\n";
+		text += "  collection master edition:  " + collectionMasterEdition.toString() + "\n";
+		text += "  candy machine authority:    " + authorityPda.toString() + "\n";
+		text += "  collection delegate record: " + delegateRecord.toString() + "\n";
+		text += "\nADDCONFIGLINES BATCHING\n  ~" + linesPerTx + " lines per transaction (estimate — Step 2 measures the real size)\n";
+
+		output.innerHTML = '<span class="ok">DRY RUN OK — nothing sent</span>\n' + text;
+	} catch (err) {
+		output.innerHTML = '<span class="err">DRY RUN FAILED: ' + describeError(err) + '</span>';
+		console.error(err);
+	} finally {
+		dryRunBtn.disabled = false;
+	}
+}
+dryRunBtn.addEventListener("click", runDryRun);
+
+async function runInitialize() {
+	const output = document.getElementById("initOutput");
+	initBtn.disabled = true;
+	output.textContent = "Working...";
+	try {
+		const { collectionMint, candyMachineData } = readForm();
+
+		const { total: space, breakdown } = RelaxCandyMachine.describeSpaceForCandy(candyMachineData);
+		const rentLamports = await connection.getMinimumBalanceForRentExemption(space);
+
+		let report = "Account size " + space + " bytes, rent " + (rentLamports / 1e9).toFixed(6) + " SOL\n";
+		for (const b of breakdown) report += "  " + String(b.bytes).padStart(8) + "  " + b.label + "\n";
+		output.textContent = report + "Building transaction...";
+
+		const candyMachineKeypair = solanaWeb3.Keypair.generate();
+
+		const createAccountIx = solanaWeb3.SystemProgram.createAccount({
+			fromPubkey: walletPubkey,
+			newAccountPubkey: candyMachineKeypair.publicKey,
+			lamports: rentLamports,
+			space,
+			programId: new solanaWeb3.PublicKey(RelaxCandyMachine.CANDY_MACHINE_CORE_PROGRAM_ID)
+		});
+
+		// collectionMetadata / collectionMasterEdition / collectionDelegateRecord
+		// deliberately not passed — the builder derives all three.
+		const initIx = await RelaxCandyMachine.buildInitializeV2Instruction({
+			candyMachine: candyMachineKeypair.publicKey,
+			authority: walletPubkey,
+			payer: walletPubkey,
+			collectionMint,
+			collectionUpdateAuthority: walletPubkey,
+			candyMachineData,
+			tokenStandard: 0
+		});
+
+		const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+		const tx = new solanaWeb3.Transaction();
+		tx.recentBlockhash = blockhash;
+		tx.feePayer = walletPubkey;
+		tx.add(createAccountIx, initIx);
+		tx.partialSign(candyMachineKeypair);
+
+		const signedTx = await walletProvider.signTransaction(tx);
+		const signature = await connection.sendRawTransaction(signedTx.serialize(), { skipPreflight: false });
+		output.textContent += "\nSent: " + signature + "\nWaiting for confirmation...";
+
+		await pollConfirmation(signature, lastValidBlockHeight);
+
+		output.innerHTML = '<span class="ok">SUCCESS</span>\nCandy Machine: ' + candyMachineKeypair.publicKey.toString() +
+			'\nSignature: ' + signature +
+			'\nSpace: ' + space + ' bytes / Rent: ' + (rentLamports / 1e9).toFixed(6) + ' SOL';
+
+		document.getElementById("candyMachinePubkeyInput").value = candyMachineKeypair.publicKey.toString();
+	} catch (err) {
+		output.innerHTML = '<span class="err">FAILED: ' + describeError(err) + '</span>';
+		console.error(err);
+	} finally {
+		initBtn.disabled = false;
+	}
+}
+initBtn.addEventListener("click", runInitialize);
+
+async function runAddConfigLines() {
+	const output = document.getElementById("addLinesOutput");
+	addLinesBtn.disabled = true;
+	output.textContent = "Working...";
+	try {
+		const candyMachinePubkey = document.getElementById("candyMachinePubkeyInput").value.trim();
+		const lineCount = parseInt(document.getElementById("testLineCountInput").value, 10);
+		const nameLength = parseInt(document.getElementById("nameLengthInput").value, 10);
+		const uriLength = parseInt(document.getElementById("uriLengthInput").value, 10);
+		const enc = new TextEncoder();
+
+		// Lines must fit the reserved name_length / uri_length or the program
+		// rejects the whole batch. Checked locally so a length mistake surfaces
+		// here rather than as a program error after a signature.
+		const lines = [];
+		for (let i = 0; i < lineCount; i++) {
+			const name = "RELAX Test #" + i;
+			const uri = "https://gateway.irys.xyz/" + String(i).padStart(4, "0") + "-devnet-test.json";
+			if (enc.encode(name).length > nameLength) throw new Error('Line ' + i + ' name exceeds nameLength (' + nameLength + '): "' + name + '"');
+			if (enc.encode(uri).length > uriLength) throw new Error('Line ' + i + ' uri exceeds uriLength (' + uriLength + '): "' + uri + '"');
+			lines.push({ name, uri });
+		}
+
+		const ix = RelaxCandyMachine.buildAddConfigLinesInstruction({
+			candyMachine: candyMachinePubkey, authority: walletPubkey, startIndex: 0, lines
+		});
+
+		const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+		const tx = new solanaWeb3.Transaction();
+		tx.recentBlockhash = blockhash;
+		tx.feePayer = walletPubkey;
+		tx.add(ix);
+
+		// Real serialized size vs the ~1232-byte limit — the direct
+		// confirmation of the batching math, not the formula's estimate.
+		const serialized = tx.serialize({ requireAllSignatures: false, verifySignatures: false });
+		const estimate = RelaxCandyMachine.estimateLinesPerTransaction(nameLength, uriLength);
+		output.textContent = "Transaction size with " + lineCount + " lines: " + serialized.length +
+			" bytes (limit ~1232)\nFormula estimated max: " + estimate + " lines/tx\nSending...";
+
+		if (serialized.length > 1232) {
+			throw new Error("Transaction is " + serialized.length + " bytes, over the ~1232 limit. Lower the line count (formula suggests " + estimate + ").");
+		}
+
+		const signedTx = await walletProvider.signTransaction(tx);
+		const signature = await connection.sendRawTransaction(signedTx.serialize(), { skipPreflight: false });
+		output.textContent += "\nSent: " + signature + "\nWaiting for confirmation...";
+
+		await pollConfirmation(signature, lastValidBlockHeight);
+
+		output.innerHTML = '<span class="ok">SUCCESS</span>\n' + lineCount + ' lines added.\nSignature: ' + signature +
+			'\nSerialized tx size: ' + serialized.length + ' bytes\nFormula estimate was: ' + estimate + ' lines/tx';
+	} catch (err) {
+		output.innerHTML = '<span class="err">FAILED: ' + describeError(err) + '</span>';
+		console.error(err);
+	} finally {
+		addLinesBtn.disabled = false;
+	}
+}
+addLinesBtn.addEventListener("click", runAddConfigLines);
+
+</script>
+</body>
+</html>
