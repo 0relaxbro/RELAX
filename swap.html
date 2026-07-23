@@ -732,7 +732,7 @@ applicable, are shown before you sign.
 
 /* ============================================================
    Jupiter's Swap V2 Meta-Aggregator (order + execute) — routed
-   through RELAX's own worker (card.0relaxbro.xyz/jupiter-order and
+   through RELAX's own worker (api.0relaxbro.xyz/jupiter-order and
    /jupiter-execute), NOT called directly against api.jup.ag from
    here. This is a hard rule, not a preference: swap.html is public,
    static code on GitHub Pages, so anything hardcoded here (including
@@ -749,7 +749,7 @@ applicable, are shown before you sign.
    gasless order's total fee), keeping JupiterZ's liquidity available
    on every quote.
    ============================================================ */
-const JUPITER_API_BASE = "https://card.0relaxbro.xyz";
+const JUPITER_API_BASE = "https://api.0relaxbro.xyz";
 
 // PRODUCT DECISION (18 Jul 2026): RELAX's platform fee is 0% for
 // everyone, always — not just holders. Swap is the doorway that
@@ -878,7 +878,7 @@ function tokenRiskFlags(token) {
 	return flags;
 }
 
-const RPC_URL = "https://card.0relaxbro.xyz";
+const RPC_URL = "https://api.0relaxbro.xyz";
 
 const connectBtn = document.getElementById("connectBtn");
 const walletBox = document.getElementById("walletBox");

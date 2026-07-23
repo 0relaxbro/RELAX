@@ -8344,7 +8344,7 @@ marketStatus.textContent =
    the correct, richer source (real 24h change, volume, liquidity).
    Until then (still on the pump.fun bonding curve, as it is today),
    DexScreener has no pair to read and returns empty data, so we
-   fall back to RELAX's own pump.fun proxy (card.0relaxbro.xyz/
+   fall back to RELAX's own pump.fun proxy (api.0relaxbro.xyz/
    pumpfun-price — needed because frontend-api-v3.pump.fun blocks
    direct browser/CORS requests, see worker.js).
 
@@ -8397,7 +8397,7 @@ if(!activePair){
 
 const pumpResponse =
 await fetch(
-"https://card.0relaxbro.xyz/pumpfun-price",
+"https://api.0relaxbro.xyz/pumpfun-price",
 { cache:"no-store" }
 );
 

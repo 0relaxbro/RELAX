@@ -384,7 +384,7 @@ const NFT_NETWORK = "devnet"; // "devnet" | "mainnet-beta" — the only line to 
 
 const NFT_NETWORKS = {
 	devnet: {
-		rpcUrl: "https://card.0relaxbro.xyz/rpc-devnet",
+		rpcUrl: "https://api.0relaxbro.xyz/rpc-devnet",
 		explorerCluster: "devnet", // passed as ?cluster= on explorer.solana.com links
 		irysDevnet: true, // Irys's devnet/test storage tier — worthless SOL, ~60-day retention, not permanent
 		// Verified Collection (added 22 Jul 2026) — devnet TEST collection,
@@ -395,7 +395,7 @@ const NFT_NETWORKS = {
 		collectionAuthority: "EpXhzMtQXm4wbzciCVioXr8Cr13QxpzLjQnHUV1HBdZg" // public key only — the matching private key lives ONLY as a Cloudflare secret, never here
 	},
 	"mainnet-beta": {
-		rpcUrl: "https://card.0relaxbro.xyz", // same worker, default (non-devnet) route — see worker.js's fallthrough to handleRpcProxy(request, env, "mainnet")
+		rpcUrl: "https://api.0relaxbro.xyz", // same worker, default (non-devnet) route — see worker.js's fallthrough to handleRpcProxy(request, env, "mainnet")
 		explorerCluster: "mainnet-beta", // Explorer accepts this explicitly; no special-casing needed
 		irysDevnet: false, // Irys's real, paid mainnet storage tier — persistence properties should be verified against Irys's current docs before relying on this for production launch
 		// TODO before mainnet launch: mint a fresh Collection NFT on

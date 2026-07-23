@@ -14,13 +14,13 @@
      logic live. Every tool calls RelaxHolder, none of them
      re-implement the check themselves.
    - Read-only. Never asks for a signature, never moves funds.
-   - Reuses the exact RPC proxy (card.0relaxbro.xyz) and contract
+   - Reuses the exact RPC proxy (api.0relaxbro.xyz) and contract
      address already used by the rest of the site.
    ========================================================= */
 
 const RelaxHolder = (function () {
 
-	const RPC_URL = "https://card.0relaxbro.xyz";
+	const RPC_URL = "https://api.0relaxbro.xyz";
 	const RELAX_MINT = "6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump";
 	// DexScreener first, pump.fun as automatic fallback — same convention
 	// used site-wide (see index.html's fetchRelaxMarket and the
@@ -28,7 +28,7 @@ const RelaxHolder = (function () {
 	// once $RELAX graduates and real liquidity/volume appears.
 	const DEX_PAIR_ENDPOINT =
 		"https://api.dexscreener.com/token-pairs/v1/solana/" + RELAX_MINT;
-	const PUMPFUN_PRICE_ENDPOINT = "https://card.0relaxbro.xyz/pumpfun-price";
+	const PUMPFUN_PRICE_ENDPOINT = "https://api.0relaxbro.xyz/pumpfun-price";
 	const HOLDER_USD_THRESHOLD = 20;
 
 	// Cache the price for a short window so rapid re-checks (e.g. re-running
