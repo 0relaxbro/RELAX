@@ -982,6 +982,7 @@ async function runInitialize() {
 			'\nSpace: ' + space + ' bytes / Rent: ' + (rentLamports / 1e9).toFixed(6) + ' SOL';
 
 		document.getElementById("candyMachinePubkeyInput").value = candyMachineKeypair.publicKey.toString();
+		document.getElementById("guardCandyMachineInput").value = candyMachineKeypair.publicKey.toString();
 	} catch (err) {
 		output.innerHTML = '<span class="err">FAILED: ' + describeError(err) + '</span>';
 		console.error(err);
