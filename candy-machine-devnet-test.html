@@ -146,8 +146,15 @@ async function runInitialize() {
 		};
 
 		const space = RelaxCandyMachine.getSpaceForCandy(candyMachineData);
-		const rentLamports = await connection.getMinimumBalanceForRentExemption(space);
-		output.textContent = "Computed space: " + space + " bytes, rent: " + (rentLamports / 1e9).toFixed(6) + " SOL\nBuilding transaction...";
+		// TEMPORARY DIAGNOSTIC (23 Jul 2026): +500 byte buffer to isolate
+		// whether the program's ConstraintRaw failure on InitializeV2 is
+		// a real size shortfall in getSpaceForCandy() vs. an unrelated
+		// issue (e.g. account owner). Remove once the real cause is
+		// confirmed — this is not a fix, it's a test.
+		const DIAGNOSTIC_BUFFER = 500;
+		const spaceWithBuffer = space + DIAGNOSTIC_BUFFER;
+		const rentLamports = await connection.getMinimumBalanceForRentExemption(spaceWithBuffer);
+		output.textContent = "Computed space: " + space + " + " + DIAGNOSTIC_BUFFER + " diagnostic buffer = " + spaceWithBuffer + " bytes, rent: " + (rentLamports / 1e9).toFixed(6) + " SOL\nBuilding transaction...";
 
 		const candyMachineKeypair = solanaWeb3.Keypair.generate();
 		lastCandyMachineKeypair = candyMachineKeypair;
@@ -156,7 +163,7 @@ async function runInitialize() {
 			fromPubkey: walletPubkey,
 			newAccountPubkey: candyMachineKeypair.publicKey,
 			lamports: rentLamports,
-			space,
+			space: spaceWithBuffer,
 			programId: new solanaWeb3.PublicKey(RelaxCandyMachine.CANDY_MACHINE_CORE_PROGRAM_ID)
 		});
 
