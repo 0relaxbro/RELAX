@@ -27,10 +27,17 @@ pre{background:#000;border-radius:6px;padding:12px;font-size:12px;overflow-x:aut
 <h1>🍬 Candy Machine — Devnet Test Harness</h1>
 <p class="warn">Internal tool. Not linked from the site, not for public use.
 Devnet only — hardcoded, no mainnet path.</p>
-<p class="build">BUILD 3 — self-contained: no external .js files, so nothing can be
-served stale from cache.<br>
-Fixed so far: account sizing (ConstraintRaw / 0x7d3) → collection delegate record
-PDA (was a placeholder) → collection_metadata writable (ConstraintMut / 0x7d0).</p>
+<p class="build">BUILD 4 — added Step 3 (Candy Guard initialize+wrap) and Step 4
+(route + mint_v2), byte layouts read directly from the real, installed
+@metaplex-foundation/mpl-candy-guard npm package source — not guessed.
+Still self-contained, no external .js files.<br>
+Candy Machine Core fixes (from BUILD 3): account sizing (ConstraintRaw
+/ 0x7d3) → collection delegate record PDA (was a placeholder) →
+collection_metadata writable (ConstraintMut / 0x7d0). All proven on
+real devnet transactions.<br>
+Step 3/4 are UNTESTED — first real run of this code. Uses a
+single-leaf AllowList tree (your own wallet) to prove the guard wiring
+end-to-end before building real multi-wallet Merkle trees.</p>
 
 <div class="card">
 	<div id="walletStatus">Not connected.</div>
@@ -65,7 +72,43 @@ PDA (was a placeholder) → collection_metadata writable (ConstraintMut / 0x7d0)
 	<pre id="addLinesOutput">(not run yet)</pre>
 </div>
 
+<div class="card">
+	<h3 style="margin-top:0;">Step 3 — Candy Guard: initialize + wrap</h3>
+	<p class="hint">Creates a CandyGuard with a single group "WAVE1"
+	(AllowList + MintLimit(1) + StartDate=now, matching the badge-wave
+	design in the migration plan), then wraps it onto the Candy Machine
+	from Step 1 so minting only works through the guard from here on.</p>
+	<label>Candy Machine pubkey (auto-filled after Step 1)</label>
+	<input type="text" id="guardCandyMachineInput" value="">
+	<button id="dryRunGuardBtn" class="secondary" disabled>Dry run (size + PDAs, no transaction)</button>
+	<button id="initGuardBtn" disabled>Create + Initialize + Wrap</button>
+	<pre id="initGuardOutput">(not run yet)</pre>
+</div>
+
+<div class="card">
+	<h3 style="margin-top:0;">Step 4 — mint_v2 (test mint under WAVE1)</h3>
+	<p class="hint">Submits the AllowList Merkle proof via `route`, then
+	calls `mint_v2`. Connected wallet must be in the allow-list used to
+	build the Merkle root below (this test uses a single-leaf tree — the
+	connected wallet IS the whole list, for a first end-to-end check).</p>
+	<label>Candy Guard pubkey (auto-filled after Step 3)</label>
+	<input type="text" id="mintGuardInput" value="">
+	<label>Candy Machine pubkey (auto-filled after Step 1)</label>
+	<input type="text" id="mintCandyMachineInput" value="">
+	<button id="mintBtn" disabled>Route (AllowList proof) + mint_v2</button>
+	<pre id="mintOutput">(not run yet)</pre>
+</div>
+
 <script src="https://unpkg.com/@solana/web3.js@1.95.3/lib/index.iife.min.js"></script>
+<script>
+// crypto.subtle-based sha256, used for the single-leaf Merkle "tree"
+// test below — no external hashing library needed, browsers have this
+// natively.
+async function sha256(bytes) {
+	const digest = await crypto.subtle.digest("SHA-256", bytes);
+	return new Uint8Array(digest);
+}
+</script>
 <script>
 /* =========================================================
    INLINED — Borsh primitives (was serializer.js)
@@ -538,6 +581,206 @@ const RelaxCandyMachine = (function () {
 })();
 
 /* =========================================================
+   INLINED — RELAX Candy Guard instruction builder
+   =========================================================
+   Byte layouts transcribed directly from the real, installed, working
+   @metaplex-foundation/mpl-candy-guard npm package source
+   (dist/src/parser.js + dist/src/generated/*), read directly — not
+   guessed from README prose, which turned out to have a real error
+   (Allocation's field is `limit: u32`, 5 bytes total — NOT
+   `size: u16`/3 bytes as the README describes). See
+   SWAP_V2_MIGRATION_PLAN.md's "Candy Guard byte format solved" section
+   for the full research trail.
+   ========================================================= */
+const RelaxCandyGuard = (function () {
+	const { u8, u16, u32, u64, bool, concatAll } = RelaxBorsh;
+
+	const CANDY_GUARD_PROGRAM_ID = "Guard1JwRhJkVH6XZhzoYxeBVQe872VH6QggF4BWmS9g";
+	const SYSTEM_PROGRAM_ID = "11111111111111111111111111111111";
+
+	const DISCRIMINATOR = {
+		initialize: Uint8Array.of(175, 175, 109, 31, 13, 152, 155, 237),
+		mintV2: Uint8Array.of(120, 121, 23, 146, 173, 110, 199, 205),
+		route: Uint8Array.of(229, 23, 203, 151, 122, 227, 173, 42),
+		wrap: Uint8Array.of(178, 40, 10, 189, 228, 129, 186, 140)
+	};
+
+	function pk(x) { return x instanceof solanaWeb3.PublicKey ? x : new solanaWeb3.PublicKey(x); }
+
+	const GUARDS_NAME = [
+		"botTax", "solPayment", "tokenPayment", "startDate", "thirdPartySigner",
+		"tokenGate", "gatekeeper", "endDate", "allowList", "mintLimit",
+		"nftPayment", "redeemedAmount", "addressGate", "nftGate", "nftBurn",
+		"tokenBurn", "freezeSolPayment", "freezeTokenPayment", "programGate",
+		"allocation", "token2022Payment"
+	];
+	const GUARDS_SIZE = {
+		botTax: 9, solPayment: 40, tokenPayment: 72, startDate: 8,
+		thirdPartySigner: 32, tokenGate: 40, gatekeeper: 33, endDate: 8,
+		allowList: 32, mintLimit: 3, nftPayment: 64, redeemedAmount: 8,
+		addressGate: 32, nftGate: 32, nftBurn: 32, tokenBurn: 40,
+		freezeSolPayment: 40, freezeTokenPayment: 72, programGate: 164,
+		allocation: 5, token2022Payment: 72
+	};
+	const GUARD_TYPE = {
+		botTax: 0, solPayment: 1, tokenPayment: 2, startDate: 3,
+		thirdPartySigner: 4, tokenGate: 5, gatekeeper: 6, endDate: 7,
+		allowList: 8, mintLimit: 9, nftPayment: 10, redeemedAmount: 11,
+		addressGate: 12, nftGate: 13, nftBurn: 14, tokenBurn: 15,
+		freezeSolPayment: 16, freezeTokenPayment: 17, programGate: 18,
+		allocation: 19, token2022Payment: 20
+	};
+	const MAX_LABEL_LENGTH = 6;
+
+	function encodeAllowList(g) {
+		if (g.merkleRoot.length !== 32) throw new Error("AllowList.merkleRoot must be 32 bytes");
+		return g.merkleRoot;
+	}
+	function encodeMintLimit(g) { return concatAll([u8(g.id), u16(g.limit)]); }
+	function encodeStartDate(g) { return u64(BigInt(g.date)); }
+	function encodeEndDate(g) { return u64(BigInt(g.date)); }
+	function encodeBotTax(g) { return concatAll([u64(g.lamports), bool(!!g.lastInstruction)]); }
+	function encodeAllocation(g) { return concatAll([u8(g.id), u32(g.limit)]); } // CORRECTED: limit:u32, not size:u16
+
+	const GUARD_ENCODERS = {
+		allowList: encodeAllowList, mintLimit: encodeMintLimit,
+		startDate: encodeStartDate, endDate: encodeEndDate,
+		botTax: encodeBotTax, allocation: encodeAllocation
+	};
+
+	function encodeGuardSet(guardSet) {
+		guardSet = guardSet || {};
+		let features = 0n;
+		const dataChunks = [];
+		GUARDS_NAME.forEach((name, index) => {
+			const value = guardSet[name];
+			if (value) {
+				const encoder = GUARD_ENCODERS[name];
+				if (!encoder) throw new Error("No encoder for guard '" + name + "'");
+				const encoded = encoder(value);
+				if (encoded.length !== GUARDS_SIZE[name]) {
+					throw new Error("Size mismatch for '" + name + "': expected " + GUARDS_SIZE[name] + ", got " + encoded.length);
+				}
+				dataChunks.push(encoded);
+				features |= (1n << BigInt(index));
+			}
+		});
+		return concatAll([u64(features), concatAll(dataChunks)]);
+	}
+
+	function encodeCandyGuardData(data) {
+		const chunks = [encodeGuardSet(data.default)];
+		const groups = data.groups || [];
+		chunks.push(u32(groups.length));
+		for (const group of groups) {
+			if (group.label.length > MAX_LABEL_LENGTH) throw new Error("Label too long: " + group.label);
+			const labelBytes = new Uint8Array(MAX_LABEL_LENGTH);
+			labelBytes.set(new TextEncoder().encode(group.label));
+			chunks.push(labelBytes);
+			chunks.push(encodeGuardSet(group.guards));
+		}
+		return concatAll(chunks);
+	}
+
+	async function findCandyGuardPda(basePubkey) {
+		const [pda] = await solanaWeb3.PublicKey.findProgramAddress(
+			[new TextEncoder().encode("candy_guard"), pk(basePubkey).toBytes()],
+			pk(CANDY_GUARD_PROGRAM_ID)
+		);
+		return pda;
+	}
+
+	function buildInitializeInstruction(params) {
+		const keys = [
+			{ pubkey: pk(params.candyGuard), isSigner: false, isWritable: true },
+			{ pubkey: pk(params.base), isSigner: true, isWritable: false },
+			{ pubkey: pk(params.authority), isSigner: false, isWritable: false },
+			{ pubkey: pk(params.payer), isSigner: true, isWritable: true },
+			{ pubkey: pk(SYSTEM_PROGRAM_ID), isSigner: false, isWritable: false }
+		];
+		const encoded = encodeCandyGuardData(params.candyGuardData);
+		const data = concatAll([DISCRIMINATOR.initialize, u32(encoded.length), encoded]);
+		return new solanaWeb3.TransactionInstruction({ programId: pk(CANDY_GUARD_PROGRAM_ID), keys, data });
+	}
+
+	function buildWrapInstruction(params) {
+		const keys = [
+			{ pubkey: pk(params.candyGuard), isSigner: false, isWritable: false },
+			{ pubkey: pk(params.authority), isSigner: true, isWritable: false },
+			{ pubkey: pk(params.candyMachine), isSigner: false, isWritable: true },
+			{ pubkey: pk(RelaxCandyMachine.CANDY_MACHINE_CORE_PROGRAM_ID), isSigner: false, isWritable: false },
+			{ pubkey: pk(params.candyMachineAuthority), isSigner: true, isWritable: false }
+		];
+		return new solanaWeb3.TransactionInstruction({
+			programId: pk(CANDY_GUARD_PROGRAM_ID), keys, data: concatAll([DISCRIMINATOR.wrap])
+		});
+	}
+
+	function buildRouteInstruction(params) {
+		if (!(params.guardName in GUARD_TYPE)) throw new Error("Unknown guard '" + params.guardName + "'");
+		const keys = [
+			{ pubkey: pk(params.candyGuard), isSigner: false, isWritable: false },
+			{ pubkey: pk(params.candyMachine), isSigner: false, isWritable: true },
+			{ pubkey: pk(params.payer), isSigner: true, isWritable: true },
+			...(params.remainingAccounts || [])
+		];
+		const routeData = params.routeData || new Uint8Array(0);
+		const enc = new TextEncoder();
+		const labelOption = params.label
+			? concatAll([Uint8Array.of(1), u32(enc.encode(params.label).length), enc.encode(params.label)])
+			: Uint8Array.of(0);
+		const data = concatAll([DISCRIMINATOR.route, u8(GUARD_TYPE[params.guardName]), u32(routeData.length), routeData, labelOption]);
+		return new solanaWeb3.TransactionInstruction({ programId: pk(CANDY_GUARD_PROGRAM_ID), keys, data });
+	}
+
+	function buildMintV2Instruction(params) {
+		const none = pk(CANDY_GUARD_PROGRAM_ID);
+		const keys = [
+			{ pubkey: pk(params.candyGuard), isSigner: false, isWritable: false },
+			{ pubkey: pk(RelaxCandyMachine.CANDY_MACHINE_CORE_PROGRAM_ID), isSigner: false, isWritable: false },
+			{ pubkey: pk(params.candyMachine), isSigner: false, isWritable: true },
+			{ pubkey: pk(params.candyMachineAuthorityPda), isSigner: false, isWritable: true },
+			{ pubkey: pk(params.payer), isSigner: true, isWritable: true },
+			{ pubkey: pk(params.minter), isSigner: true, isWritable: true },
+			{ pubkey: pk(params.nftMint), isSigner: false, isWritable: true },
+			{ pubkey: pk(params.nftMintAuthority), isSigner: true, isWritable: false },
+			{ pubkey: pk(params.nftMetadata), isSigner: false, isWritable: true },
+			{ pubkey: pk(params.nftMasterEdition), isSigner: false, isWritable: true },
+			{ pubkey: params.token ? pk(params.token) : none, isSigner: false, isWritable: !!params.token },
+			{ pubkey: params.tokenRecord ? pk(params.tokenRecord) : none, isSigner: false, isWritable: !!params.tokenRecord },
+			{ pubkey: pk(params.collectionDelegateRecord), isSigner: false, isWritable: false },
+			{ pubkey: pk(params.collectionMint), isSigner: false, isWritable: false },
+			{ pubkey: pk(params.collectionMetadata), isSigner: false, isWritable: true },
+			{ pubkey: pk(params.collectionMasterEdition), isSigner: false, isWritable: false },
+			{ pubkey: pk(params.collectionUpdateAuthority), isSigner: false, isWritable: false },
+			{ pubkey: pk(params.tokenMetadataProgram), isSigner: false, isWritable: false },
+			{ pubkey: pk(params.splTokenProgram), isSigner: false, isWritable: false },
+			{ pubkey: params.splAtaProgram ? pk(params.splAtaProgram) : none, isSigner: false, isWritable: false },
+			{ pubkey: pk(SYSTEM_PROGRAM_ID), isSigner: false, isWritable: false },
+			{ pubkey: pk(params.sysvarInstructions), isSigner: false, isWritable: false },
+			{ pubkey: pk(params.recentSlothashes), isSigner: false, isWritable: false },
+			{ pubkey: params.authorizationRulesProgram ? pk(params.authorizationRulesProgram) : none, isSigner: false, isWritable: false },
+			{ pubkey: params.authorizationRules ? pk(params.authorizationRules) : none, isSigner: false, isWritable: false },
+			...(params.remainingAccounts || [])
+		];
+		const mintArgs = params.mintArgs || new Uint8Array(0);
+		const enc = new TextEncoder();
+		const labelOption = params.label
+			? concatAll([Uint8Array.of(1), u32(enc.encode(params.label).length), enc.encode(params.label)])
+			: Uint8Array.of(0);
+		const data = concatAll([DISCRIMINATOR.mintV2, u32(mintArgs.length), mintArgs, labelOption]);
+		return new solanaWeb3.TransactionInstruction({ programId: pk(CANDY_GUARD_PROGRAM_ID), keys, data });
+	}
+
+	return {
+		CANDY_GUARD_PROGRAM_ID, GUARD_TYPE,
+		findCandyGuardPda, encodeGuardSet, encodeCandyGuardData,
+		buildInitializeInstruction, buildWrapInstruction,
+		buildRouteInstruction, buildMintV2Instruction
+	};
+})();
+
+/* =========================================================
    UI / test harness
    ========================================================= */
 
@@ -552,6 +795,9 @@ const connectBtn = document.getElementById("connectBtn");
 const dryRunBtn = document.getElementById("dryRunBtn");
 const initBtn = document.getElementById("initBtn");
 const addLinesBtn = document.getElementById("addLinesBtn");
+const dryRunGuardBtn = document.getElementById("dryRunGuardBtn");
+const initGuardBtn = document.getElementById("initGuardBtn");
+const mintBtn = document.getElementById("mintBtn");
 
 async function connectWallet() {
 	if (!window.solana || !window.solana.isPhantom) {
@@ -566,6 +812,9 @@ async function connectWallet() {
 		dryRunBtn.disabled = false;
 		initBtn.disabled = false;
 		addLinesBtn.disabled = false;
+		dryRunGuardBtn.disabled = false;
+		initGuardBtn.disabled = false;
+		mintBtn.disabled = false;
 	} catch (err) {
 		walletStatus.innerHTML = '<span class="err">' + (err.message || "Connection failed.") + '</span>';
 	}
@@ -802,6 +1051,201 @@ async function runAddConfigLines() {
 	}
 }
 addLinesBtn.addEventListener("click", runAddConfigLines);
+
+/* =========================================================
+   Step 3 — Candy Guard: initialize + wrap
+   ========================================================= */
+
+let lastGuardBase = null; // the "base" keypair used as the Guard PDA's seed, kept for Step 4
+
+function buildWave1GuardData(merkleRoot) {
+	// Matches the migration plan's badge-wave design: AllowList gate +
+	// MintLimit(1 per wallet) + StartDate (now, so it's immediately
+	// live for this test) under a single group labeled "WAVE1". No
+	// default-set guards — the default set applies with NO group
+	// specified, which we don't want usable here, so it's left empty
+	// (an empty default set blocks all ungrouped mint attempts, which
+	// is correct: this test collection should ONLY be mintable via WAVE1).
+	return {
+		default: {},
+		groups: [{
+			label: "WAVE1",
+			guards: {
+				allowList: { merkleRoot },
+				mintLimit: { id: 1, limit: 1 },
+				startDate: { date: Math.floor(Date.now() / 1000) - 60 } // 60s in the past, so it's live immediately
+			}
+		}]
+	};
+}
+
+async function runInitGuard() {
+	const output = document.getElementById("initGuardOutput");
+	initGuardBtn.disabled = true;
+	output.textContent = "Working...";
+	try {
+		const candyMachine = document.getElementById("guardCandyMachineInput").value.trim();
+		if (!candyMachine) throw new Error("Candy Machine pubkey required (from Step 1).");
+
+		// Single-leaf Merkle "tree" for this first test: the tree is
+		// just sha256(walletPubkey), so the connected wallet itself is
+		// the entire allow-list. A real multi-wallet tree is a Step 5+
+		// concern (needs a small Merkle-tree helper) — this proves the
+		// AllowList guard's wiring end-to-end first, which is the
+		// actual open question right now.
+		const merkleRoot = await sha256(walletPubkey.toBytes());
+		output.textContent = "Single-leaf AllowList root (= sha256 of your wallet): " +
+			Array.from(merkleRoot).map(b => b.toString(16).padStart(2, "0")).join("") +
+			"\nBuilding Candy Guard...";
+
+		const baseKeypair = solanaWeb3.Keypair.generate();
+		lastGuardBase = baseKeypair;
+		const candyGuardPda = await RelaxCandyGuard.findCandyGuardPda(baseKeypair.publicKey);
+
+		const candyGuardData = buildWave1GuardData(merkleRoot);
+
+		const initIx = RelaxCandyGuard.buildInitializeInstruction({
+			candyGuard: candyGuardPda,
+			base: baseKeypair.publicKey,
+			authority: walletPubkey,
+			payer: walletPubkey,
+			candyGuardData
+		});
+
+		const candyMachineAuthorityPda = await RelaxCandyMachine.findCandyMachineAuthorityPda(candyMachine);
+		// NOTE: wrap's `candyMachineAuthority` account is the WALLET
+		// that currently controls the Candy Machine (the one that
+		// signed InitializeV2 in Step 1) — NOT the authority PDA. Easy
+		// to confuse these two; they're different accounts.
+		const wrapIx = RelaxCandyGuard.buildWrapInstruction({
+			candyGuard: candyGuardPda,
+			authority: walletPubkey,
+			candyMachine,
+			candyMachineAuthority: walletPubkey
+		});
+
+		const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+		const tx = new solanaWeb3.Transaction();
+		tx.recentBlockhash = blockhash;
+		tx.feePayer = walletPubkey;
+		tx.add(initIx, wrapIx);
+		tx.partialSign(baseKeypair);
+
+		const signedTx = await walletProvider.signTransaction(tx);
+		const signature = await connection.sendRawTransaction(signedTx.serialize(), { skipPreflight: false });
+		output.textContent += "\nSent: " + signature + "\nWaiting for confirmation...";
+
+		await pollConfirmation(signature, lastValidBlockHeight);
+
+		output.innerHTML = '<span class="ok">SUCCESS</span>\nCandy Guard: ' + candyGuardPda.toString() +
+			'\nSignature: ' + signature +
+			'\nGroup: WAVE1 (AllowList + MintLimit(1) + StartDate=live now)';
+
+		document.getElementById("mintGuardInput").value = candyGuardPda.toString();
+		document.getElementById("mintCandyMachineInput").value = candyMachine;
+	} catch (err) {
+		output.innerHTML = '<span class="err">FAILED: ' + describeError(err) + '</span>';
+		console.error(err);
+	} finally {
+		initGuardBtn.disabled = false;
+	}
+}
+initGuardBtn.addEventListener("click", runInitGuard);
+
+async function runDryRunGuard() {
+	const output = document.getElementById("initGuardOutput");
+	try {
+		const merkleRoot = await sha256(walletPubkey.toBytes());
+		const candyGuardData = buildWave1GuardData(merkleRoot);
+		const encoded = RelaxCandyGuard.encodeCandyGuardData(candyGuardData);
+		output.textContent = "DRY RUN OK — nothing sent\n" +
+			"Encoded CandyGuardData size: " + encoded.length + " bytes\n" +
+			"Merkle root (single-leaf, your wallet): " +
+			Array.from(merkleRoot).map(b => b.toString(16).padStart(2, "0")).join("");
+	} catch (err) {
+		output.innerHTML = '<span class="err">' + describeError(err) + '</span>';
+	}
+}
+dryRunGuardBtn.addEventListener("click", runDryRunGuard);
+
+/* =========================================================
+   Step 4 — route (AllowList proof) + mint_v2
+   ========================================================= */
+
+async function runMint() {
+	const output = document.getElementById("mintOutput");
+	mintBtn.disabled = true;
+	output.textContent = "Working...";
+	try {
+		const candyGuard = document.getElementById("mintGuardInput").value.trim();
+		const candyMachine = document.getElementById("mintCandyMachineInput").value.trim();
+		const collectionMint = document.getElementById("collectionMintInput").value.trim();
+		if (!candyGuard || !candyMachine) throw new Error("Both Candy Guard and Candy Machine pubkeys required (from Steps 1 & 3).");
+
+		// AllowList's route needs a Merkle PROOF, not just the root. For
+		// this single-leaf tree, the "proof" is empty (the leaf IS the
+		// root — there's nothing else to prove against). A real
+		// multi-wallet tree needs actual sibling-hash proof data here.
+		const proof = new Uint8Array(0);
+		const routeData = proof; // AllowList's route payload is just the proof bytes, per the guard's own route() handler
+
+		const nftMintKeypair = solanaWeb3.Keypair.generate();
+		const nftMetadata = await RelaxPdas.findMetadataPda(nftMintKeypair.publicKey);
+		const nftMasterEdition = await RelaxPdas.findMasterEditionPda(nftMintKeypair.publicKey);
+		const collectionMetadata = await RelaxPdas.findMetadataPda(collectionMint);
+		const collectionMasterEdition = await RelaxPdas.findMasterEditionPda(collectionMint);
+		const candyMachineAuthorityPda = await RelaxCandyMachine.findCandyMachineAuthorityPda(candyMachine);
+		const collectionUpdateAuthority = walletPubkey; // this test's throwaway collection's update authority is the connected wallet itself
+		const collectionDelegateRecord = await RelaxCandyMachine.findCollectionDelegateRecordPda({
+			collectionMint, collectionUpdateAuthority, delegate: candyMachineAuthorityPda
+		});
+		const sysvarInstructions = new solanaWeb3.PublicKey("Sysvar1nstructions1111111111111111111111111");
+		const recentSlothashes = new solanaWeb3.PublicKey("SysvarS1otHashes111111111111111111111111111");
+		const splTokenProgram = new solanaWeb3.PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+
+		const routeIx = RelaxCandyGuard.buildRouteInstruction({
+			candyGuard, candyMachine, payer: walletPubkey,
+			guardName: "allowList", routeData, label: "WAVE1"
+		});
+
+		const mintIx = RelaxCandyGuard.buildMintV2Instruction({
+			candyGuard, candyMachine, candyMachineAuthorityPda,
+			payer: walletPubkey, minter: walletPubkey,
+			nftMint: nftMintKeypair.publicKey, nftMintAuthority: walletPubkey,
+			nftMetadata, nftMasterEdition,
+			collectionDelegateRecord, collectionMint,
+			collectionMetadata, collectionMasterEdition, collectionUpdateAuthority,
+			tokenMetadataProgram: RelaxPdas.TOKEN_METADATA_PROGRAM_ID,
+			splTokenProgram, sysvarInstructions, recentSlothashes,
+			label: "WAVE1"
+		});
+
+		const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+		const tx = new solanaWeb3.Transaction();
+		tx.recentBlockhash = blockhash;
+		tx.feePayer = walletPubkey;
+		tx.add(routeIx, mintIx);
+		tx.partialSign(nftMintKeypair);
+
+		output.textContent = "Built route + mint_v2. Sending...";
+
+		const signedTx = await walletProvider.signTransaction(tx);
+		const signature = await connection.sendRawTransaction(signedTx.serialize(), { skipPreflight: false });
+		output.textContent += "\nSent: " + signature + "\nWaiting for confirmation...";
+
+		await pollConfirmation(signature, lastValidBlockHeight);
+
+		output.innerHTML = '<span class="ok">SUCCESS — real gated mint worked end-to-end</span>\n' +
+			'NFT mint: ' + nftMintKeypair.publicKey.toString() +
+			'\nSignature: ' + signature;
+	} catch (err) {
+		output.innerHTML = '<span class="err">FAILED: ' + describeError(err) + '</span>';
+		console.error(err);
+	} finally {
+		mintBtn.disabled = false;
+	}
+}
+mintBtn.addEventListener("click", runMint);
 
 </script>
 </body>
