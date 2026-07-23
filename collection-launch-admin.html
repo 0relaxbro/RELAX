@@ -1622,7 +1622,7 @@ function renderLoadStep() {
 						startIndex: loaded, lines: batchLines
 					});
 					testTx = new solanaWeb3.Transaction();
-					testTx.recentBlockhash = "11111111111111111111111111111111111111111111"; // placeholder for size check only
+					testTx.recentBlockhash = solanaWeb3.SystemProgram.programId.toBase58(); // valid 32-byte base58 placeholder, only used for local size measurement, never sent
 					testTx.feePayer = STATE.walletPubkey;
 					testTx.add(ix);
 					const size = testTx.serialize({ requireAllSignatures: false, verifySignatures: false }).length;
