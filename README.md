@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="logo.png" alt="RELAX" width="120" height="120">
+<img src="logo.webp" alt="RELAX" width="120" height="120">
 
 <h1>RELAX</h1>
 
