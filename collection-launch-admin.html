@@ -62,6 +62,16 @@ pre{background:#000;border-radius:6px;padding:12px;font-size:12px;overflow-x:aut
 <div class="main" id="main"></div>
 
 <script src="https://unpkg.com/@solana/web3.js@1.95.3/lib/index.iife.min.js"></script>
+<!-- Bulk upload capability — same Irys stack NFT Creator already uses,
+     loaded as separate files (not inlined) since irys-bundle.js alone
+     is ~1.9MB. Copy these 2 files into the same folder as this admin
+     tool: irys-bundle.js, irys-web-provider.js, storage-adapter.js.
+     NOT loading serializer.js separately — this admin tool already has
+     its own inlined RelaxBorsh (see the library code block below);
+     loading a second copy would throw "already declared". -->
+<script src="irys-bundle.js"></script>
+<script src="irys-web-provider.js"></script>
+<script src="storage-adapter.js"></script>
 <script>
 /* =========================================================
    PROVEN LIBRARY CODE — copied verbatim from candy-machine-devnet-test.html
@@ -1203,18 +1213,28 @@ function renderCollectionStep() {
 function renderItemsStep() {
 	document.getElementById("panel-items").innerHTML = `
 		<h2>Steps 2-3 — Items + validate</h2>
-		<p class="desc">Paste one line per NFT: <code>name,uri</code>.
-		A full drag-and-drop image uploader with automatic Irys hosting
-		is a planned upgrade, not built yet — for now, upload images
-		yourself (e.g. via the existing NFT Creator's Irys flow, one at
-		a time, or any other host) and paste the resulting URIs here.</p>
+		<p class="desc">Upload images in bulk (auto-hosted on Irys, same
+		infrastructure NFT Creator uses), or paste <code>name,uri</code>
+		lines manually if you already have hosted images elsewhere.</p>
+		<div class="card">
+			<label>Bulk upload — select multiple images</label>
+			<input type="file" id="bulkFilesInput" accept="image/*" multiple>
+			<div class="row">
+				<div><label>Name prefix (e.g. "RELAX Badge #")</label><input type="text" id="bulkNamePrefix" value="RELAX Badge #"></div>
+				<div><label>Description (same for all items)</label><input type="text" id="bulkDescription" value=""></div>
+			</div>
+			<button id="estimateBulkBtn" class="secondary">Estimate cost</button>
+			<button id="uploadBulkBtn" disabled>Upload all + fund Irys</button>
+			<div class="progress-bar"><div id="bulkProgressBar"></div></div>
+			<pre id="bulkOutput">(no files selected)</pre>
+		</div>
 		<div class="card">
 			<label>Name / URI byte reservation per line (fixed at Candy Machine creation — cannot grow later, only shrink)</label>
 			<div class="row">
 				<div><input type="number" id="nameLenInput" value="32"></div>
 				<div><input type="number" id="uriLenInput" value="96"></div>
 			</div>
-			<label>Items — one per line, format: <code>name,uri</code></label>
+			<label>Items — one per line, format: <code>name,uri</code> (bulk upload above fills this in automatically)</label>
 			<textarea id="itemsTextarea" rows="10" placeholder="RELAX Badge #1,https://gateway.irys.xyz/abc123
 RELAX Badge #2,https://gateway.irys.xyz/def456"></textarea>
 			<button id="validateItemsBtn">Validate items</button>
@@ -1222,6 +1242,86 @@ RELAX Badge #2,https://gateway.irys.xyz/def456"></textarea>
 		</div>
 	`;
 
+	wireBulkUpload();
+	wireItemsValidation();
+}
+
+function wireBulkUpload() {
+	const filesInput = document.getElementById("bulkFilesInput");
+	const estimateBtn = document.getElementById("estimateBulkBtn");
+	const uploadBtn = document.getElementById("uploadBulkBtn");
+	const output = document.getElementById("bulkOutput");
+	const progressBar = document.getElementById("bulkProgressBar");
+
+	filesInput.addEventListener("change", () => {
+		output.textContent = filesInput.files.length + " file(s) selected. Click \"Estimate cost\" next.";
+		uploadBtn.disabled = true;
+	});
+
+	estimateBtn.addEventListener("click", async () => {
+		const files = Array.from(filesInput.files);
+		if (files.length === 0) { output.innerHTML = '<span class="err">No files selected.</span>'; return; }
+		output.textContent = "Estimating...";
+		try {
+			let totalLamports = 0n;
+			for (const file of files) {
+				const bytes = new Uint8Array(await file.arrayBuffer());
+				// Rough per-item cost: media upload + a small metadata JSON
+				// (~300 bytes is a safe over-estimate for name/description/
+				// image/attributes at this scale).
+				totalLamports += BigInt(await RelaxStorage.estimateCost(STATE.walletProvider, bytes));
+				totalLamports += BigInt(await RelaxStorage.estimateCost(STATE.walletProvider, new Uint8Array(300)));
+			}
+			const loadedBalance = await RelaxStorage.getLoadedBalance(STATE.walletProvider);
+			output.innerHTML = files.length + ' files\nEstimated total cost: <span class="ok">' + (Number(totalLamports) / 1e9).toFixed(6) + ' SOL</span>' +
+				'\nAlready loaded on Irys: ' + (Number(loadedBalance) / 1e9).toFixed(6) + ' SOL';
+			uploadBtn.disabled = false;
+			uploadBtn.dataset.totalLamports = totalLamports.toString();
+		} catch (err) {
+			output.innerHTML = '<span class="err">' + (err.message || String(err)) + '</span>';
+		}
+	});
+
+	uploadBtn.addEventListener("click", async () => {
+		const files = Array.from(filesInput.files);
+		uploadBtn.disabled = true;
+		try {
+			const requiredLamports = BigInt(uploadBtn.dataset.totalLamports || "0");
+			output.textContent = "Funding Irys (if needed)...";
+			await RelaxStorage.ensureFunded(STATE.walletProvider, requiredLamports);
+
+			const namePrefix = document.getElementById("bulkNamePrefix").value;
+			const description = document.getElementById("bulkDescription").value;
+			const lines = [];
+
+			for (let i = 0; i < files.length; i++) {
+				const file = files[i];
+				const bytes = new Uint8Array(await file.arrayBuffer());
+				output.textContent = "Uploading " + (i + 1) + "/" + files.length + ": " + file.name + " (image)...";
+				const imageUri = await RelaxStorage.uploadMedia(STATE.walletProvider, bytes, file.type || "image/png");
+
+				const name = namePrefix + (i + 1);
+				output.textContent = "Uploading " + (i + 1) + "/" + files.length + ": " + file.name + " (metadata)...";
+				const metadataUri = await RelaxStorage.uploadMetadataJson(STATE.walletProvider, {
+					name, description, image: imageUri, attributes: []
+				});
+
+				lines.push(name + "," + metadataUri);
+				const pct = Math.round(((i + 1) / files.length) * 100);
+				progressBar.style.width = pct + "%";
+				output.textContent = lines.length + "/" + files.length + " uploaded.";
+			}
+
+			document.getElementById("itemsTextarea").value = lines.join("\n");
+			output.innerHTML = '<span class="ok">All ' + files.length + ' items uploaded and filled in below.</span>\nClick "Validate items" to continue.';
+		} catch (err) {
+			output.innerHTML = '<span class="err">FAILED: ' + (err.message || String(err)) + '</span>\n(any files already uploaded above are still valid — re-select only the remaining files and try again, or paste manually)';
+			uploadBtn.disabled = false;
+		}
+	});
+}
+
+function wireItemsValidation() {
 	document.getElementById("validateItemsBtn").addEventListener("click", () => {
 		const output = document.getElementById("itemsValidateOutput");
 		try {
