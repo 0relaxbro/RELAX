@@ -193,9 +193,17 @@ const RelaxCandyMachine = (function () {
 			{ pubkey: new solanaWeb3.PublicKey(params.collectionDelegateRecord), isSigner: false, isWritable: true },
 			{ pubkey: new solanaWeb3.PublicKey(TOKEN_METADATA_PROGRAM_ID), isSigner: false, isWritable: false },
 			{ pubkey: new solanaWeb3.PublicKey(SYSTEM_PROGRAM_ID), isSigner: false, isWritable: false },
-			{ pubkey: sysvarInstructions, isSigner: false, isWritable: false }
+			{ pubkey: sysvarInstructions, isSigner: false, isWritable: false },
 			// authorization_rules_program / authorization_rules: pNFT-only,
-			// omitted for RELAX's plain-NFT badge collection.
+			// not needed for RELAX's plain-NFT badge collection — but per
+			// Anchor v0.26's "positional optional accounts" convention,
+			// signaling "None" requires passing the executing program's
+			// own ID as a placeholder, NOT omitting the account entirely.
+			// FIX (23 Jul 2026, first real devnet error): omitting these
+			// two trailing accounts caused "AccountNotEnoughKeys" —
+			// Anchor still expects all 15 account slots present.
+			{ pubkey: new solanaWeb3.PublicKey(CANDY_MACHINE_CORE_PROGRAM_ID), isSigner: false, isWritable: false },
+			{ pubkey: new solanaWeb3.PublicKey(CANDY_MACHINE_CORE_PROGRAM_ID), isSigner: false, isWritable: false }
 		];
 
 		const data = concatAll([
