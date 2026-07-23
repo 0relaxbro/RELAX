@@ -258,9 +258,24 @@ const RelaxMerkle = (function () {
 	function toLeafBytes(item) {
 		return typeof item === "string" ? new TextEncoder().encode(item) : item;
 	}
+	// FIX (23 Jul 2026, AddressNotFoundInAllowedList in BOTH base58 and
+	// raw-bytes leaf-encoding modes): leaves were hashed directly with
+	// no prefix. Solana's own Merkle tree spec (solana-foundation/specs,
+	// core/merkle-tree.md) requires leaf pre-images to start with a
+	// 0x00 byte (intermediate nodes use 0x01, which this file already
+	// had right) — the standard second-preimage-attack defense, and
+	// exactly what Candy Guard's on-chain AllowList guard expects.
+	// Neither encoding mode could have worked without this; it wasn't
+	// a base58-vs-bytes question at all.
+	function hashLeaf(bytes) {
+		const prefixed = new Uint8Array(1 + bytes.length);
+		prefixed[0] = 0x00;
+		prefixed.set(bytes, 1);
+		return keccak256(prefixed);
+	}
 	/** Full tree, level 0 = root, last level = leaves. */
 	function getMerkleTree(items) {
-		let level = items.map(i => keccak256(toLeafBytes(i)));
+		let level = items.map(i => hashLeaf(toLeafBytes(i)));
 		const levels = [level];
 		while (level.length > 1) {
 			const next = [];
@@ -278,7 +293,7 @@ const RelaxMerkle = (function () {
 	/** Sibling hashes from leaf up to (not including) the root. */
 	function getMerkleProof(items, target) {
 		const levels = getMerkleTree(items);
-		const targetLeaf = keccak256(toLeafBytes(target));
+		const targetLeaf = hashLeaf(toLeafBytes(target));
 		let index = levels[levels.length - 1].findIndex(l => compare(l, targetLeaf) === 0);
 		if (index < 0) throw new Error("Target is not in the allow list.");
 		const proof = [];
@@ -290,7 +305,7 @@ const RelaxMerkle = (function () {
 		}
 		return proof;
 	}
-	return { getMerkleTree, getMerkleRoot, getMerkleProof, hashPair };
+	return { getMerkleTree, getMerkleRoot, getMerkleProof, hashPair, hashLeaf };
 })();
 
 RelaxKeccak.selfTest();
