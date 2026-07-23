@@ -1204,6 +1204,42 @@ async function runMint() {
 		const recentSlothashes = new solanaWeb3.PublicKey("SysvarS1otHashes111111111111111111111111111");
 		const splTokenProgram = new solanaWeb3.PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
 
+		// FIX (23 Jul 2026, first real mint attempt): the docs say the
+		// NFT mint account "should be created before executing the
+		// instruction" — this was skipped entirely, which is the real
+		// cause of the "unknown signer" error (nftMintKeypair was never
+		// referenced by any instruction, so partialSign had nothing to
+		// attach its signature to). Two standard SPL Token instructions,
+		// built by hand since only @solana/web3.js is loaded here (no
+		// @solana/spl-token): create the account (82 bytes, MINT_SIZE,
+		// owned by the Token program), then InitializeMint2 (tag 20 —
+		// the newer variant that needs no separate Rent sysvar account).
+		const MINT_SIZE = 82;
+		const mintRent = await connection.getMinimumBalanceForRentExemption(MINT_SIZE);
+		const createMintAccountIx = solanaWeb3.SystemProgram.createAccount({
+			fromPubkey: walletPubkey,
+			newAccountPubkey: nftMintKeypair.publicKey,
+			lamports: mintRent,
+			space: MINT_SIZE,
+			programId: splTokenProgram
+		});
+		// InitializeMint2 data layout (spl-token instruction.rs, not
+		// Anchor/Borsh — the Token program's own manual pack format):
+		// [tag=20][decimals u8][mint_authority: 32 bytes]
+		// [freeze_authority COption: 1 byte (0=None/1=Some) + 32 bytes
+		// only if Some]. Decimals=0, no freeze authority — a standard,
+		// fixed-supply-of-1 NFT mint.
+		const initMintData = new Uint8Array([
+			20, 0,
+			...walletPubkey.toBytes(),
+			0 // freeze_authority = None
+		]);
+		const initMintIx = new solanaWeb3.TransactionInstruction({
+			programId: splTokenProgram,
+			keys: [{ pubkey: nftMintKeypair.publicKey, isSigner: false, isWritable: true }],
+			data: initMintData
+		});
+
 		const routeIx = RelaxCandyGuard.buildRouteInstruction({
 			candyGuard, candyMachine, payer: walletPubkey,
 			guardName: "allowList", routeData, label: "WAVE1"
@@ -1225,7 +1261,7 @@ async function runMint() {
 		const tx = new solanaWeb3.Transaction();
 		tx.recentBlockhash = blockhash;
 		tx.feePayer = walletPubkey;
-		tx.add(routeIx, mintIx);
+		tx.add(createMintAccountIx, initMintIx, routeIx, mintIx);
 		tx.partialSign(nftMintKeypair);
 
 		output.textContent = "Built route + mint_v2. Sending...";
