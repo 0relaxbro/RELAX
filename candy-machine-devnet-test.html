@@ -28,11 +28,14 @@ pre{background:#000;border-radius:6px;padding:12px;font-size:12px;overflow-x:aut
 <h1>🍬 Candy Machine — Devnet Test Harness</h1>
 <p class="warn">Internal tool. Not linked from the site, not for public use.
 Devnet only — hardcoded, no mainnet path.</p>
-<p class="build">BUILD 4 — self-contained: no external .js files, so nothing can be
+<p class="build">BUILD 5 — self-contained: no external .js files, so nothing can be
 served stale from cache.<br>
 Fixed: account sizing (0x7d3) → collection delegate PDA → collection_metadata
-writable (0x7d0) → collection update authority → <strong>AllowList route wiring
-(0x1776): remaining accounts, Borsh-encoded proof, keccak256 leaves</strong>.</p>
+writable (0x7d0) → collection update authority → AllowList route wiring (0x1776)
+→ <strong>Step 2 now loads every config line, not one batch (0x1784,
+NotFullyLoaded)</strong>.<br>
+Confirmed live on devnet: route validated the Merkle proof, so the base58
+leaf encoding is the correct one.</p>
 
 <div class="card">
 	<div id="walletStatus">Not connected.</div>
@@ -61,9 +64,12 @@ writable (0x7d0) → collection update authority → <strong>AllowList route wir
 	<h3 style="margin-top:0;">Step 2 — AddConfigLines (test batch)</h3>
 	<label>Candy Machine pubkey (auto-filled after Step 1)</label>
 	<input type="text" id="candyMachinePubkeyInput" value="">
-	<label>How many test lines to add</label>
-	<input type="text" id="testLineCountInput" value="8">
-	<button id="addLinesBtn" disabled>Send AddConfigLines</button>
+	<p class="hint">Loads <strong>every</strong> item (Step 1's "items available")
+	in as many batches as the ~1232-byte transaction limit needs. This is not
+	optional: the Candy Machine refuses to mint at all until
+	<code>items_loaded == items_available</code> (error 6020, NotFullyLoaded),
+	so a partial load makes Step 4 fail no matter how correct its wiring is.</p>
+	<button id="addLinesBtn" disabled>Load all config lines</button>
 	<pre id="addLinesOutput">(not run yet)</pre>
 </div>
 
@@ -223,7 +229,7 @@ const RelaxKeccak = (function () {
    Merkle tree, matching Candy Guard's own verify() exactly:
    sorted pair, prefixed with a 0x01 domain-separation byte, hashed
    with keccak256. A single-leaf tree's root IS its leaf hash and its
-   proof is empty \u2014 which is what this first end-to-end test uses.
+   proof is empty — which is what this first end-to-end test uses.
    --------------------------------------------------------- */
 const RelaxMerkle = (function () {
 	const { keccak256 } = RelaxKeccak;
@@ -739,6 +745,7 @@ const RelaxCandyMachine = (function () {
 			6005: "TooManyCreators — max 4 creators (the candy machine itself takes the 5th slot).",
 			6006: "MissingRemainingAccount (Candy Guard) — a guard needed an account in the instruction's REMAINING accounts and it wasn't there. Which guard depends on the log line: AllowList's route needs [proof_pda (writable), system_program]; mint_v2 needs one entry per account-requiring guard, in guard-definition order.",
 			6008: "AddressNotFoundInAllowedList — the Merkle proof did not verify against the guard's root. Usually the leaf encoding: the tree must hash exactly what the on-chain guard hashes (base58 string vs raw pubkey bytes). Switch the leaf-encoding selector in Step 3, rebuild the guard, retry.",
+			6020: "NotFullyLoaded — the Candy Machine still has fewer config lines loaded than items_available. mint_v2 refuses to mint until the machine is completely full; run Step 2 to load every item.",
 			6012: "IncorrectCollectionAuthority — the signer isn't the collection's update authority."
 		};
 		return known[n] || ("Unmapped error code " + n + " (0x" + n.toString(16) + ").");
@@ -1227,13 +1234,31 @@ async function runInitialize() {
 }
 initBtn.addEventListener("click", runInitialize);
 
+/**
+ * Loads ALL config lines, in as many batches as needed.
+ *
+ * FIX (23 Jul 2026, after Step 4 returned 6020 / NotFullyLoaded): this
+ * used to send exactly one batch of whatever the count box said, which
+ * meant a 20-item Candy Machine sat permanently at 8 items loaded and
+ * could never mint. mint_v2 checks items_loaded == items_available and
+ * rejects everything until the machine is completely full, so a
+ * partial load isn't a smaller test, it's a broken one.
+ *
+ * Batch size is derived from the real measured transaction size rather
+ * than trusted from the formula: the first batch is built at the
+ * estimate, serialized, and shrunk until it actually fits. That measured
+ * number is then reused for the remaining batches and reported — which
+ * is the batch-size validation the migration plan actually wanted,
+ * now exercised against a full load instead of one hand-picked batch.
+ */
 async function runAddConfigLines() {
 	const output = document.getElementById("addLinesOutput");
 	addLinesBtn.disabled = true;
 	output.textContent = "Working...";
 	try {
 		const candyMachinePubkey = document.getElementById("candyMachinePubkeyInput").value.trim();
-		const lineCount = parseInt(document.getElementById("testLineCountInput").value, 10);
+		if (!candyMachinePubkey) throw new Error("Candy Machine pubkey required (from Step 1).");
+		const itemsAvailable = parseInt(document.getElementById("itemsAvailableInput").value, 10);
 		const nameLength = parseInt(document.getElementById("nameLengthInput").value, 10);
 		const uriLength = parseInt(document.getElementById("uriLengthInput").value, 10);
 		const enc = new TextEncoder();
@@ -1241,44 +1266,72 @@ async function runAddConfigLines() {
 		// Lines must fit the reserved name_length / uri_length or the program
 		// rejects the whole batch. Checked locally so a length mistake surfaces
 		// here rather than as a program error after a signature.
-		const lines = [];
-		for (let i = 0; i < lineCount; i++) {
+		const allLines = [];
+		for (let i = 0; i < itemsAvailable; i++) {
 			const name = "RELAX Test #" + i;
 			const uri = "https://gateway.irys.xyz/" + String(i).padStart(4, "0") + "-devnet-test.json";
 			if (enc.encode(name).length > nameLength) throw new Error('Line ' + i + ' name exceeds nameLength (' + nameLength + '): "' + name + '"');
 			if (enc.encode(uri).length > uriLength) throw new Error('Line ' + i + ' uri exceeds uriLength (' + uriLength + '): "' + uri + '"');
-			lines.push({ name, uri });
+			allLines.push({ name, uri });
 		}
-
-		const ix = RelaxCandyMachine.buildAddConfigLinesInstruction({
-			candyMachine: candyMachinePubkey, authority: walletPubkey, startIndex: 0, lines
-		});
 
 		const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
-		const tx = new solanaWeb3.Transaction();
-		tx.recentBlockhash = blockhash;
-		tx.feePayer = walletPubkey;
-		tx.add(ix);
 
-		// Real serialized size vs the ~1232-byte limit — the direct
-		// confirmation of the batching math, not the formula's estimate.
-		const serialized = tx.serialize({ requireAllSignatures: false, verifySignatures: false });
-		const estimate = RelaxCandyMachine.estimateLinesPerTransaction(nameLength, uriLength);
-		output.textContent = "Transaction size with " + lineCount + " lines: " + serialized.length +
-			" bytes (limit ~1232)\nFormula estimated max: " + estimate + " lines/tx\nSending...";
-
-		if (serialized.length > 1232) {
-			throw new Error("Transaction is " + serialized.length + " bytes, over the ~1232 limit. Lower the line count (formula suggests " + estimate + ").");
+		function buildBatchTx(startIndex, lines) {
+			const tx = new solanaWeb3.Transaction();
+			tx.recentBlockhash = blockhash;
+			tx.feePayer = walletPubkey;
+			tx.add(RelaxCandyMachine.buildAddConfigLinesInstruction({
+				candyMachine: candyMachinePubkey, authority: walletPubkey, startIndex, lines
+			}));
+			return tx;
+		}
+		function txSize(tx) {
+			return tx.serialize({ requireAllSignatures: false, verifySignatures: false }).length;
 		}
 
-		const signedTx = await walletProvider.signTransaction(tx);
-		const signature = await connection.sendRawTransaction(signedTx.serialize(), { skipPreflight: false });
-		output.textContent += "\nSent: " + signature + "\nWaiting for confirmation...";
+		// Measure, don't assume: shrink from the estimate until it fits.
+		const estimate = RelaxCandyMachine.estimateLinesPerTransaction(nameLength, uriLength);
+		let perBatch = Math.min(estimate, allLines.length);
+		while (perBatch > 1 && txSize(buildBatchTx(0, allLines.slice(0, perBatch))) > 1232) perBatch--;
+		const measuredSize = txSize(buildBatchTx(0, allLines.slice(0, perBatch)));
+		if (measuredSize > 1232) throw new Error("Even a single line does not fit in one transaction (" + measuredSize + " bytes).");
 
-		await pollConfirmation(signature, lastValidBlockHeight);
+		const batches = [];
+		for (let i = 0; i < allLines.length; i += perBatch) {
+			batches.push({ startIndex: i, lines: allLines.slice(i, i + perBatch) });
+		}
 
-		output.innerHTML = '<span class="ok">SUCCESS</span>\n' + lineCount + ' lines added.\nSignature: ' + signature +
-			'\nSerialized tx size: ' + serialized.length + ' bytes\nFormula estimate was: ' + estimate + ' lines/tx';
+		let header = "Items to load: " + itemsAvailable +
+			"\nFormula estimate: " + estimate + " lines/tx" +
+			"\nMeasured/using:   " + perBatch + " lines/tx (" + measuredSize + " bytes, limit ~1232)" +
+			"\nBatches:          " + batches.length + "\n\n";
+		output.textContent = header + "Awaiting signature...";
+
+		const txs = batches.map(b => buildBatchTx(b.startIndex, b.lines));
+
+		// One signature prompt for the whole load when the wallet supports
+		// it. Phantom does; the fallback keeps this working if a wallet
+		// ever doesn't, at the cost of one prompt per batch.
+		const signed = walletProvider.signAllTransactions
+			? await walletProvider.signAllTransactions(txs)
+			: await (async () => {
+				const out = [];
+				for (const tx of txs) out.push(await walletProvider.signTransaction(tx));
+				return out;
+			})();
+
+		const signatures = [];
+		for (let i = 0; i < signed.length; i++) {
+			output.textContent = header + "Sending batch " + (i + 1) + " of " + signed.length +
+				" (lines " + batches[i].startIndex + "–" + (batches[i].startIndex + batches[i].lines.length - 1) + ")...";
+			const sig = await connection.sendRawTransaction(signed[i].serialize(), { skipPreflight: false });
+			await pollConfirmation(sig, lastValidBlockHeight);
+			signatures.push(sig);
+		}
+
+		output.innerHTML = '<span class="ok">SUCCESS — all ' + itemsAvailable + ' config lines loaded</span>\n' +
+			header + signatures.map((sig, i) => "batch " + (i + 1) + ": " + sig).join("\n");
 	} catch (err) {
 		output.innerHTML = '<span class="err">FAILED: ' + describeError(err) + '</span>';
 		console.error(err);
@@ -1548,7 +1601,7 @@ async function runMint() {
 		tx.partialSign(nftMintKeypair);
 
 		output.textContent = "Merkle root:  " + RelaxKeccak.toHex(merkleRoot) +
-			"\nProof nodes:  " + proof.length + " (single-leaf tree \u2192 0 is correct)" +
+			"\nProof nodes:  " + proof.length + " (single-leaf tree → 0 is correct)" +
 			"\nProof PDA:    " + allowListProofPda.toString() +
 			"\nMintLimit PDA:" + mintLimitCounterPda.toString() +
 			"\nBuilt route + mint_v2. Sending...";
