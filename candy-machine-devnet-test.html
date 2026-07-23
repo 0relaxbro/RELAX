@@ -1684,7 +1684,7 @@ async function runMint() {
 		// CreateIdempotent instruction (tag=1 — safe even if the
 		// account happened to already exist, though it never will for
 		// a freshly generated mint).
-		const associatedTokenProgram = new solanaWeb3.PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xH25efTNsLJA8knL");
+		const associatedTokenProgram = new solanaWeb3.PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL");
 		const [nftTokenAccount] = await solanaWeb3.PublicKey.findProgramAddress(
 			[walletPubkey.toBytes(), splTokenProgram.toBytes(), nftMintKeypair.publicKey.toBytes()],
 			associatedTokenProgram
