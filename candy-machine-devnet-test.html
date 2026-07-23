@@ -1674,6 +1674,34 @@ async function runMint() {
 			id: WAVE1_MINT_LIMIT_ID, minter: walletPubkey, candyGuard, candyMachine
 		});
 
+		// FIX (23 Jul 2026, MissingTokenAccount / 6025): mint_v2's
+		// (optional) "token" account was left as a placeholder — but
+		// for a plain NFT mint it needs to be the REAL Associated Token
+		// Account that will hold the 1 newly-minted token, and that
+		// account has to actually exist before mint_v2 runs (same
+		// "create it yourself first" pattern as the mint account
+		// itself). Standard SPL derivation + the ATA program's
+		// CreateIdempotent instruction (tag=1 — safe even if the
+		// account happened to already exist, though it never will for
+		// a freshly generated mint).
+		const associatedTokenProgram = new solanaWeb3.PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xH25efTNsLJA8knL");
+		const [nftTokenAccount] = await solanaWeb3.PublicKey.findProgramAddress(
+			[walletPubkey.toBytes(), splTokenProgram.toBytes(), nftMintKeypair.publicKey.toBytes()],
+			associatedTokenProgram
+		);
+		const createAtaIx = new solanaWeb3.TransactionInstruction({
+			programId: associatedTokenProgram,
+			keys: [
+				{ pubkey: walletPubkey, isSigner: true, isWritable: true },          // payer
+				{ pubkey: nftTokenAccount, isSigner: false, isWritable: true },       // the ATA being created
+				{ pubkey: walletPubkey, isSigner: false, isWritable: false },         // owner
+				{ pubkey: nftMintKeypair.publicKey, isSigner: false, isWritable: false }, // mint
+				{ pubkey: solanaWeb3.SystemProgram.programId, isSigner: false, isWritable: false },
+				{ pubkey: splTokenProgram, isSigner: false, isWritable: false }
+			],
+			data: Uint8Array.of(1) // CreateIdempotent
+		});
+
 		const routeIx = RelaxCandyGuard.buildRouteInstruction({
 			candyGuard, candyMachine, payer: walletPubkey,
 			guardName: "allowList", routeData, label: "WAVE1",
@@ -1688,6 +1716,7 @@ async function runMint() {
 			payer: walletPubkey, minter: walletPubkey,
 			nftMint: nftMintKeypair.publicKey, nftMintAuthority: walletPubkey,
 			nftMetadata, nftMasterEdition,
+			token: nftTokenAccount,
 			collectionDelegateRecord, collectionMint,
 			collectionMetadata, collectionMasterEdition, collectionUpdateAuthority,
 			tokenMetadataProgram: RelaxPdas.TOKEN_METADATA_PROGRAM_ID,
@@ -1704,7 +1733,7 @@ async function runMint() {
 		const tx = new solanaWeb3.Transaction();
 		tx.recentBlockhash = blockhash;
 		tx.feePayer = walletPubkey;
-		tx.add(createMintAccountIx, initMintIx, routeIx, mintIx);
+		tx.add(createMintAccountIx, initMintIx, createAtaIx, routeIx, mintIx);
 		tx.partialSign(nftMintKeypair);
 
 		output.textContent = "Merkle root:  " + RelaxKeccak.toHex(merkleRoot) +
