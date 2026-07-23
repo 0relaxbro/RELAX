@@ -11,12 +11,14 @@ h1{font-size:18px;margin:0 0 4px;}
 .warn{color:#F5A623;font-size:13px;margin:0 0 24px;}
 .card{background:#0B0E1F;border:1px solid #1E2340;border-radius:10px;padding:20px;margin-bottom:16px;}
 button{background:#5B7CFF;color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:14px;cursor:pointer;margin-right:8px;}
+button.secondary{background:#1E2340;}
 button:disabled{opacity:.4;cursor:not-allowed;}
 input{background:#050713;border:1px solid #1E2340;color:#F5F7FF;border-radius:6px;padding:8px;width:100%;box-sizing:border-box;margin:4px 0 12px;font-family:monospace;font-size:13px;}
 label{font-size:12px;color:#929BB5;}
 pre{background:#000;border-radius:6px;padding:12px;font-size:12px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;}
 .ok{color:#14F195;}
 .err{color:#FF5C5C;}
+.hint{color:#929BB5;font-size:12px;line-height:1.5;}
 </style>
 </head>
 <body>
@@ -41,6 +43,11 @@ SWAP_V2_MIGRATION_PLAN.md against a real transaction.</p>
 	<label>Name length / URI length (bytes reserved per config line)</label>
 	<input type="text" id="nameLengthInput" value="20">
 	<input type="text" id="uriLengthInput" value="70">
+	<p class="hint">The connected wallet must be the collection's <strong>update authority</strong> —
+	InitializeV2 makes it sign so the Candy Machine can approve itself as a
+	collection delegate. If it isn't, expect an IncorrectCollectionAuthority
+	or a Token Metadata CPI failure, not a size error.</p>
+	<button id="dryRunBtn" class="secondary" disabled>Dry run (size + PDAs, no transaction)</button>
 	<button id="initBtn" disabled>Create + InitializeV2</button>
 	<pre id="initOutput">(not run yet)</pre>
 </div>
@@ -49,7 +56,7 @@ SWAP_V2_MIGRATION_PLAN.md against a real transaction.</p>
 	<h3 style="margin-top:0;">Step 2 — AddConfigLines (test batch)</h3>
 	<label>Candy Machine pubkey (auto-filled after Step 1)</label>
 	<input type="text" id="candyMachinePubkeyInput" value="">
-	<label>How many test lines to add (validates the ~11/tx estimate)</label>
+	<label>How many test lines to add</label>
 	<input type="text" id="testLineCountInput" value="11">
 	<button id="addLinesBtn" disabled>Send AddConfigLines</button>
 	<pre id="addLinesOutput">(not run yet)</pre>
@@ -66,10 +73,11 @@ const connection = new solanaWeb3.Connection(RPC_URL, "confirmed");
 
 let walletPubkey = null;
 let walletProvider = null;
-let lastCandyMachineKeypair = null; // kept in memory only, this session — test tool, not a real key-management flow
+let lastCandyMachineKeypair = null; // in memory only, this session — test tool, not a key-management flow
 
 const walletStatus = document.getElementById("walletStatus");
 const connectBtn = document.getElementById("connectBtn");
+const dryRunBtn = document.getElementById("dryRunBtn");
 const initBtn = document.getElementById("initBtn");
 const addLinesBtn = document.getElementById("addLinesBtn");
 
@@ -83,6 +91,7 @@ async function connectWallet() {
 		walletPubkey = resp.publicKey;
 		walletProvider = window.solana;
 		walletStatus.innerHTML = 'Connected: <span class="ok">' + walletPubkey.toString() + '</span>';
+		dryRunBtn.disabled = false;
 		initBtn.disabled = false;
 		addLinesBtn.disabled = false;
 	} catch (err) {
@@ -107,7 +116,6 @@ async function pollConfirmation(signature, lastValidBlockHeight) {
 		}
 		const currentHeight = await connection.getBlockHeight();
 		if (currentHeight > lastValidBlockHeight) {
-			// one final check before declaring expired, same pattern as nft-creator.html
 			const finalCheck = await connection.getSignatureStatuses([signature]);
 			const finalStatus = finalCheck && finalCheck.value && finalCheck.value[0];
 			if (finalStatus && !finalStatus.err) return true;
@@ -118,43 +126,114 @@ async function pollConfirmation(signature, lastValidBlockHeight) {
 	throw new Error("Confirmation timed out after 60s.");
 }
 
+/**
+ * Pulls the "custom program error: 0xNNN" out of a simulation failure
+ * and runs it through RelaxCandyMachine.explainErrorCode(), so the
+ * output says what actually went wrong instead of a bare hex code.
+ * Added 23 Jul 2026 after spending a round on an unexplained 0x7d3.
+ */
+function describeError(err) {
+	const raw = err && (err.message || String(err));
+	const match = /custom program error:\s*(0x[0-9a-fA-F]+)/.exec(raw || "");
+	if (!match) return raw;
+	return raw + "\n\n→ " + RelaxCandyMachine.explainErrorCode(match[1]);
+}
+
+function readForm() {
+	const collectionMint = document.getElementById("collectionMintInput").value.trim();
+	const itemsAvailable = parseInt(document.getElementById("itemsAvailableInput").value, 10);
+	const nameLength = parseInt(document.getElementById("nameLengthInput").value, 10);
+	const uriLength = parseInt(document.getElementById("uriLengthInput").value, 10);
+
+	const candyMachineData = {
+		itemsAvailable,
+		symbol: "RELAXTEST",
+		sellerFeeBasisPoints: 0,
+		maxSupply: 0,
+		isMutable: true,
+		creators: [{ address: walletPubkey.toString(), verified: false, percentageShare: 100 }],
+		configLineSettings: {
+			prefixName: "",
+			nameLength,
+			prefixUri: "",
+			uriLength,
+			isSequential: false
+		},
+		hiddenSettings: null
+	};
+
+	return { collectionMint, itemsAvailable, nameLength, uriLength, candyMachineData };
+}
+
+/**
+ * Everything Step 1 would compute, printed, with nothing sent and no
+ * wallet popup. The ConstraintRaw bug was a pure arithmetic error that
+ * a single "here is the size and here is where it comes from" printout
+ * would have caught before any signature — so that printout now exists.
+ */
+async function runDryRun() {
+	const output = document.getElementById("initOutput");
+	dryRunBtn.disabled = true;
+	output.textContent = "Computing...";
+	try {
+		const { collectionMint, nameLength, uriLength, candyMachineData } = readForm();
+
+		RelaxCandyMachine.validateCandyMachineData(candyMachineData);
+
+		const { total, breakdown } = RelaxCandyMachine.describeSpaceForCandy(candyMachineData);
+		const rentLamports = await connection.getMinimumBalanceForRentExemption(total);
+
+		const fakeCandyMachine = solanaWeb3.Keypair.generate().publicKey;
+		const authorityPda = await RelaxCandyMachine.findCandyMachineAuthorityPda(fakeCandyMachine);
+		const delegateRecord = await RelaxCandyMachine.findCollectionDelegateRecordPda({
+			collectionMint,
+			collectionUpdateAuthority: walletPubkey,
+			delegate: authorityPda
+		});
+		const collectionMetadata = await RelaxInstructionBuilder.findMetadataPda(collectionMint);
+		const collectionMasterEdition = await RelaxInstructionBuilder.findMasterEditionPda(collectionMint);
+
+		const linesPerTx = RelaxCandyMachine.estimateLinesPerTransaction(nameLength, uriLength);
+
+		let text = "ACCOUNT SIZE\n";
+		for (const b of breakdown) {
+			text += "  " + String(b.bytes).padStart(8) + "  " + b.label + "\n";
+		}
+		text += "  " + String(total).padStart(8) + "  TOTAL\n";
+		text += "\nRENT (rent-exempt minimum, live from RPC)\n";
+		text += "  " + (rentLamports / 1e9).toFixed(6) + " SOL\n";
+		text += "\nDERIVED ADDRESSES (authority PDA + delegate record shown for a throwaway\n";
+		text += "candy machine key — the real ones change per run, this only proves derivation works)\n";
+		text += "  collection metadata:       " + collectionMetadata.toString() + "\n";
+		text += "  collection master edition: " + collectionMasterEdition.toString() + "\n";
+		text += "  candy machine authority:   " + authorityPda.toString() + "\n";
+		text += "  collection delegate record:" + delegateRecord.toString() + "\n";
+		text += "\nADDCONFIGLINES BATCHING\n";
+		text += "  ~" + linesPerTx + " lines per transaction (estimate — Step 2 measures the real size)\n";
+
+		output.innerHTML = '<span class="ok">DRY RUN OK — nothing sent</span>\n' + text;
+	} catch (err) {
+		output.innerHTML = '<span class="err">DRY RUN FAILED: ' + describeError(err) + '</span>';
+		console.error(err);
+	} finally {
+		dryRunBtn.disabled = false;
+	}
+}
+dryRunBtn.addEventListener("click", runDryRun);
+
 async function runInitialize() {
 	const output = document.getElementById("initOutput");
 	initBtn.disabled = true;
 	output.textContent = "Working...";
 	try {
-		const collectionMint = document.getElementById("collectionMintInput").value.trim();
-		const itemsAvailable = parseInt(document.getElementById("itemsAvailableInput").value, 10);
-		const nameLength = parseInt(document.getElementById("nameLengthInput").value, 10);
-		const uriLength = parseInt(document.getElementById("uriLengthInput").value, 10);
+		const { collectionMint, candyMachineData } = readForm();
 
-		const candyMachineData = {
-			itemsAvailable,
-			symbol: "RELAXTEST",
-			sellerFeeBasisPoints: 0,
-			maxSupply: 0,
-			isMutable: true,
-			creators: [{ address: walletPubkey.toString(), verified: false, percentageShare: 100 }],
-			configLineSettings: {
-				prefixName: "",
-				nameLength,
-				prefixUri: "",
-				uriLength,
-				isSequential: false
-			},
-			hiddenSettings: null
-		};
+		const { total: space, breakdown } = RelaxCandyMachine.describeSpaceForCandy(candyMachineData);
+		const rentLamports = await connection.getMinimumBalanceForRentExemption(space);
 
-		const space = RelaxCandyMachine.getSpaceForCandy(candyMachineData);
-		// TEMPORARY DIAGNOSTIC (23 Jul 2026): +500 byte buffer to isolate
-		// whether the program's ConstraintRaw failure on InitializeV2 is
-		// a real size shortfall in getSpaceForCandy() vs. an unrelated
-		// issue (e.g. account owner). Remove once the real cause is
-		// confirmed — this is not a fix, it's a test.
-		const DIAGNOSTIC_BUFFER = 500;
-		const spaceWithBuffer = space + DIAGNOSTIC_BUFFER;
-		const rentLamports = await connection.getMinimumBalanceForRentExemption(spaceWithBuffer);
-		output.textContent = "Computed space: " + space + " + " + DIAGNOSTIC_BUFFER + " diagnostic buffer = " + spaceWithBuffer + " bytes, rent: " + (rentLamports / 1e9).toFixed(6) + " SOL\nBuilding transaction...";
+		let sizeReport = "Account size " + space + " bytes, rent " + (rentLamports / 1e9).toFixed(6) + " SOL\n";
+		for (const b of breakdown) sizeReport += "  " + String(b.bytes).padStart(8) + "  " + b.label + "\n";
+		output.textContent = sizeReport + "Building transaction...";
 
 		const candyMachineKeypair = solanaWeb3.Keypair.generate();
 		lastCandyMachineKeypair = candyMachineKeypair;
@@ -163,32 +242,20 @@ async function runInitialize() {
 			fromPubkey: walletPubkey,
 			newAccountPubkey: candyMachineKeypair.publicKey,
 			lamports: rentLamports,
-			space: spaceWithBuffer,
+			space,
 			programId: new solanaWeb3.PublicKey(RelaxCandyMachine.CANDY_MACHINE_CORE_PROGRAM_ID)
 		});
 
-		// NOTE (23 Jul 2026): the metadata/master-edition/delegate-record
-		// accounts for the collection below assume the standard Token
-		// Metadata PDAs derived from collectionMint — reusing the exact
-		// same derivation the NFT Creator layer already has. The
-		// collection_delegate_record must already be an APPROVED
-		// delegate for this Candy Machine's authority PDA (a one-time
-		// prerequisite, see migration plan's "verification is automatic"
-		// section) — if this instruction fails with an authority/
-		// delegate-related program error, that's very likely why; this
-		// harness does not yet perform that approval step itself.
-		const collectionMetadata = await RelaxInstructionBuilder.findMetadataPda(collectionMint);
-		const collectionMasterEdition = await RelaxInstructionBuilder.findMasterEditionPda(collectionMint);
-
+		// collectionMetadata / collectionMasterEdition / collectionDelegateRecord
+		// are all deliberately NOT passed: the builder derives each of them
+		// from collectionMint + collectionUpdateAuthority. That's what removed
+		// the placeholder that used to sit in the delegate-record slot.
 		const initIx = await RelaxCandyMachine.buildInitializeV2Instruction({
 			candyMachine: candyMachineKeypair.publicKey,
 			authority: walletPubkey,
 			payer: walletPubkey,
-			collectionMetadata,
 			collectionMint,
-			collectionMasterEdition,
 			collectionUpdateAuthority: walletPubkey,
-			collectionDelegateRecord: walletPubkey, // PLACEHOLDER — see note above, real PDA needed once delegate approval step exists
 			candyMachineData,
 			tokenStandard: 0
 		});
@@ -212,7 +279,7 @@ async function runInitialize() {
 
 		document.getElementById("candyMachinePubkeyInput").value = candyMachineKeypair.publicKey.toString();
 	} catch (err) {
-		output.innerHTML = '<span class="err">FAILED: ' + (err.message || String(err)) + '</span>';
+		output.innerHTML = '<span class="err">FAILED: ' + describeError(err) + '</span>';
 		console.error(err);
 	} finally {
 		initBtn.disabled = false;
@@ -227,10 +294,24 @@ async function runAddConfigLines() {
 	try {
 		const candyMachinePubkey = document.getElementById("candyMachinePubkeyInput").value.trim();
 		const lineCount = parseInt(document.getElementById("testLineCountInput").value, 10);
+		const nameLength = parseInt(document.getElementById("nameLengthInput").value, 10);
+		const uriLength = parseInt(document.getElementById("uriLengthInput").value, 10);
 
+		// Lines must fit inside the reserved name_length / uri_length or the
+		// program rejects the whole batch with ExceededLengthError. Build them
+		// to a known length and check locally first, so a length mistake shows
+		// up here instead of as a program error after a wallet signature.
 		const lines = [];
 		for (let i = 0; i < lineCount; i++) {
-			lines.push({ name: "RELAX Test #" + i, uri: "https://gateway.irys.xyz/testtesttesttesttesttesttesttesttesttest" + i });
+			const name = "RELAX Test #" + i;
+			const uri = "https://gateway.irys.xyz/" + String(i).padStart(4, "0") + "-devnet-test-metadata.json";
+			if (new TextEncoder().encode(name).length > nameLength) {
+				throw new Error('Line ' + i + ' name is longer than nameLength (' + nameLength + '): "' + name + '"');
+			}
+			if (new TextEncoder().encode(uri).length > uriLength) {
+				throw new Error('Line ' + i + ' uri is longer than uriLength (' + uriLength + '): "' + uri + '"');
+			}
+			lines.push({ name, uri });
 		}
 
 		const ix = RelaxCandyMachine.buildAddConfigLinesInstruction({
@@ -246,11 +327,17 @@ async function runAddConfigLines() {
 		tx.feePayer = walletPubkey;
 		tx.add(ix);
 
-		// Report the actual serialized size vs Solana's ~1232 byte limit —
-		// this is the real, direct confirmation of the batch-size math,
-		// not just the formula estimate.
+		// Real serialized size vs Solana's ~1232-byte limit — the direct
+		// confirmation of the batch-size math, not the formula's estimate.
 		const serializedForSizeCheck = tx.serialize({ requireAllSignatures: false, verifySignatures: false });
-		output.textContent = "Transaction size with " + lineCount + " lines: " + serializedForSizeCheck.length + " bytes (limit ~1232)\nSending...";
+		const estimate = RelaxCandyMachine.estimateLinesPerTransaction(nameLength, uriLength);
+		output.textContent = "Transaction size with " + lineCount + " lines: " + serializedForSizeCheck.length +
+			" bytes (limit ~1232)\nFormula estimated max: " + estimate + " lines/tx\nSending...";
+
+		if (serializedForSizeCheck.length > 1232) {
+			throw new Error("Transaction is " + serializedForSizeCheck.length +
+				" bytes, over the ~1232 limit. Lower the line count (formula suggests " + estimate + ").");
+		}
 
 		const signedTx = await walletProvider.signTransaction(tx);
 		const signature = await connection.sendRawTransaction(signedTx.serialize(), { skipPreflight: false });
@@ -259,9 +346,10 @@ async function runAddConfigLines() {
 		await pollConfirmation(signature, lastValidBlockHeight);
 
 		output.innerHTML = '<span class="ok">SUCCESS</span>\n' + lineCount + ' lines added.\nSignature: ' + signature +
-			'\nSerialized tx size: ' + serializedForSizeCheck.length + ' bytes';
+			'\nSerialized tx size: ' + serializedForSizeCheck.length + ' bytes' +
+			'\nFormula estimate was: ' + estimate + ' lines/tx';
 	} catch (err) {
-		output.innerHTML = '<span class="err">FAILED: ' + (err.message || String(err)) + '</span>';
+		output.innerHTML = '<span class="err">FAILED: ' + describeError(err) + '</span>';
 		console.error(err);
 	} finally {
 		addLinesBtn.disabled = false;
