@@ -1240,9 +1240,31 @@ async function runMint() {
 			data: initMintData
 		});
 
+		// FIX (23 Jul 2026, second mint attempt): AllowList's route
+		// handler needs a PDA that tracks "has this wallet already used
+		// this proof" — without it, the guard has nowhere to record
+		// that the proof was consumed, hence MissingRemainingAccount.
+		// Seeds confirmed in this project's own 23 Jul research:
+		// ["allow_list", merkle_root, minter, candy_guard, candy_machine].
+		const merkleRootForPda = await sha256(walletPubkey.toBytes());
+		const [allowListProofPda] = await solanaWeb3.PublicKey.findProgramAddress(
+			[
+				new TextEncoder().encode("allow_list"),
+				merkleRootForPda,
+				walletPubkey.toBytes(),
+				new solanaWeb3.PublicKey(candyGuard).toBytes(),
+				new solanaWeb3.PublicKey(candyMachine).toBytes()
+			],
+			new solanaWeb3.PublicKey(RelaxCandyGuard.CANDY_GUARD_PROGRAM_ID)
+		);
+
 		const routeIx = RelaxCandyGuard.buildRouteInstruction({
 			candyGuard, candyMachine, payer: walletPubkey,
-			guardName: "allowList", routeData, label: "WAVE1"
+			guardName: "allowList", routeData, label: "WAVE1",
+			remainingAccounts: [
+				{ pubkey: allowListProofPda, isSigner: false, isWritable: true },
+				{ pubkey: solanaWeb3.SystemProgram.programId, isSigner: false, isWritable: false }
+			]
 		});
 
 		const mintIx = RelaxCandyGuard.buildMintV2Instruction({
