@@ -263,11 +263,14 @@ const RelaxCandyMachine = (function () {
 		let total = hiddenSectionOffset
 			+ 4                                          // item count
 			+ (itemsAvailable * configLineSize)           // config lines
-			+ Math.ceil(itemsAvailable / 8);              // byte mask
+			+ (Math.floor(itemsAvailable / 8) + 1);       // byte mask — matches README verbatim: "(items_available / 8) + 1", NOT ceil() (differs when itemsAvailable is an exact multiple of 8 — fixed 23 Jul 2026)
 
-		if (!settings.isSequential) {
-			total += itemsAvailable * 4; // mint indices array
-		}
+		// Mint indices array: README's wording ("valid indices start at
+		// the mint number if is_sequential is true") implies the array
+		// is reserved unconditionally, just interpreted differently by
+		// mode — not skipped for sequential mode. Fixed 23 Jul 2026 to
+		// always reserve it (previously conditional on !isSequential).
+		total += itemsAvailable * 4;
 
 		total += 1; // rule set flag (always present, pNFT or not)
 		// rule set itself (32 bytes) omitted — RELAX's badge collection
