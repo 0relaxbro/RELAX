@@ -1739,11 +1739,45 @@ function renderGuardStep() {
 				candyMachine: STATE.candyMachinePubkey, candyMachineAuthority: STATE.walletPubkey
 			});
 
+			// FIX (23 Jul 2026, MissingRemainingAccount then wrong-signer
+			// bug): the Allocation guard needs its own tracker PDA
+			// created via a `route` call BEFORE any mint can validate
+			// against it (seeds ["allocation", id, candy_guard,
+			// candy_machine] — confirmed against Metaplex's own README).
+			// Its accounts are proof_pda(w) + authority(SIGNER, the
+			// CANDY GUARD's authority) + system_program — this can only
+			// be signed by the operator, never a random buyer, which is
+			// exactly why it belongs here in the admin flow and not on
+			// the public mint page.
+			const allocationInitIxList = [];
+			for (const g of groupsForGuard) {
+				if (!g.guards.allocation) continue;
+				const groupState = STATE.groups.find(sg => sg.label === g.label);
+				const [allocationTrackerPda] = await solanaWeb3.PublicKey.findProgramAddress(
+					[
+						new TextEncoder().encode("allocation"),
+						Uint8Array.of(groupState.allocationId),
+						candyGuardPda.toBytes(),
+						new solanaWeb3.PublicKey(STATE.candyMachinePubkey).toBytes()
+					],
+					new solanaWeb3.PublicKey(RelaxCandyGuard.CANDY_GUARD_PROGRAM_ID)
+				);
+				allocationInitIxList.push(RelaxCandyGuard.buildRouteInstruction({
+					candyGuard: candyGuardPda, candyMachine: STATE.candyMachinePubkey, payer: STATE.walletPubkey,
+					guardName: "allocation", routeData: new Uint8Array(0), label: g.label,
+					remainingAccounts: [
+						{ pubkey: allocationTrackerPda, isSigner: false, isWritable: true },
+						{ pubkey: STATE.walletPubkey, isSigner: true, isWritable: false },
+						{ pubkey: solanaWeb3.SystemProgram.programId, isSigner: false, isWritable: false }
+					]
+				}));
+			}
+
 			const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
 			const tx = new solanaWeb3.Transaction();
 			tx.recentBlockhash = blockhash;
 			tx.feePayer = STATE.walletPubkey;
-			tx.add(initIx, wrapIx);
+			tx.add(initIx, wrapIx, ...allocationInitIxList);
 			tx.partialSign(baseKeypair);
 
 			const signedTx = await STATE.walletProvider.signTransaction(tx);

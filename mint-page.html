@@ -1145,14 +1145,14 @@ async function runMint(group) {
 		}
 
 		if (group.allocationId) {
-			// FIX (23 Jul 2026, MissingRemainingAccount on mint_v2): the
-			// Allocation guard has its own tracker account, seeds
-			// ["allocation", id, candy_guard, candy_machine] (confirmed:
-			// Metaplex's own candy-guard README, "Mint tracker PDA"). It
-			// must exist BEFORE the first mint validates against it — a
-			// separate `route` call creates it, done here once (checked
-			// via getAccountInfo so a second mint under the same group
-			// doesn't try to recreate an already-existing tracker).
+			// FIX (23 Jul 2026): the Allocation tracker (seeds
+			// ["allocation", id, candy_guard, candy_machine]) is now
+			// always pre-created by the admin tool right after wrapping
+			// the Guard — a buyer's wallet can never create it themselves
+			// (that route call requires the CANDY GUARD's own authority
+			// as a signer, which a random minter isn't). If this account
+			// doesn't exist, that's an admin-side setup gap, not
+			// something this page can or should fix on the fly.
 			const [allocationTrackerPda] = await solanaWeb3.PublicKey.findProgramAddress(
 				[
 					new TextEncoder().encode("allocation"),
@@ -1162,17 +1162,6 @@ async function runMint(group) {
 				],
 				new solanaWeb3.PublicKey(RelaxCandyGuard.CANDY_GUARD_PROGRAM_ID)
 			);
-			const trackerInfo = await connection.getAccountInfo(allocationTrackerPda);
-			if (!trackerInfo) {
-				routeIxList.push(RelaxCandyGuard.buildRouteInstruction({
-					candyGuard: CONFIG.candyGuard, candyMachine: CONFIG.candyMachine, payer: walletPubkey,
-					guardName: "allocation", routeData: new Uint8Array(0), label: group.label,
-					remainingAccounts: [
-						{ pubkey: allocationTrackerPda, isSigner: false, isWritable: true },
-						{ pubkey: solanaWeb3.SystemProgram.programId, isSigner: false, isWritable: false }
-					]
-				}));
-			}
 			remainingAccounts.push({ pubkey: allocationTrackerPda, isSigner: false, isWritable: true });
 		}
 
