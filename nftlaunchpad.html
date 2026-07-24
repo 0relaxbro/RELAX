@@ -1143,6 +1143,8 @@ const STATE = {
 	items: [],          // [{name, uri}]
 	itemsValidated: false,
 	groups: [],         // [{label, walletList: string[], mintLimit, startDateOffsetMin, allocation}]
+	botProtectionEnabled: false,
+	botTaxSol: 0.01,
 	candyMachinePubkey: "",
 	candyMachineKeypairSecret: null, // kept in-memory only, this session
 	candyGuardPubkey: "",
@@ -1204,6 +1206,8 @@ function saveState() {
 			items: STATE.items,
 			itemsValidated: STATE.itemsValidated,
 			groups: STATE.groups,
+			botProtectionEnabled: STATE.botProtectionEnabled,
+			botTaxSol: STATE.botTaxSol,
 			candyMachinePubkey: STATE.candyMachinePubkey,
 			candyGuardPubkey: STATE.candyGuardPubkey,
 			configLinesLoaded: STATE.configLinesLoaded,
@@ -1232,6 +1236,8 @@ function loadState() {
 		STATE.items = saved.items || [];
 		STATE.itemsValidated = !!saved.itemsValidated;
 		STATE.groups = saved.groups || [];
+		STATE.botProtectionEnabled = !!saved.botProtectionEnabled;
+		STATE.botTaxSol = typeof saved.botTaxSol === "number" ? saved.botTaxSol : 0.01;
 		STATE.candyMachinePubkey = saved.candyMachinePubkey || "";
 		STATE.candyGuardPubkey = saved.candyGuardPubkey || "";
 		STATE.configLinesLoaded = saved.configLinesLoaded || 0;
@@ -1756,12 +1762,31 @@ function renderGroupsStep() {
 		when your collection goes live. Phases are evaluated in the order
 		listed — put the earliest/most-restricted phase first.</p>
 		<div class="card">
+			<label style="display:flex;align-items:center;gap:8px;margin:0 0 4px;">
+				<input type="checkbox" id="botProtectionEnabled" style="width:auto;" ${STATE.botProtectionEnabled ? "checked" : ""}>
+				Bot protection
+			</label>
+			<p class="desc" style="margin:0 0 12px;">Applies to every phase automatically.
+			Any mint transaction with extra instructions attached before it (a common bot
+			pattern) gets charged a small SOL penalty instead of failing outright —
+			this discourages scripted sniping without blocking real buyers using a normal wallet.</p>
+			<div id="botTaxAmountRow" style="display:${STATE.botProtectionEnabled ? "block" : "none"};">
+				<label>Penalty amount (SOL)</label>
+				<input type="number" id="botTaxSol" step="0.001" value="${STATE.botTaxSol ?? 0.01}">
+			</div>
+		</div>
+		<div class="card">
 			<div id="groupsList"></div>
 			<button id="addGroupBtn" class="secondary">+ Add phase</button>
 		</div>
 		<button id="confirmGroupsBtn">Confirm phases</button>
 		<pre id="groupsOutput">(no phases yet)</pre>
 	`;
+
+	document.getElementById("botProtectionEnabled").addEventListener("change", (e) => {
+		STATE.botProtectionEnabled = e.target.checked;
+		document.getElementById("botTaxAmountRow").style.display = e.target.checked ? "block" : "none";
+	});
 
 	if (STATE.groups.length === 0) {
 		STATE.groups.push({ label: "WAVE1", walletList: "", mintLimit: 1, startOffsetMin: 0, allocation: STATE.itemsAvailable || 0 });
@@ -1784,6 +1809,11 @@ function renderGroupsStep() {
 					? parseInt(el.value, 10) || 0
 					: el.value;
 			});
+			STATE.botProtectionEnabled = document.getElementById("botProtectionEnabled").checked;
+			if (STATE.botProtectionEnabled) {
+				STATE.botTaxSol = parseFloat(document.getElementById("botTaxSol").value) || 0.01;
+				if (STATE.botTaxSol <= 0) throw new Error("Bot protection penalty amount must be greater than 0.");
+			}
 
 			const errors = [];
 			const labelsSeen = new Set();
@@ -2147,12 +2177,16 @@ function renderGuardStep() {
 		</div>
 	`;
 
-	document.getElementById("guardPhasesSummary").innerHTML = STATE.groups.map(g => {
-		const wallets = g.walletList.split("\n").map(l => l.trim()).filter(l => l.length > 0);
-		return '<div class="review-row"><span class="k">' + g.label + '</span><span class="v">' +
-			(wallets.length > 0 ? wallets.length + ' wallets, ' : 'open, ') +
-			'limit ' + g.mintLimit + '/wallet, alloc ' + g.allocation + ', +' + g.startOffsetMin + 'min</span></div>';
-	}).join("");
+	document.getElementById("guardPhasesSummary").innerHTML =
+		'<div class="review-row"><span class="k">Bot protection</span><span class="v">' +
+			(STATE.botProtectionEnabled ? '<span class="ok">ON</span> — ' + STATE.botTaxSol + ' SOL penalty' : 'off') +
+		'</span></div>' +
+		STATE.groups.map(g => {
+			const wallets = g.walletList.split("\n").map(l => l.trim()).filter(l => l.length > 0);
+			return '<div class="review-row"><span class="k">' + g.label + '</span><span class="v">' +
+				(wallets.length > 0 ? wallets.length + ' wallets, ' : 'open, ') +
+				'limit ' + g.mintLimit + '/wallet, alloc ' + g.allocation + ', +' + g.startOffsetMin + 'min</span></div>';
+		}).join("");
 
 	document.getElementById("createGuardBtn").addEventListener("click", async () => {
 		const output = document.getElementById("guardOutput");
@@ -2187,6 +2221,21 @@ function renderGuardStep() {
 			});
 
 			const candyGuardData = { default: {}, groups: groupsForGuard };
+			if (STATE.botProtectionEnabled) {
+				// FIX (24 Jul 2026): bot protection was previously only
+				// plumbed at the low-level encoder (GUARD_ENCODERS.botTax
+				// etc. already existed) but never actually wired into any
+				// guard set built by this flow — this closes that gap.
+				// lastInstruction:true is the standard anti-bot setting
+				// (requires the bot-tax check to be the LAST instruction in
+				// the transaction, closing a known CPI-based bypass) — not
+				// exposed as its own toggle since there's no legitimate
+				// reason for a creator to want it off.
+				candyGuardData.default.botTax = {
+					lamports: BigInt(Math.round(STATE.botTaxSol * solanaWeb3.LAMPORTS_PER_SOL)),
+					lastInstruction: true
+				};
+			}
 
 			const baseKeypair = solanaWeb3.Keypair.generate();
 			const candyGuardPda = await RelaxCandyGuard.findCandyGuardPda(baseKeypair.publicKey);
