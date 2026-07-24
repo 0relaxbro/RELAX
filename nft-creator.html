@@ -107,6 +107,7 @@ padding:14px 24px; cursor:pointer; width:100%; transition:opacity .15s ease;
 
 .wallet-picker-btn.provider-phantom{ background:#AB9FF2; }
 .wallet-picker-btn.provider-solflare{ background:#FFEF46; }
+.wallet-picker-btn.provider-backpack{ background:#E33E3F; }
 
 .wallet-connected-row{ display:flex; align-items:center; justify-content:space-between; font-size:13px; color:var(--muted); }
 .wallet-connected-row .addr{ color:var(--text); font-family:monospace; }
@@ -570,11 +571,34 @@ function renderWalletPicker() {
 	});
 }
 
+// FIX (24 Jul 2026): renders "Open in <Wallet>" links instead of the
+// CONNECT WALLET button when handleConnect() finds zero injected
+// providers on a mobile device. Each link uses that wallet's Browse
+// universal link (see RelaxHolder.getMobileBrowseLinks) to reopen this
+// exact page inside the wallet's own in-app browser.
+function renderMobileWalletLinks() {
+	const links = RelaxHolder.getMobileBrowseLinks();
+	walletBox.innerHTML =
+		'<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">No wallet browser extension found on this device. Open this page inside your wallet app instead:</div>' +
+		links.map((l) =>
+			'<a href="' + l.url + '" class="connect-btn wallet-picker-btn provider-' + l.id + '" ' +
+				'style="display:block;text-align:center;margin-bottom:8px;text-decoration:none;">Open in ' + l.label + '</a>'
+		).join("");
+}
+
 async function handleConnect() {
 	clearError();
 	const providers = RelaxHolder.detectProviders();
 	if (providers.length === 0) {
-		showError("No Solana wallet detected. Install Phantom, Solflare, or Backpack and reload the page.");
+		// FIX (24 Jul 2026): route mobile visitors with no injected
+		// provider to each wallet's Browse deeplink (reopens this page
+		// inside that wallet's own in-app browser) instead of a dead-end
+		// "install a wallet" message they'd see on desktop.
+		if (RelaxHolder.isMobileDevice()) {
+			renderMobileWalletLinks();
+		} else {
+			showError("No Solana wallet detected. Install Phantom, Solflare, or Backpack and reload the page.");
+		}
 		return;
 	}
 	if (providers.length > 1) { renderWalletPicker(); return; }

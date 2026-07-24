@@ -31,6 +31,10 @@ button{background:var(--accent);color:#fff;border:none;border-radius:8px;padding
 button:disabled{opacity:.35;cursor:not-allowed;}
 button.secondary{background:#1E2340;}
 button.danger{background:var(--err);}
+.wallet-connect-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 18px;font-size:13px;cursor:pointer;margin-right:8px;margin-top:8px;display:inline-block;text-decoration:none;}
+.wallet-connect-btn.provider-phantom{background:#AB9FF2;color:#1a1a2e;}
+.wallet-connect-btn.provider-solflare{background:#FFEF46;color:#1a1a2e;}
+.wallet-connect-btn.provider-backpack{background:#E33E3F;}
 .row{display:flex;gap:12px;}
 .row>div{flex:1;}
 pre{background:#000;border-radius:6px;padding:12px;font-size:12px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;max-height:340px;overflow-y:auto;}
@@ -94,6 +98,14 @@ window.RELAX_NFT_CONFIG = Object.freeze({
 <script src="irys-bundle.js"></script>
 <script src="irys-web-provider.js"></script>
 <script src="storage-adapter.js"></script>
+<!-- FIX (24 Jul 2026): multi-wallet support (Phantom/Solflare/Backpack)
+     reuses the same RelaxHolder module the main site's Swap already
+     uses, instead of this tool re-implementing its own wallet
+     detection. Copy holder-verification.js into this same folder
+     alongside the Irys files above (it's the exact file from
+     Github/holder-verification.js — nft-creator.html already expects
+     a local copy here too, same convention). -->
+<script src="holder-verification.js"></script>
 <script>
 /* =========================================================
    PROVEN LIBRARY CODE — copied verbatim from candy-machine-devnet-test.html
@@ -1037,10 +1049,15 @@ const RelaxCandyGuard = (function () {
 
 /* =========================================================
    Global wizard state — the single source of truth every step
-   reads from and writes to. Nothing here persists across a page
-   reload (no localStorage per this project's artifact rules) —
-   a real "resume after closing the tab" capability is a known,
-   accepted gap for this first version, not solved here.
+   reads from and writes to.
+
+   FIX (24 Jul 2026): the comment that used to be here said nothing
+   persists "per this project's artifact rules" — that rule is about
+   Claude-artifact PREVIEWS (which really can't use browser storage),
+   not this file, which is a real page served from GitHub Pages.
+   localStorage works completely normally here. This now saves a
+   resume checkpoint after every markDone() so an accidental reload
+   doesn't throw away 20 minutes of wizard progress.
    ========================================================= */
 const STATE = {
 	network: "devnet",
@@ -1093,6 +1110,78 @@ document.addEventListener("focusin", (e) => {
 });
 const completedSteps = new Set();
 
+const STATE_STORAGE_KEY = "relax_candy_admin_state_v1";
+
+// What gets saved is deliberately a SAFE SUBSET of STATE, not the whole
+// object. Two things are never written to localStorage, on purpose:
+//   - walletPubkey / walletProvider: reconnecting the wallet every
+//     session is expected, secure behavior, not something to skip.
+//   - candyMachineKeypairSecret / guardBaseSecret: these are one-time
+//     signing secrets that were already documented as in-memory-only,
+//     this-session-only — that stays true. Losing them to a reload is
+//     a known, accepted gap; the UI tells you to back them up when
+//     they're generated.
+function saveState() {
+	try {
+		const safe = {
+			collectionMint: STATE.collectionMint,
+			collectionSymbol: STATE.collectionSymbol,
+			royaltyBps: STATE.royaltyBps,
+			itemsAvailable: STATE.itemsAvailable,
+			nameLength: STATE.nameLength,
+			uriLength: STATE.uriLength,
+			items: STATE.items,
+			itemsValidated: STATE.itemsValidated,
+			groups: STATE.groups,
+			candyMachinePubkey: STATE.candyMachinePubkey,
+			candyGuardPubkey: STATE.candyGuardPubkey,
+			configLinesLoaded: STATE.configLinesLoaded,
+			completedSteps: Array.from(completedSteps),
+			currentStep
+		};
+		localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(safe));
+	} catch (err) {
+		// Non-fatal — e.g. private/incognito mode blocking storage.
+		// The wizard still works, it just won't survive a reload.
+	}
+}
+
+function loadState() {
+	try {
+		const raw = localStorage.getItem(STATE_STORAGE_KEY);
+		if (!raw) return false;
+		const saved = JSON.parse(raw);
+
+		STATE.collectionMint = saved.collectionMint || "";
+		STATE.collectionSymbol = saved.collectionSymbol || "";
+		STATE.royaltyBps = saved.royaltyBps || 0;
+		STATE.itemsAvailable = saved.itemsAvailable || 0;
+		STATE.nameLength = saved.nameLength || 32;
+		STATE.uriLength = saved.uriLength || 96;
+		STATE.items = saved.items || [];
+		STATE.itemsValidated = !!saved.itemsValidated;
+		STATE.groups = saved.groups || [];
+		STATE.candyMachinePubkey = saved.candyMachinePubkey || "";
+		STATE.candyGuardPubkey = saved.candyGuardPubkey || "";
+		STATE.configLinesLoaded = saved.configLinesLoaded || 0;
+
+		(saved.completedSteps || []).forEach(id => completedSteps.add(id));
+		currentStep = typeof saved.currentStep === "number" ? saved.currentStep : 0;
+
+		return completedSteps.size > 0;
+	} catch (err) {
+		return false;
+	}
+}
+
+function clearSavedState() {
+	try { localStorage.removeItem(STATE_STORAGE_KEY); } catch (err) {}
+}
+
+// Restore any previous session's progress BEFORE the first render, so
+// the wallet panel below can show a "resume" notice if applicable.
+const hasSavedProgress = loadState();
+
 function renderNav() {
 	const nav = document.getElementById("stepNav");
 	nav.innerHTML = "";
@@ -1110,11 +1199,13 @@ function goToStep(i) {
 	renderNav();
 	document.querySelectorAll(".step-panel").forEach(p => p.classList.remove("active"));
 	document.getElementById("panel-" + STEPS[i].id).classList.add("active");
+	saveState();
 }
 
 function markDone(stepId) {
 	completedSteps.add(stepId);
 	renderNav();
+	saveState();
 }
 
 const main = document.getElementById("main");
@@ -1131,41 +1222,115 @@ STEPS.forEach(s => {
      Panel: Connect wallet
      ========================================================= -->
 <script>
+// FIX (24 Jul 2026): resume notice — only shown if a previous session
+// left saved progress (see loadState() above). Cleared automatically
+// once the user reconnects, since resumeIntoSavedProgress() below
+// handles getting them back to the right step from there.
+const resumeNotice = hasSavedProgress
+	? '<div class="gate">Found saved progress from a previous session (furthest step reached: "' +
+	  (STEPS[Math.max(0, currentStep)] || STEPS[0]).label +
+	  '"). Connect your wallet to resume — or <a href="#" id="discardProgressLink" style="color:inherit;">discard it and start fresh</a>.</div>'
+	: '';
+
 document.getElementById("panel-wallet").innerHTML = `
 	<h2>Connect wallet</h2>
 	<p class="desc">This wallet pays for and controls everything created
 	in this flow — it becomes the Candy Machine's authority. Devnet only;
 	get free devnet SOL from <a href="https://faucet.solana.com" target="_blank" style="color:var(--accent)">faucet.solana.com</a>
 	if the balance below is empty.</p>
+	${resumeNotice}
 	<div class="card">
 		<div id="walletStatus">Not connected.</div>
-		<button id="connectBtn">Connect Phantom</button>
+		<div id="walletButtons"></div>
 	</div>
 `;
 
 const connection = new solanaWeb3.Connection(STATE.rpcUrl, "confirmed");
 
-async function connectWallet() {
-	const statusEl = document.getElementById("walletStatus");
-	if (!window.solana || !window.solana.isPhantom) {
-		statusEl.innerHTML = '<span class="err">Phantom not found. Install it and reload.</span>';
+document.getElementById("discardProgressLink")?.addEventListener("click", (e) => {
+	e.preventDefault();
+	clearSavedState();
+	location.reload();
+});
+
+// FIX (24 Jul 2026): this tool used to hard-check window.solana.isPhantom
+// and refuse to connect anything else. It now uses the same RelaxHolder
+// module (holder-verification.js) the main site already uses for Swap —
+// detects Phantom/Solflare/Backpack, shows a picker if more than one is
+// installed, and works with whichever one the user actually has.
+function renderWalletButtons() {
+	const box = document.getElementById("walletButtons");
+	const providers = RelaxHolder.detectProviders();
+	if (providers.length === 0) {
+		// FIX (24 Jul 2026): on mobile, no injected provider is the norm
+		// (extensions are desktop-only) — route to each wallet's Browse
+		// deeplink instead of a dead-end "install a wallet" message.
+		if (RelaxHolder.isMobileDevice()) {
+			const links = RelaxHolder.getMobileBrowseLinks();
+			box.innerHTML =
+				'<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">No wallet browser extension found on this device. Open this page inside your wallet app instead:</div>' +
+				links.map(l =>
+					'<a href="' + l.url + '" class="wallet-connect-btn provider-' + l.id + '" ' +
+						'style="display:block;text-align:center;margin-bottom:8px;text-decoration:none;">Open in ' + l.label + '</a>'
+				).join("");
+		} else {
+			box.innerHTML = '<span class="err">No Solana wallet found. Install Phantom, Solflare, or Backpack and reload.</span>';
+		}
 		return;
 	}
+	box.innerHTML = providers.map(p =>
+		'<button data-provider="' + p.id + '" class="wallet-connect-btn provider-' + p.id + '">Connect ' + p.label + '</button>'
+	).join("");
+	providers.forEach(p => {
+		box.querySelector('[data-provider="' + p.id + '"]').addEventListener("click", () => connectWallet(p.id));
+	});
+}
+renderWalletButtons();
+
+// After a fresh connect (or an eager silent reconnect), if there's
+// saved progress from a previous session, re-render every step panel
+// that already has data — each renderXStep() both builds that panel's
+// markup AND wires its own button handlers, so this is the one call
+// needed to make each panel usable again after a full page reload
+// wiped all DOM/JS state. Nothing here re-runs any on-chain
+// transaction; it only rebuilds the display and re-attaches "click to
+// do the thing" handlers, same as clicking through normally would.
+function resumeIntoSavedProgress() {
+	renderCollectionStep();
+	if (completedSteps.has("items") || STATE.items.length > 0) renderItemsStep();
+	if (completedSteps.has("groups") || STATE.groups.length > 0) renderGroupsStep();
+	if (completedSteps.has("review")) renderReviewStep();
+	if (completedSteps.has("create") || STATE.candyMachinePubkey) renderCreateStep();
+	if (completedSteps.has("load")) renderLoadStep();
+	if (completedSteps.has("guard") || STATE.candyGuardPubkey) renderGuardStep();
+	if (completedSteps.has("verify")) renderVerifyStep();
+	if (completedSteps.has("publish")) renderPublishStep();
+
+	const resumeStep = Math.max(1, Math.min(currentStep, STEPS.length - 1));
+	goToStep(resumeStep);
+}
+
+async function connectWallet(providerId) {
+	const statusEl = document.getElementById("walletStatus");
 	try {
-		const resp = await window.solana.connect();
-		STATE.walletPubkey = resp.publicKey;
-		STATE.walletProvider = window.solana;
+		const conn = await RelaxHolder.connect(providerId);
+		STATE.walletPubkey = new solanaWeb3.PublicKey(conn.publicKey);
+		STATE.walletProvider = conn.rawProvider;
 		const balance = await connection.getBalance(STATE.walletPubkey);
-		statusEl.innerHTML = 'Connected: <span class="ok">' + STATE.walletPubkey.toString() + '</span>' +
+		statusEl.innerHTML = 'Connected (' + conn.providerId + '): <span class="ok">' + STATE.walletPubkey.toString() + '</span>' +
 			'<br>Balance: ' + (balance / 1e9).toFixed(4) + ' SOL';
 		markDone("wallet");
-		goToStep(1);
-		renderCollectionStep();
+
+		if (hasSavedProgress) {
+			resumeIntoSavedProgress();
+		} else {
+			goToStep(1);
+			renderCollectionStep();
+		}
 	} catch (err) {
 		statusEl.innerHTML = '<span class="err">' + (err.message || "Connection failed.") + '</span>';
 	}
 }
-document.getElementById("connectBtn").addEventListener("click", connectWallet);
 </script>
 
 <!-- =========================================================
@@ -1182,19 +1347,19 @@ function renderCollectionStep() {
 		the existing NFT Creator, then paste its mint address here.</p>
 		<div class="card">
 			<label>Collection mint address</label>
-			<input type="text" id="collectionMintInput" placeholder="Paste an existing Collection NFT's mint address">
+			<input type="text" id="collectionMintInput" placeholder="Paste an existing Collection NFT's mint address" value="${STATE.collectionMint || ''}">
 			<div class="row">
 				<div>
 					<label>Symbol (max 10 chars, space-reserved on-chain regardless of actual length)</label>
-					<input type="text" id="collectionSymbolInput" value="RELAX" maxlength="10">
+					<input type="text" id="collectionSymbolInput" value="${STATE.collectionSymbol || 'RELAX'}" maxlength="10">
 				</div>
 				<div>
 					<label>Royalty (basis points, 500 = 5%)</label>
-					<input type="number" id="royaltyInput" value="0">
+					<input type="number" id="royaltyInput" value="${STATE.royaltyBps || 0}">
 				</div>
 			</div>
 			<button id="validateCollectionBtn">Validate collection on-chain</button>
-			<pre id="collectionValidateOutput">(not checked yet)</pre>
+			<pre id="collectionValidateOutput">${STATE.collectionMint ? 'Restored from a previous session — click "Validate collection on-chain" again to re-confirm before continuing.' : '(not checked yet)'}</pre>
 		</div>
 	`;
 
@@ -1266,14 +1431,14 @@ function renderItemsStep() {
 		<div class="card">
 			<label>Name / URI byte reservation per line (fixed at Candy Machine creation — cannot grow later, only shrink)</label>
 			<div class="row">
-				<div><input type="number" id="nameLenInput" value="32"></div>
-				<div><input type="number" id="uriLenInput" value="96"></div>
+				<div><input type="number" id="nameLenInput" value="${STATE.nameLength || 32}"></div>
+				<div><input type="number" id="uriLenInput" value="${STATE.uriLength || 96}"></div>
 			</div>
 			<label>Items — one per line, format: <code>name,uri</code> (bulk upload above fills this in automatically)</label>
 			<textarea id="itemsTextarea" rows="10" placeholder="RELAX Badge #1,https://gateway.irys.xyz/abc123
-RELAX Badge #2,https://gateway.irys.xyz/def456"></textarea>
+RELAX Badge #2,https://gateway.irys.xyz/def456">${STATE.items && STATE.items.length > 0 ? STATE.items.map(it => it.name + "," + it.uri).join("\n") : ""}</textarea>
 			<button id="validateItemsBtn">Validate items</button>
-			<pre id="itemsValidateOutput">(not validated yet)</pre>
+			<pre id="itemsValidateOutput">${STATE.itemsValidated ? 'Restored from a previous session (' + STATE.items.length + ' items) — click "Validate items" again to re-confirm before continuing.' : '(not validated yet)'}</pre>
 		</div>
 	`;
 
@@ -1687,6 +1852,7 @@ function renderCreateStep(candyMachineData) {
 		<h2>Step 8 — Create Candy Machine</h2>
 		<p class="desc">Sends the real InitializeV2 transaction. This is
 		the first irreversible on-chain action in this flow.</p>
+		${STATE.candyMachinePubkey ? '<div class="gate">Already created in a previous session: ' + STATE.candyMachinePubkey + '. No need to click below again — continue to the next step.</div>' : ''}
 		<div class="card">
 			<button id="createCmBtn">Create Candy Machine (real transaction)</button>
 			<pre id="createCmOutput">(not run yet)</pre>
@@ -1870,6 +2036,7 @@ function renderGuardStep() {
 		<p class="desc">Builds one Guard with all confirmed phases as
 		groups, then wraps it onto the Candy Machine from Step 8 — after
 		this, minting can only happen through the Guard.</p>
+		${STATE.candyGuardPubkey ? '<div class="gate">Already created in a previous session: ' + STATE.candyGuardPubkey + '. No need to click below again — continue to the next step.</div>' : ''}
 		<div class="card">
 			<div id="guardPhasesSummary"></div>
 			<button id="createGuardBtn">Create + Initialize + Wrap Guard</button>

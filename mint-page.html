@@ -43,6 +43,13 @@ label{font-size:12px;color:var(--muted);display:block;margin:12px 0 4px;}
 </div>
 
 <script src="https://unpkg.com/@solana/web3.js@1.95.3/lib/index.iife.min.js"></script>
+<!-- FIX (24 Jul 2026): multi-wallet support (Phantom/Solflare/Backpack)
+     for the real public mint page — this used to hard-require Phantom
+     specifically, which would have turned away every real buyer using
+     a different wallet. Reuses the same RelaxHolder module the main
+     site's Swap already uses. Copy holder-verification.js into this
+     same folder alongside this page. -->
+<script src="holder-verification.js"></script>
 <script>
 /* =========================================================
    PROVEN LIBRARY CODE — copied verbatim from the admin tool /
@@ -1008,11 +1015,31 @@ function renderConnectStep() {
 	document.getElementById("content").innerHTML = `
 		<div id="supplyBox" class="center">Loading supply...</div>
 		<div id="phaseBox"></div>
-		<button id="connectBtn">Connect Phantom</button>
+		<div id="walletButtons"></div>
 		<pre id="statusOutput"></pre>
 	`;
 	loadSupply();
-	document.getElementById("connectBtn").addEventListener("click", connectWallet);
+	renderWalletButtons();
+}
+
+// FIX (24 Jul 2026): was hard-locked to window.solana.isPhantom — a
+// real buyer with only Solflare or Backpack installed simply couldn't
+// mint at all. Now detects whichever of Phantom/Solflare/Backpack is
+// actually installed (via the shared RelaxHolder module) and shows a
+// picker if more than one is present.
+function renderWalletButtons() {
+	const box = document.getElementById("walletButtons");
+	const providers = RelaxHolder.detectProviders();
+	if (providers.length === 0) {
+		box.innerHTML = '<span class="err">No Solana wallet found. Install Phantom, Solflare, or Backpack and reload.</span>';
+		return;
+	}
+	box.innerHTML = providers.map(p =>
+		'<button data-provider="' + p.id + '" class="connect-btn">Connect ' + p.label + '</button>'
+	).join("");
+	providers.forEach(p => {
+		box.querySelector('[data-provider="' + p.id + '"]').addEventListener("click", () => connectWallet(p.id));
+	});
 }
 
 async function loadSupply() {
@@ -1030,16 +1057,12 @@ async function loadSupply() {
 	}
 }
 
-async function connectWallet() {
+async function connectWallet(providerId) {
 	const statusOutput = document.getElementById("statusOutput");
-	if (!window.solana || !window.solana.isPhantom) {
-		statusOutput.innerHTML = '<span class="err">Phantom not found. Install it and reload.</span>';
-		return;
-	}
 	try {
-		const resp = await window.solana.connect();
-		walletPubkey = resp.publicKey;
-		walletProvider = window.solana;
+		const conn = await RelaxHolder.connect(providerId);
+		walletPubkey = new solanaWeb3.PublicKey(conn.publicKey);
+		walletProvider = conn.rawProvider;
 		renderMintStep();
 	} catch (err) {
 		statusOutput.innerHTML = '<span class="err">' + (err.message || "Connection failed.") + '</span>';

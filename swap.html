@@ -161,6 +161,10 @@ background:#AB9FF2; /* Phantom brand purple */
 background:#FFEF46; /* Solflare brand yellow */
 }
 
+.wallet-picker-btn.provider-backpack{
+background:#E33E3F; /* Backpack brand red */
+}
+
 .wallet-connected-row{
 display:flex;
 align-items:center;
@@ -2311,12 +2315,42 @@ function renderWalletPicker() {
 	});
 }
 
+// FIX (24 Jul 2026): renders "Open in <Wallet>" links instead of the
+// CONNECT WALLET button when handleConnect() finds zero injected
+// providers on a mobile device. Each link uses that wallet's Browse
+// universal link (see RelaxHolder.getMobileBrowseLinks) to reopen this
+// exact page inside the wallet's own in-app browser.
+function renderMobileWalletLinks() {
+	const links = RelaxHolder.getMobileBrowseLinks();
+	walletBox.innerHTML =
+		'<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">No wallet browser extension found on this device. Open this page inside your wallet app instead:</div>' +
+		links.map((l) =>
+			'<a href="' + l.url + '" class="connect-btn wallet-picker-btn provider-' + l.id + '" ' +
+				'style="display:block;text-align:center;margin-bottom:8px;text-decoration:none;">Open in ' + l.label + '</a>'
+		).join("");
+}
+
 async function handleConnect() {
 	clearError();
 	const providers = RelaxHolder.detectProviders();
 
 	if (providers.length === 0) {
-		showError("No Solana wallet detected. Install Phantom, Solflare, or Backpack and reload the page.");
+		// FIX (24 Jul 2026): on mobile there's almost never an injected
+		// provider (extensions are desktop-only) — that used to always
+		// hit the plain-text "install a wallet" error, which is a dead
+		// end for a mobile visitor who very likely already HAS a wallet
+		// app installed, just not as a browser extension. Route them to
+		// each wallet's documented "Browse" link instead, which opens
+		// this exact page inside that wallet's own in-app browser (where
+		// window.solana/etc. get injected normally and the rest of this
+		// flow needs zero changes). Desktop with no extension still gets
+		// the original plain message, since Browse links aren't meant to
+		// be opened in a normal desktop browser tab.
+		if (RelaxHolder.isMobileDevice()) {
+			renderMobileWalletLinks();
+		} else {
+			showError("No Solana wallet detected. Install Phantom, Solflare, or Backpack and reload the page.");
+		}
 		return;
 	}
 

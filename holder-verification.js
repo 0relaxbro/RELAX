@@ -400,6 +400,40 @@ const RelaxHolder = (function () {
 		};
 	}
 
+	/* ---------- Mobile wallet support (browse deeplinks) ---------- */
+
+	// FIX (24 Jul 2026): none of RELAX's tools did anything for a mobile
+	// visitor with no wallet browser extension — which is nearly every
+	// mobile visitor on regular Safari/Chrome, since extensions are a
+	// desktop-only concept. Each wallet documents a "Browse" universal
+	// link that opens the CURRENT page inside that wallet's own in-app
+	// browser, where window.solana/window.solflare/window.backpack get
+	// injected exactly like a desktop extension — the connect() flow
+	// above then works completely unmodified from there. This does NOT
+	// implement each wallet's full deeplink Connect/Sign protocol (that
+	// needs a separate Diffie-Hellman session-encryption handshake per
+	// wallet) — Browse is the simple, documented, low-risk piece that
+	// gets a mobile user to a working "Connect" button with zero new
+	// cryptographic surface to get wrong.
+	// Sources (checked 24 Jul 2026):
+	//   https://docs.phantom.com/phantom-deeplinks/other-methods/browse
+	//   https://docs.solflare.com/solflare/technical/deeplinks/other-methods/browse
+	//   https://docs.backpack.app/deeplinks/other-methods/browse
+	function isMobileDevice() {
+		if (typeof navigator === "undefined") return false;
+		return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "");
+	}
+
+	function getMobileBrowseLinks() {
+		if (typeof window === "undefined") return [];
+		const here = encodeURIComponent(window.location.href);
+		return [
+			{ id: "phantom", label: "Phantom", url: "https://phantom.app/ul/browse/" + here + "?ref=" + here },
+			{ id: "solflare", label: "Solflare", url: "https://solflare.com/ul/v1/browse/" + here + "?ref=" + here },
+			{ id: "backpack", label: "Backpack", url: "https://backpack.app/ul/v1/browse/" + here + "?ref=" + here }
+		];
+	}
+
 	return {
 		detectProviders,
 		connect,
@@ -409,6 +443,8 @@ const RelaxHolder = (function () {
 		checkHolderStatus,
 		getWalletAdapterPassthrough,
 		onAccountChanged,
+		isMobileDevice,
+		getMobileBrowseLinks,
 		HOLDER_USD_THRESHOLD
 	};
 
