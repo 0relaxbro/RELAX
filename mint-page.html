@@ -22,6 +22,10 @@ p.sub{color:var(--muted);font-size:13px;text-align:center;margin:0 0 24px;}
 button{width:100%;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;}
 button:disabled{opacity:.35;cursor:not-allowed;}
 button.secondary{background:#1E2340;}
+.connect-btn{display:block;width:100%;box-sizing:border-box;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;text-decoration:none;text-align:center;}
+.connect-btn.provider-phantom{background:#AB9FF2;color:#1a1a2e;}
+.connect-btn.provider-solflare{background:#FFEF46;color:#1a1a2e;}
+.connect-btn.provider-backpack{background:#E33E3F;}
 input[type=text],input[type=file]{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-size:13px;margin:6px 0;}
 pre{background:#000;border-radius:8px;padding:12px;font-size:11px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;max-height:200px;overflow-y:auto;margin-top:12px;}
 .ok{color:var(--ok);}
@@ -49,6 +53,7 @@ label{font-size:12px;color:var(--muted);display:block;margin:12px 0 4px;}
      a different wallet. Reuses the same RelaxHolder module the main
      site's Swap already uses. Copy holder-verification.js into this
      same folder alongside this page. -->
+<script src="relax-mobile-wallet-adapter.bundle.js"></script>
 <script src="holder-verification.js"></script>
 <script>
 /* =========================================================
@@ -1031,7 +1036,47 @@ function renderWalletButtons() {
 	const box = document.getElementById("walletButtons");
 	const providers = RelaxHolder.detectProviders();
 	if (providers.length === 0) {
-		box.innerHTML = '<span class="err">No Solana wallet found. Install Phantom, Solflare, or Backpack and reload.</span>';
+		// FIX (24 Jul 2026): this was a dead end for every mobile buyer
+		// (no injected provider on regular mobile Safari/Chrome) — now
+		// offers a real Android Mobile Wallet Adapter connect button
+		// when available, plus each wallet's Browse deeplink (opens this
+		// exact page inside that wallet's own in-app browser) as a
+		// universal fallback for iOS and everything else.
+		if (RelaxHolder.isMobileDevice()) {
+			const links = RelaxHolder.getMobileBrowseLinks();
+			const mwaButton = RelaxHolder.isMobileWalletAdapterAvailable()
+				? '<button id="mwaConnectBtn" class="connect-btn" style="display:block;width:100%;margin-bottom:12px;">Connect Wallet (Android)</button>' +
+					'<div style="font-size:11px;color:var(--muted);margin-bottom:12px;">Or open this page inside your wallet app:</div>'
+				: '';
+			box.innerHTML =
+				mwaButton +
+				'<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">' +
+					(mwaButton ? '' : 'No wallet browser extension found on this device. Open this page inside your wallet app instead:') +
+				'</div>' +
+				links.map(l =>
+					'<a href="' + l.url + '" class="connect-btn provider-' + l.id + '" ' +
+						'style="display:block;text-align:center;margin-bottom:8px;text-decoration:none;">Open in ' + l.label + '</a>'
+				).join("");
+
+			const mwaBtn = document.getElementById("mwaConnectBtn");
+			if (mwaBtn) {
+				mwaBtn.addEventListener("click", async () => {
+					mwaBtn.disabled = true;
+					mwaBtn.textContent = "CONNECTING…";
+					try {
+						const conn = await RelaxHolder.connectMobileWalletAdapter(CONFIG.network === "devnet" ? "devnet" : "mainnet");
+						await finishWalletConnect(conn);
+					} catch (err) {
+						document.getElementById("statusOutput").innerHTML =
+							'<span class="err">' + (err && err.message ? err.message : "Couldn't connect via Mobile Wallet Adapter.") + ' Try one of the links below instead.</span>';
+						mwaBtn.disabled = false;
+						mwaBtn.textContent = "Connect Wallet (Android)";
+					}
+				});
+			}
+		} else {
+			box.innerHTML = '<span class="err">No Solana wallet found. Install Phantom, Solflare, or Backpack and reload.</span>';
+		}
 		return;
 	}
 	box.innerHTML = providers.map(p =>
@@ -1057,13 +1102,17 @@ async function loadSupply() {
 	}
 }
 
+async function finishWalletConnect(conn) {
+	walletPubkey = new solanaWeb3.PublicKey(conn.publicKey);
+	walletProvider = conn.rawProvider;
+	renderMintStep();
+}
+
 async function connectWallet(providerId) {
 	const statusOutput = document.getElementById("statusOutput");
 	try {
 		const conn = await RelaxHolder.connect(providerId);
-		walletPubkey = new solanaWeb3.PublicKey(conn.publicKey);
-		walletProvider = conn.rawProvider;
-		renderMintStep();
+		await finishWalletConnect(conn);
 	} catch (err) {
 		statusOutput.innerHTML = '<span class="err">' + (err.message || "Connection failed.") + '</span>';
 	}

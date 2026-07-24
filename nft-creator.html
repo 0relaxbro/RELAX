@@ -429,6 +429,7 @@ window.RELAX_NFT_CONFIG = Object.freeze({
 <script src="storage-adapter.js"></script>
 <script src="metadata-builder.js"></script>
 
+<script src="relax-mobile-wallet-adapter.bundle.js"></script>
 <script src="holder-verification.js"></script>
 
 <script>
@@ -578,12 +579,35 @@ function renderWalletPicker() {
 // exact page inside the wallet's own in-app browser.
 function renderMobileWalletLinks() {
 	const links = RelaxHolder.getMobileBrowseLinks();
+	const mwaButton = RelaxHolder.isMobileWalletAdapterAvailable()
+		? '<button id="mwaConnectBtn" class="connect-btn" style="display:block;width:100%;margin-bottom:12px;">Connect Wallet (Android)</button>' +
+			'<div style="font-size:11px;color:var(--muted);margin-bottom:12px;">Or open this page inside your wallet app:</div>'
+		: '';
 	walletBox.innerHTML =
-		'<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">No wallet browser extension found on this device. Open this page inside your wallet app instead:</div>' +
+		mwaButton +
+		'<div style="font-size:12px;color:var(--muted);margin-bottom:8px;">' +
+			(mwaButton ? '' : 'No wallet browser extension found on this device. Open this page inside your wallet app instead:') +
+		'</div>' +
 		links.map((l) =>
 			'<a href="' + l.url + '" class="connect-btn wallet-picker-btn provider-' + l.id + '" ' +
 				'style="display:block;text-align:center;margin-bottom:8px;text-decoration:none;">Open in ' + l.label + '</a>'
 		).join("");
+
+	const mwaBtn = document.getElementById("mwaConnectBtn");
+	if (mwaBtn) {
+		mwaBtn.addEventListener("click", async () => {
+			mwaBtn.disabled = true;
+			mwaBtn.textContent = "CONNECTING…";
+			try {
+				const conn = await RelaxHolder.connectMobileWalletAdapter(NFT_NETWORK);
+				await afterWalletConnected(conn.publicKey);
+			} catch (err) {
+				showError((err && err.message ? err.message : "Couldn't connect via Mobile Wallet Adapter.") + " Try one of the links below instead.");
+				mwaBtn.disabled = false;
+				mwaBtn.textContent = "Connect Wallet (Android)";
+			}
+		});
+	}
 }
 
 async function handleConnect() {
