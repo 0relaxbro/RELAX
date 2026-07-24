@@ -101,10 +101,14 @@ window.RELAX_NFT_CONFIG = Object.freeze({
 <!-- FIX (24 Jul 2026): multi-wallet support (Phantom/Solflare/Backpack)
      reuses the same RelaxHolder module the main site's Swap already
      uses, instead of this tool re-implementing its own wallet
-     detection. Copy holder-verification.js into this same folder
-     alongside the Irys files above (it's the exact file from
-     Github/holder-verification.js — nft-creator.html already expects
-     a local copy here too, same convention). -->
+     detection. UPDATED (24 Jul 2026, later): holder-verification.js
+     and relax-mobile-wallet-adapter.bundle.js are used identically by
+     every tool across the whole site, so there is now exactly ONE
+     copy of each. On the real deployed site every one of these HTML
+     files lives flat at the GitHub Pages repo root — "NFT/" is only
+     this project's own local zip-organization label, not a real
+     subfolder there — so a plain relative src is correct. Do NOT
+     duplicate these two files anywhere else. -->
 <script src="relax-mobile-wallet-adapter.bundle.js"></script>
 <script src="holder-verification.js"></script>
 <script>

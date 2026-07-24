@@ -51,8 +51,11 @@ label{font-size:12px;color:var(--muted);display:block;margin:12px 0 4px;}
      for the real public mint page — this used to hard-require Phantom
      specifically, which would have turned away every real buyer using
      a different wallet. Reuses the same RelaxHolder module the main
-     site's Swap already uses. Copy holder-verification.js into this
-     same folder alongside this page. -->
+     site's Swap already uses. UPDATED (24 Jul 2026, later): single
+     shared copy lives at the repo root — every one of these HTML
+     files is actually flat there too ("NFT/" is only this project's
+     own local zip-organization label) — so a plain relative src is
+     correct, no duplicate copy needed. -->
 <script src="relax-mobile-wallet-adapter.bundle.js"></script>
 <script src="holder-verification.js"></script>
 <script>
