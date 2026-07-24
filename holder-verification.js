@@ -400,6 +400,45 @@ const RelaxHolder = (function () {
 		};
 	}
 
+	/* ---------- Android Mobile Wallet Adapter (real local session, no redirect) ---------- */
+
+	// FIX (24 Jul 2026): the one piece of true native mobile wallet
+	// support that has a real, production-grade library without needing
+	// React or a bundler anywhere else in this project:
+	// @solana-mobile/wallet-adapter-mobile, compiled separately into
+	// relax-mobile-wallet-adapter.bundle.js (source + build steps in
+	// wallet-adapter-build/, isolated from the rest of the site) and
+	// exposed as window.RelaxMobileWalletAdapter when that script is
+	// loaded. This is the REAL Solana Mobile Wallet Adapter protocol — a
+	// local WebSocket session with whichever MWA-compatible wallet app
+	// is installed, not a page redirect — but it ONLY works on Android
+	// Chrome (confirmed against Solana Mobile's own docs: MWA is
+	// Android-only, no iOS equivalent exists). Everywhere else falls
+	// through to the Browse-deeplink flow below, unchanged.
+	// NOT YET VERIFIED on a real device — see wallet-adapter-build/README.md.
+	function isMobileWalletAdapterAvailable() {
+		return typeof window !== "undefined" &&
+			!!window.RelaxMobileWalletAdapter &&
+			window.RelaxMobileWalletAdapter.isAndroidChrome();
+	}
+
+	async function connectMobileWalletAdapter(network) {
+		if (!isMobileWalletAdapterAvailable()) {
+			throw new Error("Mobile Wallet Adapter isn't available on this device/browser.");
+		}
+		const conn = await window.RelaxMobileWalletAdapter.connect(network || "mainnet");
+		activeConnection = {
+			providerId: "mobile-wallet-adapter",
+			publicKey: conn.publicKey,
+			rawProvider: conn.rawProvider
+		};
+		// The adapter instance is an EventEmitter (extends
+		// @solana/wallet-adapter-base) — wire it the same way as
+		// injected providers so account/disconnect changes stay in sync.
+		wireAccountChangeListener(conn.rawProvider);
+		return activeConnection;
+	}
+
 	/* ---------- Mobile wallet support (browse deeplinks) ---------- */
 
 	// FIX (24 Jul 2026): none of RELAX's tools did anything for a mobile
@@ -445,6 +484,8 @@ const RelaxHolder = (function () {
 		onAccountChanged,
 		isMobileDevice,
 		getMobileBrowseLinks,
+		isMobileWalletAdapterAvailable,
+		connectMobileWalletAdapter,
 		HOLDER_USD_THRESHOLD
 	};
 
