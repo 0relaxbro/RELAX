@@ -25,11 +25,12 @@ body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-famil
 .lab-tag{display:inline-block;font-family:var(--orbitron);font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--ok);background:rgba(20,241,149,.08);border:1px solid rgba(20,241,149,.25);padding:6px 12px;border-radius:20px;margin-bottom:16px;}
 .sidebar{width:260px;flex-shrink:0;border-right:1px solid var(--border);padding:20px 12px;position:sticky;top:0;height:100vh;overflow-y:auto;}
 .sidebar h1{font-family:var(--orbitron);font-weight:800;font-size:16px;margin:0 0 4px;letter-spacing:.3px;}
-.sidebar .sub{font-size:11px;color:var(--muted);margin:0 0 20px;line-height:1.5;}
+.sidebar .sub{font-size:12px;color:var(--muted);margin:0 0 20px;line-height:1.6;}
 .step-nav{list-style:none;margin:0;padding:0;}
 .step-nav li{padding:10px 12px;border-radius:8px;font-size:13px;cursor:pointer;margin-bottom:2px;color:var(--muted);display:flex;gap:8px;align-items:center;}
 .step-nav li.active{background:var(--accent);color:var(--bg);font-weight:600;}
 .step-nav li.done{color:var(--ok);}
+.step-nav li.active.done{color:var(--bg);}
 .step-nav li .n{width:20px;height:20px;border-radius:50%;border:1px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;}
 .main{flex:1;padding:28px 40px;max-width:900px;}
 .step-panel{display:none;}
@@ -92,31 +93,31 @@ pre{background:#000;border-radius:6px;padding:12px;font-size:12px;overflow-x:aut
 	</p>
 
 	<div id="welcomeStep1">
-		<p style="font-size:13px;color:var(--muted);margin:0 0 12px;">What do you want to do?</p>
+		<p style="font-size:14px;color:var(--muted);margin:0 0 12px;">What do you want to do?</p>
 		<div style="display:flex;flex-direction:column;gap:10px;">
-			<button id="welcomeCreateBtn" style="text-align:left;padding:18px;font-size:14px;">
-				<b>Create</b><br><span style="font-weight:400;color:rgba(255,255,255,.75);font-size:12px;">Launch a new single NFT or a full collection</span>
+			<button id="welcomeCreateBtn" style="text-align:left;padding:18px;font-size:15px;">
+				<b>Create</b><br><span style="font-weight:400;color:rgba(5,7,19,.72);font-size:13px;">Launch a new single NFT or a full collection</span>
 			</button>
-			<button disabled style="text-align:left;padding:18px;font-size:14px;opacity:.4;cursor:not-allowed;">
-				<b>Manage existing</b><br><span style="font-weight:400;font-size:12px;">Coming soon — update or monitor a collection you already launched</span>
+			<button disabled style="text-align:left;padding:18px;font-size:15px;background:var(--panel);border:1px solid var(--border);color:var(--text);cursor:not-allowed;">
+				<b>Manage existing</b><br><span style="font-weight:400;color:var(--muted);font-size:13px;">Coming soon — update or monitor a collection you already launched</span>
 			</button>
-			<button disabled style="text-align:left;padding:18px;font-size:14px;opacity:.4;cursor:not-allowed;">
-				<b>Import existing</b><br><span style="font-weight:400;font-size:12px;">Coming soon — bring a collection you already deployed elsewhere under RELAX Launchpad</span>
+			<button disabled style="text-align:left;padding:18px;font-size:15px;background:var(--panel);border:1px solid var(--border);color:var(--text);cursor:not-allowed;">
+				<b>Import existing</b><br><span style="font-weight:400;color:var(--muted);font-size:13px;">Coming soon — bring a collection you already deployed elsewhere under RELAX Launchpad</span>
 			</button>
 		</div>
 	</div>
 
 	<div id="welcomeStep2" style="display:none;">
-		<p style="font-size:13px;color:var(--muted);margin:0 0 12px;">How much are you creating?</p>
+		<p style="font-size:14px;color:var(--muted);margin:0 0 12px;">How much are you creating?</p>
 		<div style="display:flex;flex-direction:column;gap:10px;">
-			<a href="nft-creator.html" class="wallet-connect-btn" style="text-align:left;padding:18px;font-size:14px;display:block;">
-				<b>Single NFT</b><br><span style="font-weight:400;font-size:12px;">One piece, minted right now — opens the NFT Creator</span>
+			<a href="nft-creator.html" class="wallet-connect-btn" style="text-align:left;padding:18px;font-size:15px;display:block;">
+				<b>Single NFT</b><br><span style="font-weight:400;color:rgba(5,7,19,.72);font-size:13px;">One piece, minted right now — opens the NFT Creator</span>
 			</a>
-			<a href="nft-creator.html" class="wallet-connect-btn" style="text-align:left;padding:18px;font-size:14px;display:block;">
-				<b>Small Batch</b><br><span style="font-weight:400;font-size:12px;">A handful of pieces — use the NFT Creator once per piece for now; a dedicated small-batch flow is coming</span>
+			<a href="nft-creator.html" class="wallet-connect-btn" style="text-align:left;padding:18px;font-size:15px;display:block;">
+				<b>Small Batch</b><br><span style="font-weight:400;color:rgba(5,7,19,.72);font-size:13px;">A handful of pieces — use the NFT Creator once per piece for now; a dedicated small-batch flow is coming</span>
 			</a>
-			<button id="welcomeCollectionBtn" style="text-align:left;padding:18px;font-size:14px;">
-				<b>Collection</b><br><span style="font-weight:400;color:rgba(255,255,255,.75);font-size:12px;">A full launch — whitelist, phases, mint limits, up to thousands of items</span>
+			<button id="welcomeCollectionBtn" style="text-align:left;padding:18px;font-size:15px;">
+				<b>Collection</b><br><span style="font-weight:400;color:rgba(5,7,19,.72);font-size:13px;">A full launch — whitelist, phases, mint limits, up to thousands of items</span>
 			</button>
 		</div>
 	</div>
