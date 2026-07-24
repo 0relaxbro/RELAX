@@ -54,6 +54,7 @@ color:var(--text);
 font-family:var(--inter);
 min-height:100vh;
 padding:40px 20px 100px;
+overflow-wrap:break-word;
 }
 
 .wrap{
@@ -271,7 +272,14 @@ box-shadow:0 12px 32px rgba(0,0,0,.5);
 .token-picker-panel.open{ display:block; }
 
 .jupiter-signature{
-position:absolute;
+/* FIX (24 Jul 2026): was position:absolute with no positioned
+   ancestor (this div sits at the very end of <body>) — bottom:16px
+   anchored to the bottom of the whole DOCUMENT, not the viewport. Once
+   the mobile wallet-picker content made the page taller, the badge
+   ended up floating mid-page instead of in the corner. position:fixed
+   anchors to the VIEWPORT instead, so it always sits in the
+   bottom-right corner of the visible screen regardless of page height. */
+position:fixed;
 right:16px;
 bottom:16px;
 display:flex;
@@ -617,6 +625,12 @@ padding:14px 16px;
 font-size:13px;
 color:var(--danger);
 margin-bottom:20px;
+/* FIX (24 Jul 2026): long unbroken error codes like
+   MOBILE_WALLET_ADAPTER_NO_PUBLIC_KEY have no spaces to wrap at, so
+   without this the box (and the whole page) overflowed horizontally
+   on narrow phone screens — which is exactly what forces mobile
+   Chrome to auto-zoom-out on first load until pinched back in. */
+overflow-wrap:break-word;
 }
 
 </style>
@@ -2907,6 +2921,11 @@ function friendlySwapErrorMessage(err) {
 swapBtn.addEventListener("click", handleExecute);
 
 async function afterWalletConnected(publicKey) {
+	// FIX (24 Jul 2026, found via real device test): see swap.html for
+	// the same fix — a failed connect attempt (e.g. MWA needing a
+	// retry) leaves its error banner on screen; clear it once a later
+	// attempt actually succeeds.
+	clearError();
 	renderWalletConnected(publicKey);
 	// FIX: browsers can restore a previously-typed value into a number
 	// input across a page reload (form state restoration), independent

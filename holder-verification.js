@@ -426,17 +426,44 @@ const RelaxHolder = (function () {
 		if (!isMobileWalletAdapterAvailable()) {
 			throw new Error("Mobile Wallet Adapter isn't available on this device/browser.");
 		}
-		const conn = await window.RelaxMobileWalletAdapter.connect(network || "mainnet");
-		activeConnection = {
-			providerId: "mobile-wallet-adapter",
-			publicKey: conn.publicKey,
-			rawProvider: conn.rawProvider
-		};
-		// The adapter instance is an EventEmitter (extends
-		// @solana/wallet-adapter-base) — wire it the same way as
-		// injected providers so account/disconnect changes stay in sync.
-		wireAccountChangeListener(conn.rawProvider);
-		return activeConnection;
+		// FIX (24 Jul 2026, found via real Android device test): the
+		// first connect attempt after a fresh page load frequently comes
+		// back with no public key even after the user approves in the
+		// wallet app, but a second or third immediate retry succeeds —
+		// this looks like the local Wallet-Standard-mobile session
+		// needing a moment to fully register on first use. Retrying here
+		// automatically (same adapter instance, same in-progress local
+		// session) means the person doesn't have to notice this and
+		// tap the button 2-3 times themselves.
+		const maxAttempts = 3;
+		let lastErr = null;
+		for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+			try {
+				const conn = await window.RelaxMobileWalletAdapter.connect(network || "mainnet");
+				activeConnection = {
+					providerId: "mobile-wallet-adapter",
+					publicKey: conn.publicKey,
+					rawProvider: conn.rawProvider
+				};
+				// The adapter instance is an EventEmitter (extends
+				// @solana/wallet-adapter-base) — wire it the same way as
+				// injected providers so account/disconnect changes stay in sync.
+				wireAccountChangeListener(conn.rawProvider);
+				return activeConnection;
+			} catch (err) {
+				lastErr = err;
+				const msg = err && err.message ? err.message : String(err);
+				// Only silently retry the specific "connected but no key
+				// yet" case — a real timeout, an unsupported platform, or
+				// the user explicitly cancelling in the wallet app should
+				// surface immediately, not retry blindly.
+				if (!msg.includes("MOBILE_WALLET_ADAPTER_NO_PUBLIC_KEY") || attempt === maxAttempts) {
+					throw err;
+				}
+				await new Promise((resolve) => setTimeout(resolve, 400));
+			}
+		}
+		throw lastErr;
 	}
 
 	/* ---------- Mobile wallet support (browse deeplinks) ---------- */
