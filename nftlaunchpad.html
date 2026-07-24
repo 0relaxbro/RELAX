@@ -86,7 +86,7 @@ pre{background:#000;border-radius:6px;padding:12px;font-size:12px;overflow-x:aut
 				<b>Manage existing</b><br><span style="font-weight:400;font-size:12px;">Coming soon — update or monitor a collection you already launched</span>
 			</button>
 			<button disabled style="text-align:left;padding:18px;font-size:14px;opacity:.4;cursor:not-allowed;">
-				<b>Import existing</b><br><span style="font-weight:400;font-size:12px;">Coming soon — bring an existing Candy Machine under RELAX Launchpad</span>
+				<b>Import existing</b><br><span style="font-weight:400;font-size:12px;">Coming soon — bring a collection you already deployed elsewhere under RELAX Launchpad</span>
 			</button>
 		</div>
 	</div>
@@ -1306,7 +1306,7 @@ const resumeNotice = hasSavedProgress
 document.getElementById("panel-wallet").innerHTML = `
 	<h2>Connect wallet</h2>
 	<p class="desc">This wallet pays for and controls everything created
-	in this flow — it becomes the Candy Machine's authority. Devnet only;
+	in this flow — it becomes the authority over your collection. Devnet only;
 	get free devnet SOL from <a href="https://faucet.solana.com" target="_blank" style="color:var(--accent)">faucet.solana.com</a>
 	if the balance below is empty.</p>
 	${resumeNotice}
@@ -1492,13 +1492,13 @@ function renderCollectionStep() {
 
 			output.innerHTML = '<span class="ok">Metadata account exists, owned by Token Metadata program: ' + ownedByTokenMetadata + '</span>\n' +
 				'Metadata PDA: ' + metadataPda.toString() + '\n\n' +
-				'⚠️ Not yet checked here: whether the CONNECTED WALLET is this collection\'s update authority — that\'s required later (Step 8, Create Candy Machine) and will fail there with a clear error if not. Verify it yourself now if unsure by checking the mint on a devnet explorer.';
+				'⚠️ Not yet checked here: whether the CONNECTED WALLET is this collection\'s update authority — that\'s required later, in Deploy: Create, and will fail there with a clear error if not. Verify it yourself now if unsure by checking the mint on a devnet explorer.';
 
 			markDone("collection");
 			document.getElementById("proceedToItemsBtn")?.remove();
 			const btn = document.createElement("button");
 			btn.id = "proceedToItemsBtn";
-			btn.textContent = "Continue to Step 2 →";
+			btn.textContent = "Continue to Assets →";
 			btn.addEventListener("click", () => { goToStep(2); renderItemsStep(); });
 			output.parentElement.appendChild(btn);
 		} catch (err) {
@@ -1531,7 +1531,7 @@ function renderItemsStep() {
 			<pre id="bulkOutput">(no files selected)</pre>
 		</div>
 		<div class="card">
-			<label>Name / URI byte reservation per line (fixed at Candy Machine creation — cannot grow later, only shrink)</label>
+			<label>Name / URI byte reservation per line (fixed once you deploy — cannot grow later, only shrink)</label>
 			<div class="row">
 				<div><input type="number" id="nameLenInput" value="${STATE.nameLength || 32}"></div>
 				<div><input type="number" id="uriLenInput" value="${STATE.uriLength || 96}"></div>
@@ -1732,7 +1732,7 @@ function wireItemsValidation() {
 			document.getElementById("proceedToGroupsBtn")?.remove();
 			const btn = document.createElement("button");
 			btn.id = "proceedToGroupsBtn";
-			btn.textContent = "Continue to Steps 4-5 →";
+			btn.textContent = "Continue to Launch Rules →";
 			btn.addEventListener("click", () => { goToStep(3); renderGroupsStep(); });
 			output.parentElement.appendChild(btn);
 		} catch (err) {
@@ -1796,7 +1796,7 @@ function renderGroupsStep() {
 			}
 			const totalAllocation = STATE.groups.reduce((sum, g) => sum + g.allocation, 0);
 			if (totalAllocation > STATE.itemsAvailable) {
-				errors.push("Total allocation across all phases (" + totalAllocation + ") exceeds items available (" + STATE.itemsAvailable + "). Reduce one or more phases, or add more items back in Step 2.");
+				errors.push("Total allocation across all phases (" + totalAllocation + ") exceeds items available (" + STATE.itemsAvailable + "). Reduce one or more phases, or add more items back in Assets.");
 			}
 
 			if (errors.length > 0) {
@@ -1882,23 +1882,23 @@ function renderReviewStep() {
 			<div class="review-row"><span class="k">Name / URI length</span><span class="v">${STATE.nameLength} / ${STATE.uriLength} bytes</span></div>
 			<div class="review-row"><span class="k">Phases</span><span class="v">${STATE.groups.map(g => g.label).join(", ")}</span></div>
 			<div class="review-row"><span class="k">Total phase allocation</span><span class="v">${totalAllocation} / ${STATE.itemsAvailable} items ${totalAllocation > STATE.itemsAvailable ? '<span class="badge err">OVER</span>' : '<span class="badge ok">OK</span>'}</span></div>
-			<div class="review-row"><span class="k">Candy Machine account size</span><span class="v">${spaceError ? '<span class="err">' + spaceError + '</span>' : space + ' bytes'}</span></div>
+			<div class="review-row"><span class="k">On-chain account size</span><span class="v">${spaceError ? '<span class="err">' + spaceError + '</span>' : space + ' bytes'}</span></div>
 		</div>
-		${totalAllocation > STATE.itemsAvailable ? '<div class="gate">Fix the allocation overage in Step 4-5 before continuing.</div>' : ''}
+		${totalAllocation > STATE.itemsAvailable ? '<div class="gate">Fix the allocation overage in Launch Rules before continuing.</div>' : ''}
 		<button id="fetchRentBtn" ${spaceError || totalAllocation > STATE.itemsAvailable ? "disabled" : ""}>Fetch live rent cost</button>
 		<pre id="rentOutput">(not fetched yet)</pre>
 		<div class="gate" id="confirmGate">
 			I have reviewed every value above against what I actually intend
-			to launch. I understand Step 8 creates a real on-chain account
-			using this exact configuration, and that items available / name
-			length / uri length cannot be increased later, only decreased.
+			to launch. I understand the next step creates a real on-chain
+			account using this exact configuration, and that items available /
+			name length / uri length cannot be increased later, only decreased.
 			<br><br>
 			<label style="display:inline-flex;align-items:center;gap:8px;margin:8px 0 0;">
 				<input type="checkbox" id="confirmCheckbox" style="width:auto;">
 				I've checked everything above and want to proceed.
 			</label>
 		</div>
-		<button id="proceedToCreateBtn" disabled>Continue to Step 8 — Create Candy Machine →</button>
+		<button id="proceedToCreateBtn" disabled>Continue to Deploy: Create →</button>
 	`;
 
 	document.getElementById("fetchRentBtn")?.addEventListener("click", async () => {
@@ -2011,11 +2011,11 @@ function renderCreateStep(candyMachineData) {
 			await pollConfirmation(signature, lastValidBlockHeight);
 
 			STATE.candyMachinePubkey = candyMachineKeypair.publicKey.toString();
-			output.innerHTML = '<span class="ok">SUCCESS</span>\nCandy Machine: ' + STATE.candyMachinePubkey + '\nSignature: ' + signature;
+			output.innerHTML = '<span class="ok">SUCCESS</span>\nCollection account: ' + STATE.candyMachinePubkey + '\nSignature: ' + signature;
 
 			markDone("create");
 			const btn = document.createElement("button");
-			btn.textContent = "Continue to Step 9 — Load config lines →";
+			btn.textContent = "Continue to Deploy: Add Items →";
 			btn.addEventListener("click", () => { goToStep(6); renderLoadStep(); });
 			output.parentElement.appendChild(btn);
 		} catch (err) {
@@ -2057,7 +2057,7 @@ function renderLoadStep() {
 			// items_loaded counter rather than trusting in-memory state,
 			// so a page reload / interrupted run picks up correctly.
 			const accountInfo = await connection.getAccountInfo(new solanaWeb3.PublicKey(STATE.candyMachinePubkey));
-			if (!accountInfo) throw new Error("Candy Machine account not found — was Step 8 actually confirmed?");
+			if (!accountInfo) throw new Error("Collection account not found — was Deploy: Create actually confirmed?");
 			const itemsLoaded = accountInfo.data.readUInt32LE(RelaxCandyMachine.HIDDEN_SECTION);
 			STATE.configLinesLoaded = itemsLoaded;
 
@@ -2123,7 +2123,7 @@ function renderLoadStep() {
 
 function finishLoadStep(output) {
 	const btn = document.createElement("button");
-	btn.textContent = "Continue to Step 10 — Create + wrap Guard →";
+	btn.textContent = "Continue to Deploy: Launch Rules →";
 	btn.addEventListener("click", () => { goToStep(7); renderGuardStep(); });
 	output.parentElement.appendChild(btn);
 }
@@ -2251,12 +2251,12 @@ function renderGuardStep() {
 			await pollConfirmation(signature, lastValidBlockHeight);
 
 			STATE.candyGuardPubkey = candyGuardPda.toString();
-			output.innerHTML = '<span class="ok">SUCCESS</span>\nCandy Guard: ' + STATE.candyGuardPubkey + '\nSignature: ' + signature +
+			output.innerHTML = '<span class="ok">SUCCESS</span>\nLaunch rules account: ' + STATE.candyGuardPubkey + '\nSignature: ' + signature +
 				'\nGroups: ' + groupsForGuard.map(g => g.label).join(", ");
 
 			markDone("guard");
 			const btn = document.createElement("button");
-			btn.textContent = "Continue to Step 11 — Read back on-chain →";
+			btn.textContent = "Continue to Deploy: Confirm →";
 			btn.addEventListener("click", () => { goToStep(8); renderVerifyStep(); });
 			output.parentElement.appendChild(btn);
 		} catch (err) {
@@ -2288,7 +2288,7 @@ function renderVerifyStep() {
 		output.textContent = "Reading...";
 		try {
 			const cmInfo = await connection.getAccountInfo(new solanaWeb3.PublicKey(STATE.candyMachinePubkey));
-			if (!cmInfo) throw new Error("Candy Machine account not found.");
+			if (!cmInfo) throw new Error("Collection account not found.");
 			const d = cmInfo.data;
 			const authority = new solanaWeb3.PublicKey(d.subarray(16, 48)).toString();
 			const mintAuthority = new solanaWeb3.PublicKey(d.subarray(48, 80)).toString();
@@ -2324,7 +2324,7 @@ function renderVerifyStep() {
 			if (allMatch) {
 				markDone("verify");
 				const btn = document.createElement("button");
-				btn.textContent = "Continue to Step 12 — Summary →";
+				btn.textContent = "Continue to Deploy: Finish →";
 				btn.addEventListener("click", () => { goToStep(9); renderPublishStep(); });
 				output.parentElement.appendChild(btn);
 			}
