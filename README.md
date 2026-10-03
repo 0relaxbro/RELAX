@@ -53,7 +53,9 @@ with any token. Never trust a slogan — check the chain.
   transaction is signed by your own wallet — RELAX never holds,
   custodies, or has access to your funds at any point.
 - **RELAX NFT Launchpad** — create and launch NFT collections on
-  Solana, currently on devnet.
+  Solana mainnet. Collection creation is currently limited to RELAX team
+  wallets while the Badge launch is prepared; available collections can be minted
+  by eligible wallets under their published phase rules.
 
 ## Philosophy
 
