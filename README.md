@@ -11,9 +11,7 @@
 <p>
 <a href="https://0relaxbro.xyz">Website</a> ·
 <a href="https://x.com/0relaxbro">X</a> ·
-<a href="https://www.youtube.com/@0relaxbro">YouTube</a> ·
-<a href="https://pump.fun/coin/6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump">Pump.fun</a> ·
-<a href="https://dexscreener.com/solana/5ztferjiljz3u4kzkwmguyujxcwkpagzfqwwyja7yzx3">DexScreener</a>
+<a href="https://www.youtube.com/@0relaxbro">YouTube</a>
 </p>
 
 </div>
@@ -32,16 +30,11 @@ advice.
 
 ## The Contract
 
-```
-6DDJ6Gsuvhe4Hb7zkohLBhDjKkyCxHsYt4thNukbpump
-```
+The new RELAX token is coming soon. Its contract address will be
+published here and on the official website at launch.
 
 Always verify the contract address independently before interacting
 with any token. Never trust a slogan — check the chain.
-
-- Fixed supply, no additional minting
-- No private creator allocation
-- Public, on-chain verifiable
 
 ## What's live
 
@@ -53,9 +46,8 @@ with any token. Never trust a slogan — check the chain.
   transaction is signed by your own wallet — RELAX never holds,
   custodies, or has access to your funds at any point.
 - **RELAX NFT Launchpad** — create and launch NFT collections on
-  Solana mainnet. Collection creation is currently limited to RELAX team
-  wallets while the Badge launch is prepared; available collections can be minted
-  by eligible wallets under their published phase rules.
+  Solana mainnet. Available collections can be minted by eligible wallets
+  under their published phase rules.
 
 ## Philosophy
 
